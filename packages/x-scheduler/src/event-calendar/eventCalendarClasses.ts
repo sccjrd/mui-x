@@ -232,6 +232,8 @@ export interface EventCalendarClasses extends EventDialogClasses {
   resourceDayTimeGridHeaderCells: string;
   /** Styles applied to resource day time grid header cell elements. */
   resourceDayTimeGridHeaderCell: string;
+  /** Styles applied to the pin toggle button inside each resource header cell. */
+  resourceDayTimeGridPinButton: string;
   /** Styles applied to the resource name inside the header cell. */
   resourceDayTimeGridResourceName: string;
   /** Styles applied to the resource day time grid body element. */
@@ -417,6 +419,7 @@ export const eventCalendarClasses: EventCalendarClasses = generateUtilityClasses
     'resourceDayTimeGridHeader',
     'resourceDayTimeGridHeaderCells',
     'resourceDayTimeGridHeaderCell',
+    'resourceDayTimeGridPinButton',
     'resourceDayTimeGridResourceName',
     'resourceDayTimeGridBody',
     'resourceDayTimeGridInner',
@@ -565,6 +568,7 @@ const slots = {
   resourceDayTimeGridHeader: ['resourceDayTimeGridHeader'],
   resourceDayTimeGridHeaderCells: ['resourceDayTimeGridHeaderCells'],
   resourceDayTimeGridHeaderCell: ['resourceDayTimeGridHeaderCell'],
+  resourceDayTimeGridPinButton: ['resourceDayTimeGridPinButton'],
   resourceDayTimeGridResourceName: ['resourceDayTimeGridResourceName'],
   resourceDayTimeGridBody: ['resourceDayTimeGridBody'],
   resourceDayTimeGridInner: ['resourceDayTimeGridInner'],

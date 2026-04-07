@@ -2,7 +2,12 @@
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import { useStore } from '@base-ui/utils/store';
-import { SchedulerEventOccurrence, SchedulerProcessedDate, SchedulerResource, TemporalSupportedObject } from '@mui/x-scheduler-headless/models';
+import {
+  SchedulerEventOccurrence,
+  SchedulerProcessedDate,
+  SchedulerResource,
+  TemporalSupportedObject,
+} from '@mui/x-scheduler-headless/models';
 import { CalendarGrid } from '@mui/x-scheduler-headless/calendar-grid';
 import { useEventCalendarStoreContext } from '@mui/x-scheduler-headless/use-event-calendar-store-context';
 import { useAdapterContext } from '@mui/x-scheduler-headless/use-adapter-context';
@@ -19,7 +24,7 @@ const ResourceDayTimeGridColumn = styled(CalendarGrid.TimeColumn, {
   name: 'MuiEventCalendar',
   slot: 'ResourceDayTimeGridColumn',
 })(({ theme }) => ({
-  borderInlineStart: `1px solid ${(theme.vars || theme).palette.divider}`,
+  borderInlineEnd: `1px solid ${(theme.vars || theme).palette.divider}`,
   flexGrow: 1,
   flexShrink: 0,
   flexBasis: 0,
@@ -27,6 +32,53 @@ const ResourceDayTimeGridColumn = styled(CalendarGrid.TimeColumn, {
   position: 'relative',
   ':last-of-type': {
     borderInlineEnd: `1px solid ${(theme.vars || theme).palette.divider}`,
+  },
+  // Each column draws its own horizontal hour dividers.
+  // Keeping the gradient here (rather than on the grid container) means pinned
+  // columns with an opaque background-color still show the lines — background-image
+  // paints above background-color in CSS.
+  // Grid lines drawn per slot. --slot-height equals --hour-height when
+  // slotDuration is 60, and shrinks proportionally for shorter slots.
+  backgroundImage: `repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent calc(var(--slot-height) - 1px),
+    ${(theme.vars || theme).palette.divider} calc(var(--slot-height) - 1px),
+    ${(theme.vars || theme).palette.divider} var(--slot-height)
+  )`,
+  // Each column is its own stacking context so event z-indexes (2 / 3) stay
+  // local and never bleed above adjacent pinned columns.
+  isolation: 'isolate',
+  // Pinned column: sticky within the scroll container, above non-pinned columns.
+  // position: sticky overrides the position: relative above via the inline style
+  // passed from ResourceTimeGridColumn (inline styles take precedence over class styles).
+  '&[data-pinned]': {
+    zIndex: 1, // within the grid's isolated stacking context
+    backgroundColor: (theme.vars || theme).palette.background.paper,
+  },
+  // The last pinned column carries the visual separator.
+  '&[data-last-pinned]': {
+    zIndex: 2, // above other pinned columns so its ::after shadow renders on top
+  },
+  // Border separator — always visible when enabled.
+  '&[data-last-pinned][data-separator-border]': {
+    borderInlineEnd: `1px solid ${(theme.vars || theme).palette.divider}`,
+  },
+  // Shadow separator — uses a CSS variable --shadow-opacity set by the parent on scroll.
+  '&[data-last-pinned][data-separator-shadow]::after': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    right: -8,
+    bottom: 0,
+    width: 8,
+    background: `linear-gradient(to right, ${
+      theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.15)'
+    }, transparent)`,
+    pointerEvents: 'none',
+    opacity: 'var(--shadow-opacity, 0)',
+    transition: 'opacity 0.2s',
+    zIndex: 1,
   },
 }));
 
@@ -69,7 +121,18 @@ const ResourceDayTimeGridCurrentTimeIndicatorCircle = styled('span', {
 }));
 
 export function ResourceTimeGridColumn(props: ResourceTimeGridColumnProps) {
-  const { resource, occurrences: allOccurrences, day, showCurrentTimeIndicator, index } = props;
+  const {
+    resource,
+    occurrences: allOccurrences,
+    day,
+    showCurrentTimeIndicator,
+    index,
+    isPinned = false,
+    isLastPinned = false,
+    pinnedLeft,
+    showSeparatorBorder = false,
+    showSeparatorShadow = false,
+  } = props;
 
   const adapter = useAdapterContext();
   const { classes } = useEventCalendarStyledContext();
@@ -101,7 +164,20 @@ export function ResourceTimeGridColumn(props: ResourceTimeGridColumnProps) {
       end={end}
       addPropertiesToDroppedEvent={addPropertiesToDroppedEvent}
       resourceId={resource.id}
-      style={{ '--columns-count': maxIndex } as React.CSSProperties}
+      data-pinned={isPinned || undefined}
+      data-last-pinned={isLastPinned || undefined}
+      data-separator-border={(isLastPinned && showSeparatorBorder) || undefined}
+      data-separator-shadow={(isLastPinned && showSeparatorShadow) || undefined}
+      style={
+        {
+          '--columns-count': maxIndex,
+          // Sticky positioning for pinned columns — overrides position: relative from CSS.
+          ...(isPinned && {
+            position: 'sticky',
+            left: pinnedLeft,
+          }),
+        } as React.CSSProperties
+      }
     >
       <ResourceColumnInteractiveLayer
         start={start}
@@ -146,7 +222,13 @@ function ResourceColumnInteractiveLayer({
     end,
     resourceId,
   );
-  const placeholder = CalendarGrid.usePlaceholderInRange({ start, end, occurrences, maxIndex, resourceId });
+  const placeholder = CalendarGrid.usePlaceholderInRange({
+    start,
+    end,
+    occurrences,
+    maxIndex,
+    resourceId,
+  });
   const isLoading = useStore(store, schedulerOtherSelectors.isLoading);
 
   React.useEffect(() => {
@@ -191,4 +273,10 @@ interface ResourceTimeGridColumnProps {
   day: SchedulerProcessedDate;
   index: number;
   showCurrentTimeIndicator: boolean;
+  isPinned?: boolean;
+  isLastPinned?: boolean;
+  /** Pre-computed `left` value in px for sticky positioning. */
+  pinnedLeft?: number;
+  showSeparatorBorder?: boolean;
+  showSeparatorShadow?: boolean;
 }
