@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { useStableCallback } from '@base-ui/utils/useStableCallback';
 import { useAdapterContext } from '../../use-adapter-context';
-import { SchedulerEvent, TemporalSupportedObject } from '../../models';
+import { SchedulerEvent, SchedulerResourceId, TemporalSupportedObject } from '../../models';
 import { buildIsValidDropTarget } from '../../build-is-valid-drop-target';
 import { CalendarGridTimeColumnContext } from './CalendarGridTimeColumnContext';
 import { useDropTarget } from '../../internals/utils/useDropTarget';
@@ -18,7 +18,7 @@ const isValidDropTarget = buildIsValidDropTarget([
 ]);
 
 export function useTimeDropTarget(parameters: useTimeDropTarget.Parameters) {
-  const { start, end, addPropertiesToDroppedEvent } = parameters;
+  const { start, end, addPropertiesToDroppedEvent, resourceId } = parameters;
 
   // Context hooks
   const adapter = useAdapterContext();
@@ -152,6 +152,7 @@ export function useTimeDropTarget(parameters: useTimeDropTarget.Parameters) {
     getEventDropData,
     isValidDropTarget,
     addPropertiesToDroppedEvent,
+    resourceId,
   });
 
   return { getCursorPositionInElementMs, ref };
@@ -171,6 +172,11 @@ export namespace useTimeDropTarget {
      * Add properties to the event dropped in the column before storing it in the store.
      */
     addPropertiesToDroppedEvent?: () => Partial<SchedulerEvent>;
+    /**
+     * The resource this column represents.
+     * When set, created and dropped events are associated with this resource.
+     */
+    resourceId?: SchedulerResourceId | null;
   }
 
   export interface ReturnValue extends Pick<

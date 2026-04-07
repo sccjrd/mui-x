@@ -23,6 +23,7 @@
     "./locales": "./src/locales/index.ts",
     "./internals": "./src/internals/index.ts",
     "./week-view": "./src/week-view/index.ts",
+    "./resource-day-view": "./src/resource-day-view/index.ts",
     "./use-event-calendar-api-ref": "./src/use-event-calendar-api-ref/index.ts"
   },
   "sideEffects": false,

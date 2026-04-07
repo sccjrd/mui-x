@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useStore } from '@base-ui/utils/store/useStore';
-import { TemporalSupportedObject } from '../../models';
+import { SchedulerResourceId, TemporalSupportedObject } from '../../models';
 import { useEventCalendarStoreContext } from '../../use-event-calendar-store-context';
 import { schedulerEventSelectors } from '../../scheduler-selectors';
 import { useEventOccurrencesWithTimelinePosition } from '../../use-event-occurrences-with-timeline-position';
@@ -12,7 +12,7 @@ import { isInternalDragOrResizePlaceholder } from '../../internals/utils/drag-ut
 export function useCalendarGridPlaceholderInRange(
   parameters: useCalendarGridPlaceholderInRange.Parameters,
 ): useEventOccurrencesWithTimelinePosition.EventOccurrencePlaceholderWithPosition | null {
-  const { start, end, occurrences, maxIndex } = parameters;
+  const { start, end, occurrences, maxIndex, resourceId } = parameters;
 
   const adapter = useAdapterContext();
   const store = useEventCalendarStoreContext();
@@ -22,6 +22,7 @@ export function useCalendarGridPlaceholderInRange(
     eventCalendarOccurrencePlaceholderSelectors.placeholderInTimeRange,
     start,
     end,
+    resourceId,
   );
 
   const originalEventId = isInternalDragOrResizePlaceholder(rawPlaceholder)
@@ -88,5 +89,10 @@ export namespace useCalendarGridPlaceholderInRange {
   export interface Parameters extends useEventOccurrencesWithTimelinePosition.ReturnValue {
     start: TemporalSupportedObject;
     end: TemporalSupportedObject;
+    /**
+     * When provided, only return a placeholder that belongs to this resource.
+     * Use this in resource-based views to prevent placeholders from appearing in all columns.
+     */
+    resourceId?: SchedulerResourceId | null;
   }
 }

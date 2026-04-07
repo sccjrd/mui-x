@@ -25,6 +25,7 @@ export const CalendarGridTimeColumn = React.forwardRef(function CalendarGridTime
     start,
     end,
     addPropertiesToDroppedEvent,
+    resourceId,
     // Props forwarded to the DOM element
     ...elementProps
   } = componentProps;
@@ -38,6 +39,7 @@ export const CalendarGridTimeColumn = React.forwardRef(function CalendarGridTime
     start,
     end,
     addPropertiesToDroppedEvent,
+    resourceId,
   });
 
   const eventCreationProps = useEventCreation(({ event, creationConfig }) => {
@@ -54,7 +56,7 @@ export const CalendarGridTimeColumn = React.forwardRef(function CalendarGridTime
       surfaceType: 'time-grid' as const,
       start: startDate,
       end: adapter.addMinutes(startDate, creationConfig.duration),
-      resourceId: null,
+      resourceId: resourceId ?? null,
     };
   });
 

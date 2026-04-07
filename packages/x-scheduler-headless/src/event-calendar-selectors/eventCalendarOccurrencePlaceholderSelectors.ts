@@ -1,6 +1,6 @@
 import { createSelector } from '@base-ui/utils/store';
 import type { EventCalendarState as State } from '../use-event-calendar';
-import { TemporalSupportedObject } from '../models';
+import { SchedulerResourceId, TemporalSupportedObject } from '../models';
 
 export const eventCalendarOccurrencePlaceholderSelectors = {
   placeholderInDayCell: createSelector(
@@ -31,11 +31,23 @@ export const eventCalendarOccurrencePlaceholderSelectors = {
     },
   ),
   placeholderInTimeRange: createSelector(
-    (state: State, start: TemporalSupportedObject, end: TemporalSupportedObject) => {
+    (
+      state: State,
+      start: TemporalSupportedObject,
+      end: TemporalSupportedObject,
+      resourceId?: SchedulerResourceId | null,
+    ) => {
       if (
         state.occurrencePlaceholder === null ||
         state.occurrencePlaceholder.surfaceType !== 'time-grid' ||
         state.occurrencePlaceholder.isHidden
+      ) {
+        return null;
+      }
+
+      if (
+        resourceId !== undefined &&
+        state.occurrencePlaceholder.resourceId !== resourceId
       ) {
         return null;
       }
@@ -58,13 +70,22 @@ export const eventCalendarOccurrencePlaceholderSelectors = {
     return state.adapter.isSameDay(day, placeholder.start);
   }),
   isCreatingInTimeRange: createSelector(
-    (state: State, dayStart: TemporalSupportedObject, dayEnd: TemporalSupportedObject) => {
+    (
+      state: State,
+      dayStart: TemporalSupportedObject,
+      dayEnd: TemporalSupportedObject,
+      resourceId?: SchedulerResourceId | null,
+    ) => {
       const placeholder = state.occurrencePlaceholder;
       if (placeholder?.surfaceType !== 'time-grid' || placeholder.type !== 'creation') {
         return false;
       }
 
       if (!state.adapter.isSameDay(placeholder.start, dayStart)) {
+        return false;
+      }
+
+      if (resourceId !== undefined && placeholder.resourceId !== resourceId) {
         return false;
       }
 

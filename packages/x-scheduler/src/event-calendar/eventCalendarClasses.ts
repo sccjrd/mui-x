@@ -224,6 +224,38 @@ export interface EventCalendarClasses extends EventDialogClasses {
   eventDragPreview: string;
   /** Styles applied to the standalone event element. */
   standaloneEvent: string;
+  /** Styles applied to the resource day time grid container element. */
+  resourceDayTimeGridContainer: string;
+  /** Styles applied to the resource day time grid header element. */
+  resourceDayTimeGridHeader: string;
+  /** Styles applied to the resource day time grid header cells wrapper element. */
+  resourceDayTimeGridHeaderCells: string;
+  /** Styles applied to resource day time grid header cell elements. */
+  resourceDayTimeGridHeaderCell: string;
+  /** Styles applied to the resource name inside the header cell. */
+  resourceDayTimeGridResourceName: string;
+  /** Styles applied to the resource day time grid body element. */
+  resourceDayTimeGridBody: string;
+  /** Styles applied to the resource day time grid inner wrapper element. */
+  resourceDayTimeGridInner: string;
+  /** Styles applied to the resource day time grid scrollable content element. */
+  resourceDayTimeGridScrollableContent: string;
+  /** Styles applied to the resource day time grid time axis element. */
+  resourceDayTimeGridTimeAxis: string;
+  /** Styles applied to resource day time grid time axis cell elements. */
+  resourceDayTimeGridTimeAxisCell: string;
+  /** Styles applied to resource day time grid time axis text elements. */
+  resourceDayTimeGridTimeAxisText: string;
+  /** Styles applied to the resource day time grid grid element. */
+  resourceDayTimeGridGrid: string;
+  /** Styles applied to resource day time grid column elements. */
+  resourceDayTimeGridColumn: string;
+  /** Styles applied to resource day time grid column interactive layer elements. */
+  resourceDayTimeGridColumnInteractiveLayer: string;
+  /** Styles applied to the resource day time grid current time indicator element. */
+  resourceDayTimeGridCurrentTimeIndicator: string;
+  /** Styles applied to the resource day time grid current time indicator circle element. */
+  resourceDayTimeGridCurrentTimeIndicatorCircle: string;
   /** Styles applied to the agenda view event list item elements. */
   agendaViewEventListItem: string;
   /** Styles applied to the side panel collapse element. */
@@ -381,6 +413,22 @@ export const eventCalendarClasses: EventCalendarClasses = generateUtilityClasses
     'moreEventsPopoverBody',
     'eventDragPreview',
     'standaloneEvent',
+    'resourceDayTimeGridContainer',
+    'resourceDayTimeGridHeader',
+    'resourceDayTimeGridHeaderCells',
+    'resourceDayTimeGridHeaderCell',
+    'resourceDayTimeGridResourceName',
+    'resourceDayTimeGridBody',
+    'resourceDayTimeGridInner',
+    'resourceDayTimeGridScrollableContent',
+    'resourceDayTimeGridTimeAxis',
+    'resourceDayTimeGridTimeAxisCell',
+    'resourceDayTimeGridTimeAxisText',
+    'resourceDayTimeGridGrid',
+    'resourceDayTimeGridColumn',
+    'resourceDayTimeGridColumnInteractiveLayer',
+    'resourceDayTimeGridCurrentTimeIndicator',
+    'resourceDayTimeGridCurrentTimeIndicatorCircle',
     'agendaViewEventListItem',
     'sidePanelCollapse',
     'sidePanelDivider',
@@ -513,6 +561,22 @@ const slots = {
   moreEventsPopoverBody: ['moreEventsPopoverBody'],
   eventDragPreview: ['eventDragPreview'],
   standaloneEvent: ['standaloneEvent'],
+  resourceDayTimeGridContainer: ['resourceDayTimeGridContainer'],
+  resourceDayTimeGridHeader: ['resourceDayTimeGridHeader'],
+  resourceDayTimeGridHeaderCells: ['resourceDayTimeGridHeaderCells'],
+  resourceDayTimeGridHeaderCell: ['resourceDayTimeGridHeaderCell'],
+  resourceDayTimeGridResourceName: ['resourceDayTimeGridResourceName'],
+  resourceDayTimeGridBody: ['resourceDayTimeGridBody'],
+  resourceDayTimeGridInner: ['resourceDayTimeGridInner'],
+  resourceDayTimeGridScrollableContent: ['resourceDayTimeGridScrollableContent'],
+  resourceDayTimeGridTimeAxis: ['resourceDayTimeGridTimeAxis'],
+  resourceDayTimeGridTimeAxisCell: ['resourceDayTimeGridTimeAxisCell'],
+  resourceDayTimeGridTimeAxisText: ['resourceDayTimeGridTimeAxisText'],
+  resourceDayTimeGridGrid: ['resourceDayTimeGridGrid'],
+  resourceDayTimeGridColumn: ['resourceDayTimeGridColumn'],
+  resourceDayTimeGridColumnInteractiveLayer: ['resourceDayTimeGridColumnInteractiveLayer'],
+  resourceDayTimeGridCurrentTimeIndicator: ['resourceDayTimeGridCurrentTimeIndicator'],
+  resourceDayTimeGridCurrentTimeIndicatorCircle: ['resourceDayTimeGridCurrentTimeIndicatorCircle'],
   agendaViewEventListItem: ['agendaViewEventListItem'],
   sidePanelCollapse: ['sidePanelCollapse'],
   sidePanelDivider: ['sidePanelDivider'],

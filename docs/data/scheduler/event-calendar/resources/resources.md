@@ -12,6 +12,13 @@ components: EventCalendar, EventCalendarPremium
 
 {{"component": "@mui/internal-core-docs/ComponentLinkHeader", "design": false}}
 
+## Resource Day View
+
+Use `StandaloneResourceDayView` to display a single day with one column per resource.
+This is ideal for room or asset booking scenarios where you need to see all resources side-by-side:
+
+{{"demo": "RoomBookings.js", "bg": "inline", "defaultCodeOpen": false}}
+
 ## Define resources
 
 Use the `resources` prop to define the list of resources the events can be associated to and the `resource` property on the event model to link an event to its resource:

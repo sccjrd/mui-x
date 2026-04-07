@@ -1,0 +1,6 @@
+<StandaloneResourceDayView
+  events={events}
+  onEventsChange={setEvents}
+  resources={rooms}
+  defaultVisibleDate={defaultVisibleDate}
+/>
