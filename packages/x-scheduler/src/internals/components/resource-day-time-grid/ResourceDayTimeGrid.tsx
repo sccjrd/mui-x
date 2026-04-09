@@ -362,6 +362,7 @@ export const ResourceDayTimeGrid = React.forwardRef(function ResourceDayTimeGrid
     defaultPinnedResourceIds,
     onPinnedResourceIdsChange,
     pinnedColumnsSectionSeparator = 'border-and-shadow',
+    loadingResourceIds = [],
     style,
     ...other
   } = props;
@@ -614,6 +615,7 @@ export const ResourceDayTimeGrid = React.forwardRef(function ResourceDayTimeGrid
                 const pinnedLeft = isPinned
                   ? FIXED_CELL_WIDTH + gridIndex * effectiveColumnWidth
                   : undefined;
+                const isLoadingColumn = loadingResourceIds.includes(resource.id);
                 return (
                   <ResourceTimeGridColumn
                     key={resource.id}
@@ -627,6 +629,7 @@ export const ResourceDayTimeGrid = React.forwardRef(function ResourceDayTimeGrid
                     pinnedLeft={pinnedLeft}
                     showSeparatorBorder={showSeparatorBorder}
                     showSeparatorShadow={showSeparatorShadow}
+                    isLoadingColumn={isLoadingColumn}
                   />
                 );
               })}

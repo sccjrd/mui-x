@@ -132,6 +132,7 @@ export function ResourceTimeGridColumn(props: ResourceTimeGridColumnProps) {
     pinnedLeft,
     showSeparatorBorder = false,
     showSeparatorShadow = false,
+    isLoadingColumn = false,
   } = props;
 
   const adapter = useAdapterContext();
@@ -187,6 +188,7 @@ export function ResourceTimeGridColumn(props: ResourceTimeGridColumnProps) {
         occurrences={occurrences}
         maxIndex={maxIndex}
         resourceId={resource.id}
+        isLoadingColumn={isLoadingColumn}
       />
     </ResourceDayTimeGridColumn>
   );
@@ -200,6 +202,7 @@ function ResourceColumnInteractiveLayer({
   occurrences,
   maxIndex,
   resourceId,
+  isLoadingColumn = false,
 }: {
   start: TemporalSupportedObject;
   end: TemporalSupportedObject;
@@ -208,6 +211,7 @@ function ResourceColumnInteractiveLayer({
   occurrences: useEventOccurrencesWithTimelinePosition.EventOccurrenceWithPosition[];
   maxIndex: number;
   resourceId: string;
+  isLoadingColumn?: boolean;
 }) {
   const store = useEventCalendarStoreContext();
   const { onOpen: startEditing } = useEventDialogContext();
@@ -229,7 +233,8 @@ function ResourceColumnInteractiveLayer({
     maxIndex,
     resourceId,
   });
-  const isLoading = useStore(store, schedulerOtherSelectors.isLoading);
+  const isGlobalLoading = useStore(store, schedulerOtherSelectors.isLoading);
+  const isLoading = isGlobalLoading || isLoadingColumn;
 
   React.useEffect(() => {
     if (!isCreatingAnEvent || !placeholder || !columnRef.current) {
@@ -279,4 +284,6 @@ interface ResourceTimeGridColumnProps {
   pinnedLeft?: number;
   showSeparatorBorder?: boolean;
   showSeparatorShadow?: boolean;
+  /** Whether this specific column is loading. Combined with the global isLoading. */
+  isLoadingColumn?: boolean;
 }

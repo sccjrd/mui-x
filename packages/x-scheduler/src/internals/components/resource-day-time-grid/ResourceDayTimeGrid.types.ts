@@ -63,4 +63,11 @@ export interface ExportedResourceDayTimeGridProps extends React.HTMLAttributes<H
    * @default 'border-and-shadow'
    */
   pinnedColumnsSectionSeparator?: 'border' | 'shadow' | 'border-and-shadow';
+  /**
+   * IDs of resource columns that are currently loading their data.
+   * Only those columns show a skeleton; already-loaded columns are unaffected.
+   * This is independent of the global `isLoading` state; both can be true simultaneously.
+   * @default []
+   */
+  loadingResourceIds?: string[];
 }
