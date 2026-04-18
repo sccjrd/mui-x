@@ -32,7 +32,7 @@ const EventCalendar = React.forwardRef(function EventCalendar<
   const store = useEventCalendar(parameters);
   const classes = useEventCalendarUtilityClasses(classesProp);
 
-  const { localeText, apiRef, ...other } = forwardedProps;
+  const { localeText, apiRef, renderDialog, ...other } = forwardedProps;
   useInitializeApiRef(store, apiRef);
 
   const mergedLocaleText = React.useMemo(
@@ -54,7 +54,7 @@ const EventCalendar = React.forwardRef(function EventCalendar<
     <SchedulerStoreContext.Provider value={store as any}>
       <EventCalendarStyledContext.Provider value={calendarStyledContextValue}>
         <EventDialogStyledContext.Provider value={dialogStyledContextValue}>
-          <EventDialogProvider>
+          <EventDialogProvider renderDialog={renderDialog}>
             <EventCalendarRoot className={className} {...other} ref={forwardedRef} />
           </EventDialogProvider>
         </EventDialogStyledContext.Provider>

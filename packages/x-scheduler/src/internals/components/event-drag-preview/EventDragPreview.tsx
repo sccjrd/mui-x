@@ -6,6 +6,7 @@ import { RenderDragPreviewParameters } from '@mui/x-scheduler-headless/models';
 import { schedulerEventSelectors } from '@mui/x-scheduler-headless/scheduler-selectors';
 import { useSchedulerStoreContext } from '@mui/x-scheduler-headless/use-scheduler-store-context';
 import { getPaletteVariants, PaletteName } from '../../utils/tokens';
+import { isHexColor, getHexColorVars } from '../../utils/hexColorUtils';
 import { EventCalendarStyledContext } from '../../../event-calendar/EventCalendarStyledContext';
 
 const EventDragPreviewRoot = styled('div', {
@@ -34,8 +35,14 @@ export function EventDragPreview(props: RenderDragPreviewParameters) {
     props.data.id,
   );
 
+  const hexStyle = color && isHexColor(color) ? getHexColorVars(color) : undefined;
+
   return (
-    <EventDragPreviewRoot className={styledContext?.classes.eventDragPreview} data-palette={color}>
+    <EventDragPreviewRoot
+      className={styledContext?.classes.eventDragPreview}
+      data-palette={hexStyle ? undefined : color}
+      style={hexStyle}
+    >
       {props.data.title}
     </EventDragPreviewRoot>
   );

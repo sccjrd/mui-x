@@ -306,7 +306,8 @@ export type SchedulerEventColor =
   | 'lime'
   | 'amber'
   | 'orange'
-  | 'grey';
+  | 'grey'
+  | (string & {}); // allows hex strings like '#A3C4F3'
 
 export type SchedulerEventSide = 'start' | 'end';
 

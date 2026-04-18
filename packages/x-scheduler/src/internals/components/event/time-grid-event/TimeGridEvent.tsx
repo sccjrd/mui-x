@@ -12,6 +12,7 @@ import { TimeGridEventProps } from './TimeGridEvent.types';
 import { EventDragPreview } from '../../../components/event-drag-preview';
 import { useFormatTime } from '../../../hooks/useFormatTime';
 import { getPaletteVariants, PaletteName } from '../../../utils/tokens';
+import { isHexColor, getHexColorVars } from '../../../utils/hexColorUtils';
 import { useEventCalendarStyledContext } from '../../../../event-calendar/EventCalendarStyledContext';
 
 const linesClampStyles = (maximumLines: number = 1): React.CSSProperties => ({
@@ -279,6 +280,8 @@ export const TimeGridEvent = React.forwardRef(function TimeGridEvent(
     classes,
   ]);
 
+  const hexStyle = color && isHexColor(color) ? getHexColorVars(color) : undefined;
+
   const sharedProps = {
     start: occurrence.displayTimezone.start,
     end: occurrence.displayTimezone.end,
@@ -286,6 +289,7 @@ export const TimeGridEvent = React.forwardRef(function TimeGridEvent(
     style: {
       '--first-index': occurrence.position.firstIndex,
       '--last-index': occurrence.position.lastIndex,
+      ...hexStyle,
     } as React.CSSProperties,
     ...other,
     className: clsx(className, occurrence.className),
@@ -298,7 +302,7 @@ export const TimeGridEvent = React.forwardRef(function TimeGridEvent(
         data-under-hour={isLessThan30Minutes || isBetween30and60Minutes || undefined}
         data-recurrent={isRecurring || undefined}
         data-under-fifteen-minutes={isLessThan15Minutes || undefined}
-        data-palette={color}
+        data-palette={hexStyle ? undefined : color}
         {...sharedProps}
         className={clsx(classes.timeGridEventPlaceholder, sharedProps.className)}
       >
@@ -316,7 +320,7 @@ export const TimeGridEvent = React.forwardRef(function TimeGridEvent(
       data-under-hour={isLessThan30Minutes || isBetween30and60Minutes || undefined}
       data-under-fifteen-minutes={isLessThan15Minutes || undefined}
       data-recurrent={isRecurring || undefined}
-      data-palette={color}
+      data-palette={hexStyle ? undefined : color}
       {...sharedProps}
       className={clsx(classes.timeGridEvent, sharedProps.className)}
     >

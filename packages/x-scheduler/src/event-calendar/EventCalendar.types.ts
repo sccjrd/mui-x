@@ -7,6 +7,7 @@ import {
 import type { SchedulerPublicAPI } from '@mui/x-scheduler-headless/internals';
 import { EventCalendarLocaleText } from '../models/translations';
 import type { EventCalendarClasses } from './eventCalendarClasses';
+import type { EventDialogRenderProps } from '../internals/components/event-dialog/EventDialog.types';
 
 export type EventCalendarApiRef<
   TEvent extends object = any,
@@ -34,4 +35,19 @@ export interface EventCalendarProps<TEvent extends object, TResource extends obj
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
   sx?: SxProps<Theme>;
+  /**
+   * Custom render function for the event dialog.
+   * When provided, the built-in dialog is replaced entirely.
+   * Receives the open state, the clicked occurrence, an anchor ref, and a close callback.
+   *
+   * @example
+   * ```tsx
+   * <EventCalendar
+   *   renderDialog={({ isOpen, occurrence, onClose }) => (
+   *     <MyModal open={isOpen} event={occurrence} onClose={onClose} />
+   *   )}
+   * />
+   * ```
+   */
+  renderDialog?: (props: EventDialogRenderProps) => React.ReactNode;
 }

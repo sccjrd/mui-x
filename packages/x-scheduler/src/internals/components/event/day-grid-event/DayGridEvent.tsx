@@ -21,6 +21,7 @@ import { isOccurrenceAllDayOrMultipleDay } from '../../../utils/event-utils';
 import { EventDragPreview } from '../../../components/event-drag-preview';
 import { useFormatTime } from '../../../hooks/useFormatTime';
 import { getPaletteVariants, PaletteName } from '../../../utils/tokens';
+import { isHexColor, getHexColorVars } from '../../../utils/hexColorUtils';
 import { useEventCalendarStyledContext } from '../../../../event-calendar/EventCalendarStyledContext';
 import { eventCalendarClasses } from '../../../../event-calendar/eventCalendarClasses';
 
@@ -317,6 +318,7 @@ export const DayGridEvent = React.forwardRef(function DayGridEvent(
     occurrence.resource,
   );
   const color = useStore(store, schedulerEventSelectors.color, occurrence.id);
+  const hexStyle = color && isHexColor(color) ? getHexColorVars(color) : undefined;
 
   // Feature hooks
   const formatTime = useFormatTime();
@@ -409,10 +411,11 @@ export const DayGridEvent = React.forwardRef(function DayGridEvent(
     end: occurrence.displayTimezone.end,
     ref: forwardedRef,
     'data-variant': variant,
-    'data-palette': color,
+    'data-palette': hexStyle ? undefined : color,
     style: {
       '--grid-row': occurrence.position.index,
       '--grid-column-span': occurrence.position.daySpan,
+      ...hexStyle,
       ...styleProp,
     } as React.CSSProperties,
     ...other,

@@ -17,8 +17,34 @@ export interface EventDialogProps extends DialogProps {
   onClose: () => void;
 }
 
+export interface EventDialogRenderProps {
+  /** Whether the dialog is currently open. */
+  isOpen: boolean;
+  /** The event occurrence that was clicked. */
+  occurrence: SchedulerRenderableEventOccurrence;
+  /** The DOM element of the event chip that was clicked (useful for anchoring a Popover). */
+  anchorRef: React.RefObject<HTMLElement | null>;
+  /** Call this to close the dialog. */
+  onClose: () => void;
+}
+
 export interface EventDialogProviderProps {
   children: React.ReactNode;
+  /**
+   * Custom render function for the event dialog.
+   * When provided, the built-in dialog is replaced entirely.
+   * Receives the open state, the clicked occurrence, an anchor ref, and a close callback.
+   *
+   * @example
+   * ```tsx
+   * <EventCalendar
+   *   renderDialog={({ isOpen, occurrence, onClose }) => (
+   *     <MyCustomModal open={isOpen} event={occurrence} onClose={onClose} />
+   *   )}
+   * />
+   * ```
+   */
+  renderDialog?: (props: EventDialogRenderProps) => React.ReactNode;
 }
 
 export interface EventDialogTriggerProps extends React.HTMLAttributes<HTMLElement> {

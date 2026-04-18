@@ -17,6 +17,7 @@ import { useAdapterContext } from '@mui/x-scheduler-headless/use-adapter-context
 import EventDialogHeader from './EventDialogHeader';
 import { useEventDialogStyledContext } from './EventDialogStyledContext';
 import { getRecurrenceLabel, hasProp } from './utils';
+import { isHexColor, getHexColorVars } from '../../utils/hexColorUtils';
 import { useFormatTime } from '../../hooks/useFormatTime';
 import { getPaletteVariants, PaletteName } from '../../utils/tokens';
 
@@ -171,13 +172,15 @@ export default function ReadonlyContent(props: ReadonlyContentProps) {
             {resource?.eventColor && resource.eventColor !== color && (
               <ResourceLegendColorDot
                 className={classes.eventDialogResourceLegendColor}
-                data-palette={resource.eventColor}
+                data-palette={isHexColor(resource.eventColor) ? undefined : resource.eventColor}
+                style={isHexColor(resource.eventColor) ? getHexColorVars(resource.eventColor) : undefined}
               />
             )}
 
             <ResourceLegendColorDot
               className={classes.eventDialogResourceLegendColor}
-              data-palette={color}
+              data-palette={color && isHexColor(color) ? undefined : color}
+              style={color && isHexColor(color) ? getHexColorVars(color) : undefined}
             />
           </EventDialogResourceLegendContainer>
           <EventDialogResourceTitle className={classes.eventDialogResourceTitle}>

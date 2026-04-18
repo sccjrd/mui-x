@@ -17,6 +17,7 @@ import { EventItemProps } from './EventItem.types';
 import { useFormatTime } from '../../../hooks/useFormatTime';
 import { useEventCalendarStyledContext } from '../../../../event-calendar/EventCalendarStyledContext';
 import { getPaletteVariants, PaletteName } from '../../../utils/tokens';
+import { isHexColor, getHexColorVars } from '../../../utils/hexColorUtils';
 
 const EventItemCard = styled('div', {
   name: 'MuiEventCalendar',
@@ -184,6 +185,7 @@ export const EventItem = React.forwardRef(function EventItem(
     occurrence.resource,
   );
   const color = useStore(store, schedulerEventSelectors.color, occurrence.id);
+  const hexStyle = color && isHexColor(color) ? getHexColorVars(color) : undefined;
   const isRecurring = useStore(store, schedulerEventSelectors.isRecurring, occurrence.id);
 
   const formatTime = useFormatTime();
@@ -290,10 +292,11 @@ export const EventItem = React.forwardRef(function EventItem(
       ref={forwardedRef}
       id={id}
       data-variant={variant}
-      data-palette={color}
+      data-palette={hexStyle ? undefined : color}
       data-editing={isEditing || undefined}
       aria-labelledby={`${ariaLabelledBy} ${id}`}
       {...other}
+      style={{ ...(other as any).style, ...hexStyle }}
       className={clsx(className, classes.eventItemCard, occurrence.className)}
     >
       <EventItemCardWrapper className={classes.eventItemCardWrapper} data-variant={variant}>

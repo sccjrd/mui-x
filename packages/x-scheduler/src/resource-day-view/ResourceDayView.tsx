@@ -56,10 +56,12 @@ export const StandaloneResourceDayView = React.forwardRef(function StandaloneRes
     typeof props
   >(props);
 
+  const { renderDialog, ...restForwardedProps } = forwardedProps;
+
   return (
     <EventCalendarProvider {...parameters}>
-      <EventDialogProvider>
-        <ResourceDayView ref={forwardedRef} {...forwardedProps} />
+      <EventDialogProvider renderDialog={renderDialog}>
+        <ResourceDayView ref={forwardedRef} {...restForwardedProps} />
       </EventDialogProvider>
     </EventCalendarProvider>
   );

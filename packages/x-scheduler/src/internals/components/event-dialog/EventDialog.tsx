@@ -161,22 +161,26 @@ export const EventDialogContent = React.forwardRef(function EventDialogContent(
 });
 
 export function EventDialogProvider(props: EventDialogProviderProps) {
-  const { children, ...other } = props;
+  const { children, renderDialog, ...other } = props;
   const store = useSchedulerStoreContext();
   const isScopeDialogOpen = useStore(store, schedulerOtherSelectors.isScopeDialogOpen);
   const showRecurrence = useStore(store, schedulerOtherSelectors.areRecurringEventsAvailable);
 
   return (
     <EventDialog.Provider
-      render={({ isOpen, anchorRef, data: occurrence, onClose }) => (
-        <EventDialogContent
-          open={isOpen}
-          anchorRef={anchorRef}
-          occurrence={occurrence}
-          onClose={onClose}
-          {...other}
-        />
-      )}
+      render={({ isOpen, anchorRef, data: occurrence, onClose }) =>
+        renderDialog ? (
+          renderDialog({ isOpen, occurrence, anchorRef, onClose })
+        ) : (
+          <EventDialogContent
+            open={isOpen}
+            anchorRef={anchorRef}
+            occurrence={occurrence}
+            onClose={onClose}
+            {...other}
+          />
+        )
+      }
       onOpen={(occurrence) => {
         store.setEditedEventId(occurrence.id);
       }}
