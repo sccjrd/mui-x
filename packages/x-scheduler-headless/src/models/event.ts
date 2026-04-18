@@ -162,6 +162,15 @@ export interface SchedulerProcessedEvent extends SchedulerProcessedEventBase {
    * If not defined, the event is resizable if the `areEventsResizable` property is enabled.
    */
   resizable?: boolean | SchedulerEventSide;
+
+  /**
+   * When `true`, forces the recurring icon to appear on the event slot
+   * without having to define a full `rrule`.
+   * Useful when events are managed externally and you want to signal
+   * recurrence visually.
+   * @default false
+   */
+  recurrent?: boolean;
 }
 
 /**
@@ -261,6 +270,14 @@ export interface SchedulerEvent {
    * A custom class name to apply to the event element.
    */
   className?: string;
+  /**
+   * When `true`, forces the recurring icon to appear on the event slot
+   * without having to define a full `rrule`.
+   * Useful when events are managed externally and you want to signal
+   * recurrence visually.
+   * @default false
+   */
+  recurrent?: boolean;
 }
 
 /**

@@ -61,5 +61,6 @@ export function processEvent(
     draggable: model.draggable,
     resizable: model.resizable,
     className: model.className,
+    recurrent: model.recurrent,
   };
 }

@@ -181,7 +181,7 @@ export const schedulerEventSelectors = {
     processedEventSelector,
     (state: State) => state.plan,
     (event, plan, _eventId: SchedulerEventId) =>
-      plan === 'premium' && Boolean(event?.dataTimezone.rrule),
+      Boolean(event?.recurrent) || (plan === 'premium' && Boolean(event?.dataTimezone.rrule)),
   ),
 };
 
