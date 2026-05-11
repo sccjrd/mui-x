@@ -1,5 +1,5 @@
 {
-  "name": "@mui/x-scheduler-headless-premium",
+  "name": "@usi-inside-tmp/x-scheduler-headless-premium",
   "version": "9.0.0-alpha.0",
   "description": "The Premium plan edition of the headless version of the scheduler components (MUI X).",
   "license": "SEE LICENSE IN LICENSE",
@@ -50,8 +50,8 @@
     "@babel/runtime": "catalog:",
     "@base-ui/react": "catalog:",
     "@base-ui/utils": "catalog:",
-    "@mui/x-internals": "workspace:^",
-    "@mui/x-scheduler-headless": "workspace:^",
+    "@usi-inside-tmp/x-internals": "workspace:^",
+    "@usi-inside-tmp/x-scheduler-headless": "workspace:^",
     "prop-types": "catalog:"
   },
   "peerDependencies": {
@@ -72,6 +72,6 @@
     "node": ">=14.0.0"
   },
   "imports": {
-    "#formatErrorMessage": "@mui/x-internals/formatErrorMessage"
+    "#formatErrorMessage": "@usi-inside-tmp/x-internals/formatErrorMessage"
   }
 }

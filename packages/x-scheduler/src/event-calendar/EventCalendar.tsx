@@ -5,9 +5,9 @@ import { useThemeProps } from '@mui/material/styles';
 import {
   useEventCalendar,
   useExtractEventCalendarParameters,
-} from '@mui/x-scheduler-headless/use-event-calendar';
-import { SchedulerStoreContext } from '@mui/x-scheduler-headless/use-scheduler-store-context';
-import { useInitializeApiRef } from '@mui/x-scheduler-headless/internals';
+} from '@usi-inside-tmp/x-scheduler-headless/use-event-calendar';
+import { SchedulerStoreContext } from '@usi-inside-tmp/x-scheduler-headless/use-scheduler-store-context';
+import { useInitializeApiRef } from '@usi-inside-tmp/x-scheduler-headless/internals';
 import { EventCalendarProps } from './EventCalendar.types';
 import { EventDialogProvider } from '../internals/components/event-dialog';
 import { useEventCalendarUtilityClasses } from './eventCalendarClasses';

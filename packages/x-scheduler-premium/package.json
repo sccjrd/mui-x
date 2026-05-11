@@ -1,5 +1,5 @@
 {
-  "name": "@mui/x-scheduler-premium",
+  "name": "@usi-inside-tmp/x-scheduler-premium",
   "version": "9.0.0-alpha.1",
   "description": "The Premium plan edition of the scheduler components (MUI X).",
   "license": "SEE LICENSE IN LICENSE",
@@ -51,11 +51,11 @@
     "@base-ui/react": "catalog:",
     "@base-ui/utils": "catalog:",
     "@mui/utils": "catalog:",
-    "@mui/x-internals": "workspace:^",
+    "@usi-inside-tmp/x-internals": "workspace:^",
     "@mui/x-license": "workspace:^",
-    "@mui/x-scheduler": "workspace:^",
-    "@mui/x-scheduler-headless": "workspace:^",
-    "@mui/x-scheduler-headless-premium": "workspace:^",
+    "@usi-inside-tmp/x-scheduler": "workspace:^",
+    "@usi-inside-tmp/x-scheduler-headless": "workspace:^",
+    "@usi-inside-tmp/x-scheduler-headless-premium": "workspace:^",
     "clsx": "catalog:",
     "prop-types": "catalog:"
   },
@@ -90,6 +90,6 @@
     "node": ">=14.0.0"
   },
   "imports": {
-    "#formatErrorMessage": "@mui/x-internals/formatErrorMessage"
+    "#formatErrorMessage": "@usi-inside-tmp/x-internals/formatErrorMessage"
   }
 }

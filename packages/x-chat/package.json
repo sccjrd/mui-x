@@ -49,7 +49,7 @@
     "@babel/runtime": "catalog:",
     "@mui/utils": "catalog:",
     "@mui/x-chat-headless": "workspace:*",
-    "@mui/x-internals": "workspace:*",
+    "@usi-inside-tmp/x-internals": "workspace:*",
     "clsx": "catalog:",
     "prop-types": "catalog:"
   },
@@ -86,6 +86,6 @@
     "node": ">=14.0.0"
   },
   "imports": {
-    "#formatErrorMessage": "@mui/x-internals/formatErrorMessage"
+    "#formatErrorMessage": "@usi-inside-tmp/x-internals/formatErrorMessage"
   }
 }

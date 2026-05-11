@@ -33,6 +33,10 @@ test-results
 CLAUDE.local.md
 AGENTS.local.md
 
+.env
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.npmrc

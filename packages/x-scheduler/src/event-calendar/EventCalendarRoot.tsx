@@ -10,8 +10,8 @@ import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
 import {
   eventCalendarPreferenceSelectors,
   eventCalendarViewSelectors,
-} from '@mui/x-scheduler-headless/event-calendar-selectors';
-import { useEventCalendarStoreContext } from '@mui/x-scheduler-headless/use-event-calendar-store-context';
+} from '@usi-inside-tmp/x-scheduler-headless/event-calendar-selectors';
+import { useEventCalendarStoreContext } from '@usi-inside-tmp/x-scheduler-headless/use-event-calendar-store-context';
 import { ErrorContainer } from '../internals/components/error-container';
 import { WeekView } from '../week-view/WeekView';
 import { AgendaView } from '../agenda-view';

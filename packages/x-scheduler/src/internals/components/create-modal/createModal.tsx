@@ -1,7 +1,7 @@
 'use client';
 import * as React from 'react';
 import { useStableCallback } from '@base-ui/utils/useStableCallback';
-import { EventManager } from '@mui/x-internals/EventManager';
+import { EventManager } from '@usi-inside-tmp/x-internals/EventManager';
 import {
   ContextValue,
   CreateModalConfig,

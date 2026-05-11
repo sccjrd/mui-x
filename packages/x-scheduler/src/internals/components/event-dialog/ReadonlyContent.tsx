@@ -5,15 +5,15 @@ import { useStore } from '@base-ui/utils/store';
 import { styled } from '@mui/material/styles';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import { SchedulerRenderableEventOccurrence } from '@mui/x-scheduler-headless/models';
-import { useSchedulerStoreContext } from '@mui/x-scheduler-headless/use-scheduler-store-context';
+import { SchedulerRenderableEventOccurrence } from '@usi-inside-tmp/x-scheduler-headless/models';
+import { useSchedulerStoreContext } from '@usi-inside-tmp/x-scheduler-headless/use-scheduler-store-context';
 import {
   schedulerEventSelectors,
   schedulerOtherSelectors,
   schedulerRecurringEventSelectors,
   schedulerResourceSelectors,
-} from '@mui/x-scheduler-headless/scheduler-selectors';
-import { useAdapterContext } from '@mui/x-scheduler-headless/use-adapter-context';
+} from '@usi-inside-tmp/x-scheduler-headless/scheduler-selectors';
+import { useAdapterContext } from '@usi-inside-tmp/x-scheduler-headless/use-adapter-context';
 import EventDialogHeader from './EventDialogHeader';
 import { useEventDialogStyledContext } from './EventDialogStyledContext';
 import { getRecurrenceLabel, hasProp } from './utils';
@@ -173,7 +173,9 @@ export default function ReadonlyContent(props: ReadonlyContentProps) {
               <ResourceLegendColorDot
                 className={classes.eventDialogResourceLegendColor}
                 data-palette={isHexColor(resource.eventColor) ? undefined : resource.eventColor}
-                style={isHexColor(resource.eventColor) ? getHexColorVars(resource.eventColor) : undefined}
+                style={
+                  isHexColor(resource.eventColor) ? getHexColorVars(resource.eventColor) : undefined
+                }
               />
             )}
 

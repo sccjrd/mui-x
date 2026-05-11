@@ -1,8 +1,8 @@
 import { Store } from '@base-ui/utils/store';
 import { EMPTY_OBJECT } from '@base-ui/utils/empty';
 // TODO: Use the Base UI warning utility once it supports cleanup in tests.
-import { warnOnce } from '@mui/x-internals/warning';
-import { EventManager } from '@mui/x-internals/EventManager';
+import { warnOnce } from '@usi-inside-tmp/x-internals/warning';
+import { EventManager } from '@usi-inside-tmp/x-internals/EventManager';
 import {
   SchedulerEventId,
   SchedulerOccurrencePlaceholder,

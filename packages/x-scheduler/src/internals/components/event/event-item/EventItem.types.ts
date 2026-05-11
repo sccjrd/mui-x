@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { SchedulerEventOccurrence, SchedulerProcessedDate } from '@mui/x-scheduler-headless/models';
+import { SchedulerEventOccurrence, SchedulerProcessedDate } from '@usi-inside-tmp/x-scheduler-headless/models';
 
 export interface EventItemProps extends React.HTMLAttributes<HTMLDivElement> {
   /**

@@ -1,6 +1,6 @@
 import { SxProps } from '@mui/system/styleFunctionSx';
 import { Theme } from '@mui/material/styles';
-import { EventCalendarParameters } from '@mui/x-scheduler-headless/use-event-calendar';
+import { EventCalendarParameters } from '@usi-inside-tmp/x-scheduler-headless/use-event-calendar';
 import { ExportedResourceDayTimeGridProps } from '../internals/components/resource-day-time-grid/ResourceDayTimeGrid.types';
 import type { EventDialogRenderProps } from '../internals/components/event-dialog/EventDialog.types';
 

@@ -16,12 +16,12 @@ import {
   CalendarView,
   EventCalendarPreferences,
   EventCalendarPreferencesMenuConfig,
-} from '@mui/x-scheduler-headless/models';
-import { useEventCalendarStoreContext } from '@mui/x-scheduler-headless/use-event-calendar-store-context';
+} from '@usi-inside-tmp/x-scheduler-headless/models';
+import { useEventCalendarStoreContext } from '@usi-inside-tmp/x-scheduler-headless/use-event-calendar-store-context';
 import {
   eventCalendarPreferenceSelectors,
   eventCalendarViewSelectors,
-} from '@mui/x-scheduler-headless/event-calendar-selectors';
+} from '@usi-inside-tmp/x-scheduler-headless/event-calendar-selectors';
 import clsx from 'clsx';
 import { useEventCalendarStyledContext } from '../../EventCalendarStyledContext';
 

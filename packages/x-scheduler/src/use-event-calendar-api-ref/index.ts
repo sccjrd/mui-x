@@ -1,1 +1,1 @@
-export { useEventCalendarApiRef } from '@mui/x-scheduler-headless/use-event-calendar-api-ref';
+export { useEventCalendarApiRef } from '@usi-inside-tmp/x-scheduler-headless/use-event-calendar-api-ref';

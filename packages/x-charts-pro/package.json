@@ -38,7 +38,7 @@
     "@mui/x-charts": "workspace:^",
     "@mui/x-charts-vendor": "workspace:^",
     "@mui/x-internal-gestures": "workspace:^",
-    "@mui/x-internals": "workspace:^",
+    "@usi-inside-tmp/x-internals": "workspace:^",
     "@mui/x-license": "workspace:^",
     "clsx": "catalog:",
     "prop-types": "catalog:"
@@ -80,6 +80,6 @@
     "./*": "./src/*/index.ts"
   },
   "imports": {
-    "#formatErrorMessage": "@mui/x-internals/formatErrorMessage"
+    "#formatErrorMessage": "@usi-inside-tmp/x-internals/formatErrorMessage"
   }
 }

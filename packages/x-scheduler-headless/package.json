@@ -1,5 +1,5 @@
 {
-  "name": "@mui/x-scheduler-headless",
+  "name": "@usi-inside-tmp/x-scheduler-headless",
   "version": "9.0.0-alpha.0",
   "description": "The community edition of the headless version of the scheduler components (MUI X).",
   "license": "MIT",
@@ -41,8 +41,9 @@
   },
   "sideEffects": false,
   "publishConfig": {
-    "access": "public",
-    "directory": "build"
+    "access": "restricted",
+    "directory": "build",
+    "registry": "https://artifacts.usi.ch/r/usi-inside-fe-temp/"
   },
   "keywords": [
     "react",
@@ -75,7 +76,7 @@
     "@floating-ui/react": "^0.27.16",
     "@floating-ui/react-dom": "^2.1.6",
     "@floating-ui/utils": "^0.2.10",
-    "@mui/x-internals": "workspace:^",
+    "@usi-inside-tmp/x-internals": "workspace:^",
     "date-fns": "catalog:",
     "prop-types": "catalog:",
     "use-sync-external-store": "catalog:"
@@ -96,6 +97,6 @@
     "node": ">=14.0.0"
   },
   "imports": {
-    "#formatErrorMessage": "@mui/x-internals/formatErrorMessage"
+    "#formatErrorMessage": "@usi-inside-tmp/x-internals/formatErrorMessage"
   }
 }

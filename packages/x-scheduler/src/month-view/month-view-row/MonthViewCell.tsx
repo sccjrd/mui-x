@@ -4,19 +4,19 @@ import { styled } from '@mui/material/styles';
 import { useStore } from '@base-ui/utils/store';
 import Button from '@mui/material/Button';
 import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
-import { isWeekend } from '@mui/x-scheduler-headless/use-adapter';
-import { useAdapterContext } from '@mui/x-scheduler-headless/use-adapter-context';
-import { CalendarGrid } from '@mui/x-scheduler-headless/calendar-grid';
-import { useEventCalendarStoreContext } from '@mui/x-scheduler-headless/use-event-calendar-store-context';
+import { isWeekend } from '@usi-inside-tmp/x-scheduler-headless/use-adapter';
+import { useAdapterContext } from '@usi-inside-tmp/x-scheduler-headless/use-adapter-context';
+import { CalendarGrid } from '@usi-inside-tmp/x-scheduler-headless/calendar-grid';
+import { useEventCalendarStoreContext } from '@usi-inside-tmp/x-scheduler-headless/use-event-calendar-store-context';
 import {
   eventCalendarOccurrencePlaceholderSelectors,
   eventCalendarViewSelectors,
-} from '@mui/x-scheduler-headless/event-calendar-selectors';
+} from '@usi-inside-tmp/x-scheduler-headless/event-calendar-selectors';
 import {
   schedulerNowSelectors,
   schedulerOtherSelectors,
-} from '@mui/x-scheduler-headless/scheduler-selectors';
-import { useEventOccurrencesWithDayGridPosition } from '@mui/x-scheduler-headless/use-event-occurrences-with-day-grid-position';
+} from '@usi-inside-tmp/x-scheduler-headless/scheduler-selectors';
+import { useEventOccurrencesWithDayGridPosition } from '@usi-inside-tmp/x-scheduler-headless/use-event-occurrences-with-day-grid-position';
 import { DayGridEvent } from '../../internals/components/event/day-grid-event/DayGridEvent';
 import { MoreEventsPopoverTrigger } from '../../internals/components/more-events-popover/MoreEventsPopover';
 import { formatMonthAndDayOfMonth } from '../../internals/utils/date-utils';

@@ -45,7 +45,7 @@
   "dependencies": {
     "@babel/runtime": "catalog:",
     "@mui/utils": "catalog:",
-    "@mui/x-internals": "workspace:^",
+    "@usi-inside-tmp/x-internals": "workspace:^",
     "@mui/x-virtualizer": "workspace:*",
     "clsx": "catalog:",
     "prop-types": "catalog:",
@@ -89,6 +89,6 @@
     "./*": "./src/*/index.ts"
   },
   "imports": {
-    "#formatErrorMessage": "@mui/x-internals/formatErrorMessage"
+    "#formatErrorMessage": "@usi-inside-tmp/x-internals/formatErrorMessage"
   }
 }

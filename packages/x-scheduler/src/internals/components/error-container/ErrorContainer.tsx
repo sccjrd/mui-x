@@ -5,8 +5,8 @@ import { styled } from '@mui/material/styles';
 import { useStore } from '@base-ui/utils/store';
 import Alert from '@mui/material/Alert';
 import Typography from '@mui/material/Typography';
-import { useEventCalendarStoreContext } from '@mui/x-scheduler-headless/use-event-calendar-store-context';
-import { schedulerOtherSelectors } from '@mui/x-scheduler-headless/scheduler-selectors';
+import { useEventCalendarStoreContext } from '@usi-inside-tmp/x-scheduler-headless/use-event-calendar-store-context';
+import { schedulerOtherSelectors } from '@usi-inside-tmp/x-scheduler-headless/scheduler-selectors';
 import { useEventCalendarStyledContext } from '../../../event-calendar/EventCalendarStyledContext';
 
 export interface ErrorContainerProps {

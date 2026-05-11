@@ -1,7 +1,7 @@
 'use client';
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
-import { EventCalendarProvider as HeadlessEventCalendarProvider } from '@mui/x-scheduler-headless/event-calendar-provider';
+import { EventCalendarProvider as HeadlessEventCalendarProvider } from '@usi-inside-tmp/x-scheduler-headless/event-calendar-provider';
 import { eventCalendarClasses } from '../../event-calendar/eventCalendarClasses';
 import { EventCalendarStyledContext } from '../../event-calendar/EventCalendarStyledContext';
 import { EventDialogStyledContext } from './event-dialog/EventDialogStyledContext';

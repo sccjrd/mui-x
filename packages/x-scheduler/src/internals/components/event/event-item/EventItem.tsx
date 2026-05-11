@@ -9,10 +9,10 @@ import {
   schedulerEventSelectors,
   schedulerOtherSelectors,
   schedulerResourceSelectors,
-} from '@mui/x-scheduler-headless/scheduler-selectors';
-import { useAdapterContext } from '@mui/x-scheduler-headless/use-adapter-context';
-import { useEventCalendarStoreContext } from '@mui/x-scheduler-headless/use-event-calendar-store-context';
-import { SchedulerEventOccurrence } from '@mui/x-scheduler-headless/models';
+} from '@usi-inside-tmp/x-scheduler-headless/scheduler-selectors';
+import { useAdapterContext } from '@usi-inside-tmp/x-scheduler-headless/use-adapter-context';
+import { useEventCalendarStoreContext } from '@usi-inside-tmp/x-scheduler-headless/use-event-calendar-store-context';
+import { SchedulerEventOccurrence } from '@usi-inside-tmp/x-scheduler-headless/models';
 import { EventItemProps } from './EventItem.types';
 import { useFormatTime } from '../../../hooks/useFormatTime';
 import { useEventCalendarStyledContext } from '../../../../event-calendar/EventCalendarStyledContext';

@@ -21,13 +21,13 @@ import {
   RecurringEventByDayValue,
   RecurringEventWeekDayCode,
   SchedulerRenderableEventOccurrence,
-} from '@mui/x-scheduler-headless/models';
-import { useSchedulerStoreContext } from '@mui/x-scheduler-headless/use-scheduler-store-context';
-import { useAdapterContext } from '@mui/x-scheduler-headless/use-adapter-context';
+} from '@usi-inside-tmp/x-scheduler-headless/models';
+import { useSchedulerStoreContext } from '@usi-inside-tmp/x-scheduler-headless/use-scheduler-store-context';
+import { useAdapterContext } from '@usi-inside-tmp/x-scheduler-headless/use-adapter-context';
 import {
   schedulerEventSelectors,
   schedulerRecurringEventSelectors,
-} from '@mui/x-scheduler-headless/scheduler-selectors';
+} from '@usi-inside-tmp/x-scheduler-headless/scheduler-selectors';
 import { useEventDialogStyledContext } from './EventDialogStyledContext';
 import { ControlledValue, EndsSelection, getEndsSelectionFromRRule } from './utils';
 import { formatDayOfMonthAndMonthFullLetter } from '../../utils/date-utils';

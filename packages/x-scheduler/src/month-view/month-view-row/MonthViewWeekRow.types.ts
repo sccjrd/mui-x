@@ -1,5 +1,5 @@
-import { useEventOccurrencesGroupedByDay } from '@mui/x-scheduler-headless/use-event-occurrences-grouped-by-day';
-import { SchedulerProcessedDate } from '@mui/x-scheduler-headless/models';
+import { useEventOccurrencesGroupedByDay } from '@usi-inside-tmp/x-scheduler-headless/use-event-occurrences-grouped-by-day';
+import { SchedulerProcessedDate } from '@usi-inside-tmp/x-scheduler-headless/models';
 
 export interface MonthViewWeekRowProps {
   maxEvents: number;

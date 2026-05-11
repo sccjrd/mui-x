@@ -2,9 +2,9 @@
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import { Store, useStore } from '@base-ui/utils/store';
-import { RenderDragPreviewParameters } from '@mui/x-scheduler-headless/models';
-import { schedulerEventSelectors } from '@mui/x-scheduler-headless/scheduler-selectors';
-import { useSchedulerStoreContext } from '@mui/x-scheduler-headless/use-scheduler-store-context';
+import { RenderDragPreviewParameters } from '@usi-inside-tmp/x-scheduler-headless/models';
+import { schedulerEventSelectors } from '@usi-inside-tmp/x-scheduler-headless/scheduler-selectors';
+import { useSchedulerStoreContext } from '@usi-inside-tmp/x-scheduler-headless/use-scheduler-store-context';
 import { getPaletteVariants, PaletteName } from '../../utils/tokens';
 import { isHexColor, getHexColorVars } from '../../utils/hexColorUtils';
 import { EventCalendarStyledContext } from '../../../event-calendar/EventCalendarStyledContext';

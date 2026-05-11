@@ -39,7 +39,7 @@
     "@mui/utils": "catalog:",
     "@mui/x-charts-vendor": "workspace:^",
     "@mui/x-internal-gestures": "workspace:^",
-    "@mui/x-internals": "workspace:^",
+    "@usi-inside-tmp/x-internals": "workspace:^",
     "bezier-easing": "^2.1.0",
     "clsx": "catalog:",
     "prop-types": "catalog:",
@@ -82,6 +82,6 @@
     "./moduleAugmentation/*": "./src/moduleAugmentation/*.ts"
   },
   "imports": {
-    "#formatErrorMessage": "@mui/x-internals/formatErrorMessage"
+    "#formatErrorMessage": "@usi-inside-tmp/x-internals/formatErrorMessage"
   }
 }

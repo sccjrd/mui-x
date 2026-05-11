@@ -1,4 +1,4 @@
-import { CalendarView } from '@mui/x-scheduler-headless/models';
+import { CalendarView } from '@usi-inside-tmp/x-scheduler-headless/models';
 
 export interface EventDialogLocaleText {
   // EventDialog

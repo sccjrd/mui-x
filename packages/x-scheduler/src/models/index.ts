@@ -9,4 +9,4 @@ export type {
   SchedulerProcessedEventRecurrenceRule,
   SchedulerEventRecurrenceRule,
   SchedulerOccurrencePlaceholderExternalDragData,
-} from '@mui/x-scheduler-headless/models';
+} from '@usi-inside-tmp/x-scheduler-headless/models';

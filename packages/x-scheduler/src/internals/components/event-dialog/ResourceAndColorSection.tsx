@@ -12,13 +12,16 @@ import FormControl from '@mui/material/FormControl';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 
-import { EVENT_COLORS } from '@mui/x-scheduler-headless/constants';
-import { useSchedulerStoreContext } from '@mui/x-scheduler-headless/use-scheduler-store-context';
+import { EVENT_COLORS } from '@usi-inside-tmp/x-scheduler-headless/constants';
+import { useSchedulerStoreContext } from '@usi-inside-tmp/x-scheduler-headless/use-scheduler-store-context';
 import {
   schedulerOtherSelectors,
   schedulerResourceSelectors,
-} from '@mui/x-scheduler-headless/scheduler-selectors';
-import { SchedulerEventColor, SchedulerResourceId } from '@mui/x-scheduler-headless/models';
+} from '@usi-inside-tmp/x-scheduler-headless/scheduler-selectors';
+import {
+  SchedulerEventColor,
+  SchedulerResourceId,
+} from '@usi-inside-tmp/x-scheduler-headless/models';
 import { useStore } from '@base-ui/utils/store';
 import { getPaletteVariants, PaletteName } from '../../utils/tokens';
 import { useEventDialogStyledContext } from './EventDialogStyledContext';

@@ -3,17 +3,20 @@ import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
 import { createSelectorMemoized, useStore } from '@base-ui/utils/store';
-import { useResizeObserver } from '@mui/x-internals/useResizeObserver';
-import { EventCalendarViewConfig, SchedulerProcessedDate } from '@mui/x-scheduler-headless/models';
-import { getDayList } from '@mui/x-scheduler-headless/get-day-list';
-import { useAdapterContext } from '@mui/x-scheduler-headless/use-adapter-context';
-import { useEventCalendarView } from '@mui/x-scheduler-headless/use-event-calendar-view';
-import { useEventCalendarStoreContext } from '@mui/x-scheduler-headless/use-event-calendar-store-context';
-import type { EventCalendarState as State } from '@mui/x-scheduler-headless/use-event-calendar';
-import { eventCalendarPreferenceSelectors } from '@mui/x-scheduler-headless/event-calendar-selectors';
-import { CalendarGrid } from '@mui/x-scheduler-headless/calendar-grid';
-import { useEventOccurrencesGroupedByDay } from '@mui/x-scheduler-headless/use-event-occurrences-grouped-by-day';
-import { schedulerOtherSelectors } from '@mui/x-scheduler-headless/scheduler-selectors';
+import { useResizeObserver } from '@usi-inside-tmp/x-internals/useResizeObserver';
+import {
+  EventCalendarViewConfig,
+  SchedulerProcessedDate,
+} from '@usi-inside-tmp/x-scheduler-headless/models';
+import { getDayList } from '@usi-inside-tmp/x-scheduler-headless/get-day-list';
+import { useAdapterContext } from '@usi-inside-tmp/x-scheduler-headless/use-adapter-context';
+import { useEventCalendarView } from '@usi-inside-tmp/x-scheduler-headless/use-event-calendar-view';
+import { useEventCalendarStoreContext } from '@usi-inside-tmp/x-scheduler-headless/use-event-calendar-store-context';
+import type { EventCalendarState as State } from '@usi-inside-tmp/x-scheduler-headless/use-event-calendar';
+import { eventCalendarPreferenceSelectors } from '@usi-inside-tmp/x-scheduler-headless/event-calendar-selectors';
+import { CalendarGrid } from '@usi-inside-tmp/x-scheduler-headless/calendar-grid';
+import { useEventOccurrencesGroupedByDay } from '@usi-inside-tmp/x-scheduler-headless/use-event-occurrences-grouped-by-day';
+import { schedulerOtherSelectors } from '@usi-inside-tmp/x-scheduler-headless/scheduler-selectors';
 import clsx from 'clsx';
 import { MonthViewProps } from './MonthView.types';
 import MonthViewWeekRow from './month-view-row/MonthViewWeekRow';

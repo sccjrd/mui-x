@@ -4,15 +4,18 @@ import { styled } from '@mui/material/styles';
 import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
 import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
 import { useStore } from '@base-ui/utils/store';
-import { useEventOccurrencesGroupedByDay } from '@mui/x-scheduler-headless/use-event-occurrences-grouped-by-day';
-import { useEventOccurrencesWithDayGridPosition } from '@mui/x-scheduler-headless/use-event-occurrences-with-day-grid-position';
-import { eventCalendarViewSelectors } from '@mui/x-scheduler-headless/event-calendar-selectors';
-import { SchedulerEventOccurrence, SchedulerProcessedDate } from '@mui/x-scheduler-headless/models';
-import { isWeekend } from '@mui/x-scheduler-headless/use-adapter';
-import { useAdapterContext } from '@mui/x-scheduler-headless/use-adapter-context';
-import { CalendarGrid } from '@mui/x-scheduler-headless/calendar-grid';
-import { useEventCalendarStoreContext } from '@mui/x-scheduler-headless/use-event-calendar-store-context';
-import { schedulerNowSelectors } from '@mui/x-scheduler-headless/scheduler-selectors';
+import { useEventOccurrencesGroupedByDay } from '@usi-inside-tmp/x-scheduler-headless/use-event-occurrences-grouped-by-day';
+import { useEventOccurrencesWithDayGridPosition } from '@usi-inside-tmp/x-scheduler-headless/use-event-occurrences-with-day-grid-position';
+import { eventCalendarViewSelectors } from '@usi-inside-tmp/x-scheduler-headless/event-calendar-selectors';
+import {
+  SchedulerEventOccurrence,
+  SchedulerProcessedDate,
+} from '@usi-inside-tmp/x-scheduler-headless/models';
+import { isWeekend } from '@usi-inside-tmp/x-scheduler-headless/use-adapter';
+import { useAdapterContext } from '@usi-inside-tmp/x-scheduler-headless/use-adapter-context';
+import { CalendarGrid } from '@usi-inside-tmp/x-scheduler-headless/calendar-grid';
+import { useEventCalendarStoreContext } from '@usi-inside-tmp/x-scheduler-headless/use-event-calendar-store-context';
+import { schedulerNowSelectors } from '@usi-inside-tmp/x-scheduler-headless/scheduler-selectors';
 import clsx from 'clsx';
 import { DayTimeGridProps } from './DayTimeGrid.types';
 import { TimeGridColumn } from './TimeGridColumn';

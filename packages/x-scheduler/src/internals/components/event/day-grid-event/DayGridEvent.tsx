@@ -4,18 +4,18 @@ import clsx from 'clsx';
 import { styled } from '@mui/material/styles';
 import { createSelector, useStore } from '@base-ui/utils/store';
 import RepeatRounded from '@mui/icons-material/RepeatRounded';
-import { CalendarGrid } from '@mui/x-scheduler-headless/calendar-grid';
+import { CalendarGrid } from '@usi-inside-tmp/x-scheduler-headless/calendar-grid';
 import {
   SchedulerEventSide,
   SchedulerRenderableEventOccurrence,
-} from '@mui/x-scheduler-headless/models';
-import type { EventCalendarState } from '@mui/x-scheduler-headless/use-event-calendar';
+} from '@usi-inside-tmp/x-scheduler-headless/models';
+import type { EventCalendarState } from '@usi-inside-tmp/x-scheduler-headless/use-event-calendar';
 import {
   schedulerEventSelectors,
   schedulerResourceSelectors,
-} from '@mui/x-scheduler-headless/scheduler-selectors';
-import { useEventCalendarStoreContext } from '@mui/x-scheduler-headless/use-event-calendar-store-context';
-import { eventCalendarViewSelectors } from '@mui/x-scheduler-headless/event-calendar-selectors';
+} from '@usi-inside-tmp/x-scheduler-headless/scheduler-selectors';
+import { useEventCalendarStoreContext } from '@usi-inside-tmp/x-scheduler-headless/use-event-calendar-store-context';
+import { eventCalendarViewSelectors } from '@usi-inside-tmp/x-scheduler-headless/event-calendar-selectors';
 import { DayGridEventProps } from './DayGridEvent.types';
 import { isOccurrenceAllDayOrMultipleDay } from '../../../utils/event-utils';
 import { EventDragPreview } from '../../../components/event-drag-preview';
