@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  code-infra: https://raw.githubusercontent.com/mui/mui-public/cfec26dcd9b6fab27974319b37656fe2c8137b8b/.circleci/orbs/code-infra.yml
+  code-infra: https://raw.githubusercontent.com/mui/mui-public/a10a6b9731ae81fcaa0abaab456b986df1d57f8e/.circleci/orbs/code-infra.yml
 
 parameters:
   browserstack-force:
@@ -107,7 +107,7 @@ jobs:
     <<: *default-job
     executor:
       name: code-infra/mui-node-browser
-      playwright-img-version: v1.58.2-noble
+      playwright-img-version: v1.59.1-noble
     resource_class: large
     steps:
       - checkout
@@ -219,14 +219,14 @@ jobs:
     <<: *default-job
     executor:
       name: code-infra/mui-node-browser
-      playwright-img-version: v1.58.2-noble
+      playwright-img-version: v1.59.1-noble
     steps:
       - checkout
       - install-deps:
           react-version: << parameters.react-version >>
       - run:
           name: Build packages
-          command: pnpm release:build
+          command: pnpm release:build --concurrency 5
       - run:
           name: Run e2e tests
           command: pnpm test:e2e
@@ -234,7 +234,7 @@ jobs:
     <<: *default-job
     executor:
       name: code-infra/mui-node-browser
-      playwright-img-version: v1.58.2-noble
+      playwright-img-version: v1.59.1-noble
     steps:
       - checkout
       - install-deps
@@ -250,24 +250,14 @@ jobs:
       - install-deps:
           react-version: << parameters.react-version >>
       - run:
-          name: Prepare danger on PRs
-          command: pnpm danger ci
-          environment:
-            DANGER_COMMAND: prepareBundleSizeReport
-      - run:
           name: Build packages
           command: pnpm release:build
       - code-infra/upload-size-snapshot
-      - run:
-          name: Run danger on PRs
-          command: pnpm danger ci --fail-on-errors
-          environment:
-            DANGER_COMMAND: reportBundleSize
   test_regressions:
     <<: *default-job
     executor:
       name: code-infra/mui-node-browser
-      playwright-img-version: v1.58.2-noble
+      playwright-img-version: v1.59.1-noble
     steps:
       - checkout
       - install-deps:
@@ -284,6 +274,43 @@ jobs:
       - run:
           name: Upload screenshots to Argos CI
           command: pnpm test:argos
+  test_charts_benchmark:
+    <<: *default-job
+    executor:
+      name: code-infra/mui-node-browser
+      playwright-img-version: v1.59.1-noble
+    resource_class: medium
+    steps:
+      - checkout
+      - run:
+          name: Skip when no charts changes
+          command: |
+            if [ "$CIRCLE_BRANCH" = "master" ] || [ "$CIRCLE_BRANCH" = "next" ]; then
+              echo "On $CIRCLE_BRANCH; running benchmarks."
+              exit 0
+            fi
+            BASE="${BASE_BRANCH:-master}"
+            git fetch --no-tags --depth=50 origin "$BASE"
+            CHANGED=$(git diff --name-only "origin/$BASE...HEAD" -- \
+              'packages/x-charts*' \
+              'test/performance-charts' \
+              '.circleci/config.yml')
+            if [ -n "$CHANGED" ]; then
+              echo "Relevant changes detected; running benchmarks:"
+              echo "$CHANGED"
+              exit 0
+            fi
+            echo "No changes to packages/x-charts*, test/performance-charts, or CircleCI config; halting job."
+            circleci-agent step halt
+      - install-deps
+      - run:
+          name: Build charts packages
+          command: pnpm --filter "@mui/x-charts-premium..." build
+      - run:
+          name: Run charts benchmarks
+          environment:
+            BENCHMARK_UPLOAD: 'true'
+          command: pnpm test:charts-benchmark
 
 workflows:
   pipeline:
@@ -305,6 +332,8 @@ workflows:
       - test_regressions:
           <<: *default-context
       - test_package:
+          <<: *default-context
+      - test_charts_benchmark:
           <<: *default-context
   e2e-website:
     when:

@@ -1,3 +1,4 @@
+import CampaignIcon from '@mui/icons-material/Campaign';
 import type { MuiPage } from '@mui/internal-core-docs/MuiPage';
 import chartsComponentApi from './chartsApiPages';
 import chatComponentApi from './chatApiPages';
@@ -14,6 +15,21 @@ const schedulerPages: MuiPage[] = [
     children: [
       { pathname: '/x/react-scheduler', title: 'Overview' },
       { pathname: '/x/react-scheduler/quickstart' },
+      {
+        pathname: 'https://forms.gle/Ksbc91D3PcMiiK5x9',
+        title: 'Share your feedback',
+        icon: CampaignIcon,
+        linkProps: {
+          target: '_blank',
+          rel: 'noopener noreferrer',
+          sx: {
+            paddingLeft: 'calc(10px + (var(--_depth) + 1) * 13px - (var(--_expandable) * 21px))',
+            '& > span:first-of-type': {
+              order: 1,
+            },
+          },
+        },
+      },
       {
         pathname: '/x/react-scheduler/main-features',
         subheader: 'Main features',
@@ -58,7 +74,7 @@ const schedulerPages: MuiPage[] = [
           { pathname: '/x/react-scheduler/event-timeline/navigation' },
           { pathname: '/x/react-scheduler/event-timeline/drag-interactions' },
           { pathname: '/x/react-scheduler/event-timeline/editing' },
-          { pathname: '/x/react-scheduler/event-timeline/views' },
+          { pathname: '/x/react-scheduler/event-timeline/presets' },
           {
             pathname: '/x/react-scheduler/event-timeline/lazy-loading',
             planned: true,
@@ -703,10 +719,19 @@ const pages: MuiPage[] = [
             children: [
               { pathname: '/x/react-charts/accessibility' },
               { pathname: '/x/react-charts/animation' },
-              { pathname: '/x/react-charts/axis' },
+              {
+                pathname: '/x/react-charts/axis-root',
+                title: 'Axes',
+                children: [
+                  { pathname: '/x/react-charts/axis', title: 'Overview' },
+                  { pathname: '/x/react-charts/axis-ticks', title: 'Ticks and grid' },
+                  { pathname: '/x/react-charts/axis-customization', title: 'Customization' },
+                ],
+              },
               { pathname: '/x/react-charts/brush' },
               { pathname: '/x/react-charts/components', title: 'Custom components' },
               { pathname: '/x/react-charts/composition' },
+              { pathname: '/x/react-charts/dataset' },
               {
                 pathname: '/x/react-charts/data-grid-integration',
                 title: 'Data Grid integration',

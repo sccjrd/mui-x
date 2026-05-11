@@ -16,15 +16,15 @@ import {
   RecurringEventFrequency,
   SchedulerProcessedEventRecurrenceRule,
   SchedulerRenderableEventOccurrence,
-} from '@mui/x-scheduler-headless/models';
-import { useSchedulerStoreContext } from '@mui/x-scheduler-headless/use-scheduler-store-context';
-import { useAdapterContext } from '@mui/x-scheduler-headless/use-adapter-context';
+} from '@mui/x-scheduler-internals/models';
+import { useSchedulerStoreContext } from '@mui/x-scheduler-internals/use-scheduler-store-context';
+import { useAdapterContext } from '@mui/x-scheduler-internals/use-adapter-context';
 import {
   schedulerEventSelectors,
   schedulerOccurrencePlaceholderSelectors,
   schedulerOtherSelectors,
   schedulerRecurringEventSelectors,
-} from '@mui/x-scheduler-headless/scheduler-selectors';
+} from '@mui/x-scheduler-internals/scheduler-selectors';
 import { useEventDialogStyledContext } from './EventDialogStyledContext';
 import { computeRange, ControlledValue, hasProp, validateRange } from './utils';
 import EventDialogHeader from './EventDialogHeader';
@@ -100,7 +100,7 @@ export function FormContent(props: FormContentProps) {
 
   // Context hooks
   const adapter = useAdapterContext();
-  const { classes, localeText } = useEventDialogStyledContext();
+  const { schedulerId, classes, localeText } = useEventDialogStyledContext();
   const store = useSchedulerStoreContext();
 
   // Selector hooks
@@ -239,7 +239,7 @@ export function FormContent(props: FormContentProps) {
       <EventDialogForm onSubmit={handleSubmit} className={classes.eventDialogForm}>
         <EventDialogHeader onClose={onClose} dragHandlerRef={dragHandlerRef}>
           <span
-            id="event-dialog-title"
+            id={`${schedulerId}-event-dialog-title`}
             style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}
           >
             {occurrence.title}
@@ -265,13 +265,13 @@ export function FormContent(props: FormContentProps) {
           <EventDialogTabsContainer className={classes.eventDialogTabsContainer}>
             <EventDialogTabs value={tabValue} onChange={handleTabChange}>
               <Tab
-                id="general-tab"
+                id={`${schedulerId}-general-tab`}
                 className={classes.eventDialogTab}
                 label={localeText.generalTabLabel}
                 value="general"
               />
               <Tab
-                id="recurrence-tab"
+                id={`${schedulerId}-recurrence-tab`}
                 className={classes.eventDialogTab}
                 label={localeText.recurrenceTabLabel}
                 value="recurrence"

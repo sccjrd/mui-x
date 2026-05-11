@@ -4,15 +4,18 @@ import { styled } from '@mui/material/styles';
 import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
 import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
 import { useStore } from '@base-ui/utils/store';
-import { useEventOccurrencesGroupedByDay } from '@mui/x-scheduler-headless/use-event-occurrences-grouped-by-day';
-import { useEventOccurrencesWithDayGridPosition } from '@mui/x-scheduler-headless/use-event-occurrences-with-day-grid-position';
-import { eventCalendarViewSelectors } from '@mui/x-scheduler-headless/event-calendar-selectors';
-import { SchedulerEventOccurrence, SchedulerProcessedDate } from '@mui/x-scheduler-headless/models';
-import { isWeekend } from '@mui/x-scheduler-headless/use-adapter';
-import { useAdapterContext } from '@mui/x-scheduler-headless/use-adapter-context';
-import { CalendarGrid } from '@mui/x-scheduler-headless/calendar-grid';
-import { useEventCalendarStoreContext } from '@mui/x-scheduler-headless/use-event-calendar-store-context';
-import { schedulerNowSelectors } from '@mui/x-scheduler-headless/scheduler-selectors';
+import { useEventOccurrencesGroupedByDay } from '@mui/x-scheduler-internals/use-event-occurrences-grouped-by-day';
+import { useEventOccurrencesWithDayGridPosition } from '@mui/x-scheduler-internals/use-event-occurrences-with-day-grid-position';
+import { eventCalendarViewSelectors } from '@mui/x-scheduler-internals/event-calendar-selectors';
+import {
+  SchedulerEventOccurrence,
+  SchedulerProcessedDate,
+} from '@mui/x-scheduler-internals/models';
+import { isWeekend } from '@mui/x-scheduler-internals/use-adapter';
+import { useAdapterContext } from '@mui/x-scheduler-internals/use-adapter-context';
+import { CalendarGrid } from '@mui/x-scheduler-internals/calendar-grid';
+import { useEventCalendarStoreContext } from '@mui/x-scheduler-internals/use-event-calendar-store-context';
+import { schedulerNowSelectors } from '@mui/x-scheduler-internals/scheduler-selectors';
 import clsx from 'clsx';
 import { DayTimeGridProps } from './DayTimeGrid.types';
 import { TimeGridColumn } from './TimeGridColumn';
@@ -159,8 +162,13 @@ const DayTimeGridHeaderContent = styled('span', {
 const DayTimeGridHeaderCell = styled(CalendarGrid.HeaderCell, {
   name: 'MuiEventCalendar',
   slot: 'DayTimeGridHeaderCell',
-})({
+})(({ theme }) => ({
   display: 'flex',
+  '&:focus-visible': {
+    outline: `2px solid ${(theme.vars || theme).palette.primary.main}`,
+    outlineOffset: -2,
+    borderRadius: theme.shape.borderRadius,
+  },
   '&:last-of-type': {
     gridColumn: 'span 2',
   },
@@ -185,7 +193,7 @@ const DayTimeGridHeaderCell = styled(CalendarGrid.HeaderCell, {
       background: 'transparent',
     },
   },
-});
+}));
 
 const DayTimeGridHeaderButton = styled('button', {
   name: 'MuiEventCalendar',
@@ -321,7 +329,7 @@ export const DayTimeGrid = React.forwardRef(function DayTimeGrid(
 
   // Context hooks
   const adapter = useAdapterContext();
-  const { classes, localeText } = useEventCalendarStyledContext();
+  const { schedulerId, classes, localeText } = useEventCalendarStyledContext();
   const store = useEventCalendarStoreContext();
 
   // Ref hooks
@@ -417,7 +425,7 @@ export const DayTimeGrid = React.forwardRef(function DayTimeGrid(
                 className={classes.dayTimeGridHeaderButton}
                 type="button"
                 onClick={(event) => store.switchToDay(day.value, event)}
-                tabIndex={0}
+                tabIndex={-1}
               >
                 {renderHeaderContent(day)}
               </DayTimeGridHeaderButton>
@@ -440,7 +448,7 @@ export const DayTimeGrid = React.forwardRef(function DayTimeGrid(
       >
         <DayTimeGridAllDayEventsHeaderCell
           className={classes.dayTimeGridAllDayEventsHeaderCell}
-          id="DayTimeGridAllDayEventsHeaderCell"
+          id={`${schedulerId}-DayTimeGridAllDayEventsHeaderCell`}
           role="columnheader"
         >
           {localeText.allDay}
