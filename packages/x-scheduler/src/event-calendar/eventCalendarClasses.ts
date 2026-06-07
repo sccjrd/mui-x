@@ -6,8 +6,19 @@ import {
   eventDialogClassKeys,
   eventDialogSlots,
 } from '../internals/components/event-dialog/eventDialogClasses';
+import {
+  ErrorContainerClasses,
+  errorContainerClassKeys,
+  errorContainerSlots,
+} from '../internals/components/error-container/errorContainerClasses';
+import {
+  EventSkeletonClasses,
+  eventSkeletonClassKeys,
+  eventSkeletonSlots,
+} from '../internals/components/event-skeleton/eventSkeletonClasses';
 
-export interface EventCalendarClasses extends EventDialogClasses {
+export interface EventCalendarClasses
+  extends EventDialogClasses, ErrorContainerClasses, EventSkeletonClasses {
   /** Styles applied to the root element. */
   root: string;
   /** Styles applied to the side panel element. */
@@ -36,12 +47,6 @@ export interface EventCalendarClasses extends EventDialogClasses {
   miniCalendarDayCell: string;
   /** Styles applied to mini calendar day buttons. */
   miniCalendarDayButton: string;
-  /** Styles applied to the error container element. */
-  errorContainer: string;
-  /** Styles applied to the error alert element. */
-  errorAlert: string;
-  /** Styles applied to the error message element. */
-  errorMessage: string;
   /** Styles applied to the header toolbar element. */
   headerToolbar: string;
   /** Styles applied to the header toolbar actions element. */
@@ -82,8 +87,10 @@ export interface EventCalendarClasses extends EventDialogClasses {
   agendaViewYearAndMonthLabel: string;
   /** Styles applied to the agenda view events list element. */
   agendaViewEventsList: string;
-  /** Styles applied to event skeleton elements. */
-  eventSkeleton: string;
+  /** Styles applied to agenda view week number label elements. */
+  agendaViewWeekNumberLabel: string;
+  /** Styles applied to agenda view week number row elements. */
+  agendaViewWeekNumberRow: string;
   /** Styles applied to the month view root element. */
   monthView: string;
   /** Styles applied to the month view grid element. */
@@ -272,6 +279,8 @@ export interface EventCalendarClasses extends EventDialogClasses {
   headerToolbarTodayButton: string;
   /** Styles applied to the header toolbar next button element. */
   headerToolbarNextButton: string;
+  /** Styles applied to the header toolbar week number element. */
+  headerToolbarWeekNumber: string;
   /** Styles applied to the preferences menu button element. */
   preferencesMenuButton: string;
   /** Styles applied to the preferences menu list element. */
@@ -321,9 +330,6 @@ export const eventCalendarClasses: EventCalendarClasses = generateUtilityClasses
     'miniCalendarWeekRow',
     'miniCalendarDayCell',
     'miniCalendarDayButton',
-    'errorContainer',
-    'errorAlert',
-    'errorMessage',
     'headerToolbar',
     'headerToolbarActions',
     'headerToolbarLeftElement',
@@ -344,7 +350,8 @@ export const eventCalendarClasses: EventCalendarClasses = generateUtilityClasses
     'agendaViewWeekDayNameLabel',
     'agendaViewYearAndMonthLabel',
     'agendaViewEventsList',
-    'eventSkeleton',
+    'agendaViewWeekNumberLabel',
+    'agendaViewWeekNumberRow',
     'monthView',
     'monthViewGrid',
     'monthViewHeader',
@@ -439,6 +446,7 @@ export const eventCalendarClasses: EventCalendarClasses = generateUtilityClasses
     'headerToolbarPreviousButton',
     'headerToolbarTodayButton',
     'headerToolbarNextButton',
+    'headerToolbarWeekNumber',
     'preferencesMenuButton',
     'preferencesMenuList',
     'preferencesMenuListItemIcon',
@@ -451,6 +459,8 @@ export const eventCalendarClasses: EventCalendarClasses = generateUtilityClasses
     'miniCalendarPreviousButton',
     'miniCalendarNextButton',
     'moreEventsPopover',
+    ...errorContainerClassKeys,
+    ...eventSkeletonClassKeys,
     ...eventDialogClassKeys,
   ],
 );
@@ -470,9 +480,6 @@ const slots = {
   miniCalendarWeekRow: ['miniCalendarWeekRow'],
   miniCalendarDayCell: ['miniCalendarDayCell'],
   miniCalendarDayButton: ['miniCalendarDayButton'],
-  errorContainer: ['errorContainer'],
-  errorAlert: ['errorAlert'],
-  errorMessage: ['errorMessage'],
   headerToolbar: ['headerToolbar'],
   headerToolbarActions: ['headerToolbarActions'],
   headerToolbarLeftElement: ['headerToolbarLeftElement'],
@@ -493,7 +500,8 @@ const slots = {
   agendaViewWeekDayNameLabel: ['agendaViewWeekDayNameLabel'],
   agendaViewYearAndMonthLabel: ['agendaViewYearAndMonthLabel'],
   agendaViewEventsList: ['agendaViewEventsList'],
-  eventSkeleton: ['eventSkeleton'],
+  agendaViewWeekNumberLabel: ['agendaViewWeekNumberLabel'],
+  agendaViewWeekNumberRow: ['agendaViewWeekNumberRow'],
   monthView: ['monthView'],
   monthViewGrid: ['monthViewGrid'],
   monthViewHeader: ['monthViewHeader'],
@@ -588,6 +596,7 @@ const slots = {
   headerToolbarPreviousButton: ['headerToolbarPreviousButton'],
   headerToolbarTodayButton: ['headerToolbarTodayButton'],
   headerToolbarNextButton: ['headerToolbarNextButton'],
+  headerToolbarWeekNumber: ['headerToolbarWeekNumber'],
   preferencesMenuButton: ['preferencesMenuButton'],
   preferencesMenuList: ['preferencesMenuList'],
   preferencesMenuListItemIcon: ['preferencesMenuListItemIcon'],
@@ -600,6 +609,8 @@ const slots = {
   miniCalendarPreviousButton: ['miniCalendarPreviousButton'],
   miniCalendarNextButton: ['miniCalendarNextButton'],
   moreEventsPopover: ['moreEventsPopover'],
+  ...errorContainerSlots,
+  ...eventSkeletonSlots,
   ...eventDialogSlots,
 };
 
