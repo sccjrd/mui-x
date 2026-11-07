@@ -2,6 +2,7 @@
   "props": {
     "ampm": { "type": { "name": "bool" }, "default": "adapter.is12HourCycleInCurrentLocale()" },
     "autoFocus": { "type": { "name": "bool" } },
+    "className": { "type": { "name": "string" } },
     "closeOnSelect": { "type": { "name": "bool" }, "default": "false" },
     "defaultRangePosition": {
       "type": { "name": "enum", "description": "'end'<br>&#124;&nbsp;'start'" },
@@ -38,6 +39,7 @@
         "describedArgs": ["value", "context"]
       }
     },
+    "onCancel": { "type": { "name": "func" } },
     "onChange": {
       "type": { "name": "func" },
       "signature": {
@@ -289,6 +291,5 @@
   "forwardsRefTo": "HTMLDivElement",
   "filename": "/packages/x-date-pickers-pro/src/MobileTimeRangePicker/MobileTimeRangePicker.tsx",
   "inheritance": null,
-  "demos": "<ul><li><a href=\"/x/react-date-pickers/time-range-picker/\">Time Range Picker <a href=\"/x/introduction/licensing/#pro-plan\" title=\"Pro plan\"><span class=\"plan-pro\"></span></a></a></li>\n<li><a href=\"/x/react-date-pickers/validation/\">Date and Time Pickers - Validation</a></li></ul>",
-  "cssComponent": false
+  "demos": "<ul><li><a href=\"/x/react-date-pickers/time-range-picker/\">Time Range Picker <a href=\"/x/introduction/licensing/#pro-plan\" title=\"Pro plan\"><span class=\"plan-pro\"></span></a></a></li>\n<li><a href=\"/x/react-date-pickers/validation/\">Date and Time Pickers - Validation</a></li></ul>"
 }

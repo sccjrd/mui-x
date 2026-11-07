@@ -2,12 +2,11 @@
 import * as React from 'react';
 import CircularProgress from '@mui/material/CircularProgress';
 import { ChatBox } from '@mui/x-chat';
-
 import {
   createChunkStream,
   randomId,
   splitText,
-} from 'docs/data/chat/material/examples/shared/demoUtils';
+} from 'docs/data/chat/core/examples/shared/demoUtils';
 
 // --- Task types --------------------------------------------------------------
 

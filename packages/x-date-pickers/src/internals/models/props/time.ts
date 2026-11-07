@@ -1,12 +1,12 @@
-import { SxProps, Theme } from '@mui/material/styles';
-import { PickerValidDate, TimeStepOptions, TimezoneProps } from '../../../models';
+import type { SxProps, Theme } from '@mui/material/styles';
+import type { PickerValidDate, TimeStepOptions, TimezoneProps } from '../../../models';
 import type { ExportedDigitalClockProps } from '../../../DigitalClock/DigitalClock.types';
 import type { ExportedMultiSectionDigitalClockProps } from '../../../MultiSectionDigitalClock/MultiSectionDigitalClock.types';
 import type { ExportedUseViewsOptions } from '../../hooks/useViews';
-import { TimeViewWithMeridiem } from '../common';
-import { ExportedValidateTimeProps } from '../../../validation/validateTime';
-import { FormProps } from '../formProps';
-import { PickerValue } from '../value';
+import type { TimeViewWithMeridiem } from '../common';
+import type { ExportedValidateTimeProps } from '../../../validation/validateTime';
+import type { FormProps } from '../formProps';
+import type { PickerValue } from '../value';
 
 export interface AmPmProps {
   /**
@@ -21,6 +21,9 @@ export interface ExportedBaseClockProps
 
 export interface BaseClockProps<TView extends TimeViewWithMeridiem>
   extends ExportedUseViewsOptions<PickerValue, TView>, ExportedBaseClockProps, FormProps {
+  /**
+   * A CSS class name applied to the root element.
+   */
   className?: string;
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.

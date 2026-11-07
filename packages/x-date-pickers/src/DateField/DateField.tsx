@@ -3,7 +3,7 @@ import * as React from 'react';
 import PropTypes from 'prop-types';
 import { useThemeProps } from '@mui/material/styles';
 import refType from '@mui/utils/refType';
-import { DateFieldProps } from './DateField.types';
+import type { DateFieldProps } from './DateField.types';
 import { useDateField } from './useDateField';
 import {
   PickerFieldUI,
@@ -52,7 +52,7 @@ const DateField = React.forwardRef(function DateField(
   );
 }) as DateFieldComponent;
 
-DateField.propTypes = {
+DateField.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -182,6 +182,9 @@ DateField.propTypes = {
    * Name attribute of the `input` element.
    */
   name: PropTypes.string,
+  /**
+   * @ignore
+   */
   onBlur: PropTypes.func,
   /**
    * Callback fired when the value changes.
@@ -195,6 +198,9 @@ DateField.propTypes = {
    * Callback fired when the clear button is clicked.
    */
   onClear: PropTypes.func,
+  /**
+   * @ignore
+   */
   onClick: PropTypes.func,
   /**
    * Callback fired when the error associated with the current value changes.
@@ -206,9 +212,25 @@ DateField.propTypes = {
    * @param {TValue} value The value associated with the error.
    */
   onError: PropTypes.func,
+  /**
+   * @ignore
+   */
   onFocus: PropTypes.func,
+  /**
+   * @ignore
+   */
   onInput: PropTypes.func,
+  /**
+   * @ignore
+   */
   onKeyDown: PropTypes.func,
+  /**
+   * @ignore
+   */
+  onMouseDown: PropTypes.func,
+  /**
+   * @ignore
+   */
   onPaste: PropTypes.func,
   /**
    * Callback fired when the selected sections change.

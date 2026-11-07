@@ -1,7 +1,8 @@
 import * as React from 'react';
-import Stack, { StackProps, stackClasses } from '@mui/material/Stack';
+import type { StackProps } from '@mui/material/Stack';
+import Stack, { stackClasses } from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { SxProps, Theme } from '@mui/material/styles';
+import type { SxProps, Theme } from '@mui/material/styles';
 import { textFieldClasses } from '@mui/material/TextField';
 import { pickersTextFieldClasses } from '../../PickersTextField';
 
@@ -101,7 +102,7 @@ DemoItem.displayName = 'DemoItem';
 
 const isDemoItem = (child: React.ReactNode): child is React.ReactElement<DemoItemProps> => {
   if (React.isValidElement(child) && typeof child.type !== 'string') {
-    // @ts-ignore
+    // @ts-expect-error React also permits class constructors without a declared displayName property.
     return child.type.displayName === 'DemoItem';
   }
   return false;
@@ -200,7 +201,6 @@ export function DemoContainer(props: DemoGridProps) {
       {React.Children.map(children, (child) => {
         if (React.isValidElement(child) && isDemoItem(child)) {
           // Inject sx styles to the `DemoItem` if it is a direct child of `DemoContainer`.
-          // @ts-ignore
           return React.cloneElement(child, {
             sx: [
               { ...extraSx, ...demoItemSx },

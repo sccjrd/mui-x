@@ -1,11 +1,11 @@
 import * as React from 'react';
-import {
-  DataGridPremium,
+import type {
   GridPivotModel,
   GridDataSource,
   DataGridPremiumProps,
   GridColDef,
 } from '@mui/x-data-grid-premium';
+import { DataGridPremium } from '@mui/x-data-grid-premium';
 import { useMockServer } from '@mui/x-data-grid-generator';
 
 const derivedColumns: Map<string, GridColDef> = new Map();
@@ -72,6 +72,7 @@ export default function ServerSidePivotingDerivedColumns() {
       dataSet: 'Commodity',
       maxColumns: 20,
       derivedColumns: true,
+      multiSelect: true,
     },
     { useCursorPagination: false },
   );

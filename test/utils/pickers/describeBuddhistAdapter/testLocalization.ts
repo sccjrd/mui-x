@@ -1,4 +1,5 @@
-import { DescribeBuddhistAdapterTestSuite } from './describeBuddhistAdapter.types';
+import { it, expect } from 'vitest';
+import type { DescribeBuddhistAdapterTestSuite } from './describeBuddhistAdapter.types';
 
 export const testLocalization: DescribeBuddhistAdapterTestSuite = ({ adapter }) => {
   it('Method: getCurrentLocaleCode', () => {

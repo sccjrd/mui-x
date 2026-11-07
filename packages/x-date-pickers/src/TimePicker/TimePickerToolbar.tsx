@@ -9,22 +9,26 @@ import { PickersToolbar } from '../internals/components/PickersToolbar';
 import { arrayIncludes } from '../internals/utils/utils';
 import { usePickerAdapter, usePickerContext, usePickerTranslations } from '../hooks';
 import { useMeridiemMode } from '../internals/hooks/date-helpers-hooks';
-import { BaseToolbarProps, ExportedBaseToolbarProps } from '../internals/models/props/toolbar';
+import type { BaseToolbarProps, ExportedBaseToolbarProps } from '../internals/models/props/toolbar';
+import type { TimePickerToolbarClasses } from './timePickerToolbarClasses';
 import {
   getTimePickerToolbarUtilityClass,
   timePickerToolbarClasses,
-  TimePickerToolbarClasses,
 } from './timePickerToolbarClasses';
-import { PickerValue, TimeViewWithMeridiem } from '../internals/models';
+import type { PickerValue, TimeViewWithMeridiem } from '../internals/models';
 import { formatMeridiem } from '../internals/utils/date-utils';
-import { AdapterFormats } from '../models';
-import {
-  PickerToolbarOwnerState,
-  useToolbarOwnerState,
-} from '../internals/hooks/useToolbarOwnerState';
+import type { AdapterFormats } from '../models';
+import type { PickerToolbarOwnerState } from '../internals/hooks/useToolbarOwnerState';
+import { useToolbarOwnerState } from '../internals/hooks/useToolbarOwnerState';
 
 export interface TimePickerToolbarProps extends BaseToolbarProps, ExportedTimePickerToolbarProps {
+  /**
+   * 12h/24h view for hour selection clock.
+   */
   ampm?: boolean;
+  /**
+   * Display ampm controls under the clock (instead of in the toolbar).
+   */
   ampmInClock?: boolean;
 }
 
@@ -251,17 +255,26 @@ function TimePickerToolbar(inProps: TimePickerToolbarProps) {
   );
 }
 
-TimePickerToolbar.propTypes = {
+TimePickerToolbar.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * 12h/24h view for hour selection clock.
+   */
   ampm: PropTypes.bool,
+  /**
+   * Display ampm controls under the clock (instead of in the toolbar).
+   */
   ampmInClock: PropTypes.bool,
   /**
    * Override or extend the styles applied to the component.
    */
   classes: PropTypes.object,
+  /**
+   * A CSS class name applied to the root element.
+   */
   className: PropTypes.string,
   /**
    * If `true`, show the toolbar even in desktop mode.
@@ -276,6 +289,10 @@ TimePickerToolbar.propTypes = {
     PropTypes.func,
     PropTypes.object,
   ]),
+  /**
+   * The id of the toolbar title element.
+   * The picker uses it to label its popup.
+   */
   titleId: PropTypes.string,
   /**
    * Toolbar date format.

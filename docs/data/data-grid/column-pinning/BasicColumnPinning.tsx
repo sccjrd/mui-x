@@ -1,9 +1,8 @@
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import type { GridColDef, GridRowsProp } from '@mui/x-data-grid-pro';
 import {
   DataGridPro,
-  GridColDef,
-  GridRowsProp,
   GridActionsCellItem,
   GridActionsCell,
 } from '@mui/x-data-grid-pro';
@@ -27,7 +26,7 @@ export default function BasicColumnPinning() {
 }
 
 const columns: GridColDef[] = [
-  { field: 'name', headerName: 'Name', width: 160, editable: true },
+  { field: 'name', headerName: 'Name', width: 160, editable: true, rowHeader: true },
   { field: 'email', headerName: 'Email', width: 200, editable: true },
   { field: 'age', headerName: 'Age', type: 'number', editable: true },
   {

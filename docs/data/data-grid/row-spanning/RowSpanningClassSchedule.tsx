@@ -1,5 +1,6 @@
 import Box from '@mui/material/Box';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import type { GridColDef } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
 
 const rows = [
   {
@@ -100,10 +101,12 @@ const columns: GridColDef[] = [
   {
     field: 'day',
     headerName: 'Day',
+    rowHeader: true,
   },
   {
     field: 'time',
     headerName: 'Time',
+    rowHeader: true,
     minWidth: 160,
   },
   {

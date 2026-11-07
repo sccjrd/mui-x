@@ -1,12 +1,14 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import {
-  DataGridPremium,
-  useGridApiRef,
+import type {
   GridHistoryEventHandler,
   GridEvents,
   GridFilterModel,
   GridApiPremium,
+} from '@mui/x-data-grid-premium';
+import {
+  DataGridPremium,
+  useGridApiRef,
   createClipboardPasteHistoryHandler,
   createRowEditHistoryHandler,
   createCellEditHistoryHandler,
@@ -82,6 +84,7 @@ export default function AddFilterHandler() {
     dataSet: 'Commodity',
     rowLength: 200,
     editable: true,
+    multiSelect: true,
   });
 
   const apiRef = useGridApiRef() as React.RefObject<GridApiPremium>;

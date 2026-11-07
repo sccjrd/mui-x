@@ -5,7 +5,7 @@ import refType from '@mui/utils/refType';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useThemeProps } from '@mui/material/styles';
 import { DEFAULT_DESKTOP_MODE_MEDIA_QUERY } from '@mui/x-date-pickers/internals';
-import { DateTimeRangePickerProps } from './DateTimeRangePicker.types';
+import type { DateTimeRangePickerProps } from './DateTimeRangePicker.types';
 import { DesktopDateTimeRangePicker } from '../DesktopDateTimeRangePicker';
 import { MobileDateTimeRangePicker } from '../MobileDateTimeRangePicker';
 
@@ -41,7 +41,7 @@ const DateTimeRangePicker = React.forwardRef(function DateTimeRangePicker(
   return <MobileDateTimeRangePicker ref={ref} {...other} />;
 }) as DateTimeRangePickerComponent;
 
-DateTimeRangePicker.propTypes = {
+DateTimeRangePicker.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -63,6 +63,9 @@ DateTimeRangePicker.propTypes = {
    * @default 1
    */
   calendars: PropTypes.oneOf([1, 2, 3]),
+  /**
+   * A CSS class name applied to the root element.
+   */
   className: PropTypes.string,
   /**
    * If `true`, the Picker will close after submitting the full date.
@@ -234,6 +237,10 @@ DateTimeRangePicker.propTypes = {
    * - `shortcut` (optional): the shortcut metadata if the value was accepted via a shortcut selection
    */
   onAccept: PropTypes.func,
+  /**
+   * Callback fired when the Cancel action is triggered.
+   */
+  onCancel: PropTypes.func,
   /**
    * Callback fired when the value changes.
    * @template TValue The value type. It will be the same type as `value` or `null`. It can be in `[start, end]` format in case of range value.

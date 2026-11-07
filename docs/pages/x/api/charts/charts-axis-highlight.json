@@ -1,5 +1,18 @@
 {
-  "props": {},
+  "props": {
+    "x": {
+      "type": {
+        "name": "enum",
+        "description": "'band'<br>&#124;&nbsp;'line'<br>&#124;&nbsp;'none'"
+      }
+    },
+    "y": {
+      "type": {
+        "name": "enum",
+        "description": "'band'<br>&#124;&nbsp;'line'<br>&#124;&nbsp;'none'"
+      }
+    }
+  },
   "name": "ChartsAxisHighlight",
   "imports": [
     "import { ChartsAxisHighlight } from '@mui/x-charts/ChartsAxisHighlight';",
@@ -18,6 +31,5 @@
   "muiName": "MuiChartsAxisHighlight",
   "filename": "/packages/x-charts/src/ChartsAxisHighlight/ChartsAxisHighlight.tsx",
   "inheritance": null,
-  "demos": "<ul><li><a href=\"/x/react-charts/highlighting/\">Charts - Highlighting</a></li></ul>",
-  "cssComponent": false
+  "demos": "<ul><li><a href=\"/x/react-charts/highlighting/\">Charts - Highlighting</a></li></ul>"
 }

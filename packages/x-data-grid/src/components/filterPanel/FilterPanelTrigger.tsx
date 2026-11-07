@@ -2,7 +2,8 @@ import * as React from 'react';
 import PropTypes from 'prop-types';
 import useId from '@mui/utils/useId';
 import { forwardRef } from '@mui/x-internals/forwardRef';
-import { useComponentRenderer, type RenderProp } from '@mui/x-internals/useComponentRenderer';
+import { useComponentRenderer } from '@mui/x-internals/useComponentRenderer';
+import type { RenderProp } from '@mui/x-internals/useComponentRenderer';
 import useForkRef from '@mui/utils/useForkRef';
 import { useGridPanelContext } from '../panel/GridPanelContext';
 import { useGridApiContext } from '../../hooks/utils/useGridApiContext';
@@ -63,8 +64,8 @@ const FilterPanelTrigger = forwardRef<HTMLButtonElement, FilterPanelTriggerProps
     const filterCount = activeFilters.length;
     const state = { open, filterCount };
     const resolvedClassName = typeof className === 'function' ? className(state) : className;
-    const { filterPanelTriggerRef } = useGridPanelContext();
-    const handleRef = useForkRef(ref, filterPanelTriggerRef);
+    const { triggers } = useGridPanelContext();
+    const handleRef = useForkRef(ref, triggers.filterPanel.setRef);
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
       if (open) {
@@ -88,7 +89,7 @@ const FilterPanelTrigger = forwardRef<HTMLButtonElement, FilterPanelTriggerProps
       {
         ...rootProps.slotProps?.baseButton,
         id: buttonId,
-        'aria-haspopup': 'true',
+        'aria-haspopup': 'dialog',
         'aria-expanded': open ? 'true' : undefined,
         'aria-controls': open ? panelId : undefined,
         onClick: handleClick,
@@ -104,7 +105,7 @@ const FilterPanelTrigger = forwardRef<HTMLButtonElement, FilterPanelTriggerProps
   },
 );
 
-FilterPanelTrigger.propTypes = {
+FilterPanelTrigger.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -113,18 +114,42 @@ FilterPanelTrigger.propTypes = {
    * A function to customize rendering of the component.
    */
   className: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
+  /**
+   * If `true`, the button is disabled.
+   */
   disabled: PropTypes.bool,
+  /**
+   * The id of the button element.
+   */
   id: PropTypes.string,
   /**
    * A function to customize rendering of the component.
    */
   render: PropTypes.oneOfType([PropTypes.element, PropTypes.func]),
+  /**
+   * The ARIA role of the button element.
+   */
   role: PropTypes.string,
+  /**
+   * The size of the button.
+   */
   size: PropTypes.oneOf(['large', 'medium', 'small']),
+  /**
+   * Element placed before the children.
+   */
   startIcon: PropTypes.node,
   style: PropTypes.object,
+  /**
+   * The `tabIndex` of the button element.
+   */
   tabIndex: PropTypes.number,
+  /**
+   * The title of the button element.
+   */
   title: PropTypes.string,
+  /**
+   * @ignore
+   */
   touchRippleRef: PropTypes.any,
 } as any;
 

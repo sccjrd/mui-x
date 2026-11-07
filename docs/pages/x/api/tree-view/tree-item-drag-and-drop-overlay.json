@@ -1,5 +1,12 @@
 {
-  "props": {},
+  "props": {
+    "action": {
+      "type": {
+        "name": "enum",
+        "description": "'make-child'<br>&#124;&nbsp;'move-to-parent'<br>&#124;&nbsp;'reorder-above'<br>&#124;&nbsp;'reorder-below'"
+      }
+    }
+  },
   "name": "TreeItemDragAndDropOverlay",
   "imports": [
     "import { TreeItemDragAndDropOverlay } from '@mui/x-tree-view/TreeItemDragAndDropOverlay';",
@@ -10,6 +17,5 @@
   "muiName": "MuiTreeItemDragAndDropOverlay",
   "filename": "/packages/x-tree-view/src/TreeItemDragAndDropOverlay/TreeItemDragAndDropOverlay.tsx",
   "inheritance": null,
-  "demos": "<ul><li><a href=\"/x/react-tree-view/rich-tree-view/ordering/\">Rich Tree View - Ordering <a href=\"/x/introduction/licensing/#pro-plan\" title=\"Pro plan\"><span class=\"plan-pro\"></span></a></a></li></ul>",
-  "cssComponent": false
+  "demos": "<ul><li><a href=\"/x/react-tree-view/rich-tree-view/ordering/\">Rich Tree View - Ordering <a href=\"/x/introduction/licensing/#pro-plan\" title=\"Pro plan\"><span class=\"plan-pro\"></span></a></a></li></ul>"
 }

@@ -1,12 +1,22 @@
 'use client';
 import * as React from 'react';
 import useSlotProps from '@mui/utils/useSlotProps';
-import { SlotComponentProps } from '@mui/utils/types';
-import { getChatLayoutPaneKind, type ChatLayoutPaneKind } from './internals/chatLayoutPaneKind';
+import type { SlotComponentProps } from '@mui/utils/types';
+import { getChatLayoutPaneKind } from './internals/chatLayoutPaneKind';
+import type { ChatLayoutPaneKind } from './internals/chatLayoutPaneKind';
 
 export interface ChatLayoutSlots {
+  /**
+   * The component that renders the root.
+   */
   root: React.ElementType;
+  /**
+   * The component that renders the conversations pane.
+   */
   conversationsPane: React.ElementType;
+  /**
+   * The component that renders the thread pane.
+   */
   threadPane: React.ElementType;
 }
 
@@ -20,14 +30,34 @@ export interface ChatLayoutPaneOwnerState {
 }
 
 export interface ChatLayoutSlotProps {
+  /**
+   * The props used for the root slot.
+   */
   root?: SlotComponentProps<'div', {}, ChatLayoutOwnerState>;
+  /**
+   * The props used for the conversations pane slot.
+   */
   conversationsPane?: SlotComponentProps<'div', {}, ChatLayoutPaneOwnerState>;
+  /**
+   * The props used for the thread pane slot.
+   */
   threadPane?: SlotComponentProps<'div', {}, ChatLayoutPaneOwnerState>;
 }
 
 export interface ChatLayoutProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'children'> {
+  /**
+   * The content of the component.
+   */
   children?: React.ReactNode;
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
   slots?: Partial<ChatLayoutSlots>;
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
   slotProps?: ChatLayoutSlotProps;
 }
 

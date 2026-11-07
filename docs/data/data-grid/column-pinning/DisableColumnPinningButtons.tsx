@@ -1,4 +1,5 @@
-import { DataGridPro, GridColDef, GridRowsProp } from '@mui/x-data-grid-pro';
+import type { GridColDef, GridRowsProp } from '@mui/x-data-grid-pro';
+import { DataGridPro } from '@mui/x-data-grid-pro';
 import {
   randomCreatedDate,
   randomTraderName,
@@ -20,7 +21,7 @@ export default function DisableColumnPinningButtons() {
 }
 
 const columns: GridColDef[] = [
-  { field: 'name', headerName: 'Name', width: 160, editable: true },
+  { field: 'name', headerName: 'Name', width: 160, editable: true, rowHeader: true },
   { field: 'email', headerName: 'Email', width: 200, editable: true },
   { field: 'age', headerName: 'Age', type: 'number', editable: true },
   {

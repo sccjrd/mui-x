@@ -1,5 +1,29 @@
 import { adapter } from 'test/utils/scheduler';
+import { describe, it, expect } from 'vitest';
+import type { TemporalSupportedObject } from '@base-ui/react/internals/temporal';
+import type { WeekStartsOn } from '@mui/x-scheduler-internals/models';
+import { buildTemporalPlainDate, getDayNumber } from '@mui/x-scheduler-internals/internals';
+import type { TimelineAxisWindow } from '@mui/x-scheduler-internals/internals';
+import type { PresetHeaderUnit } from '../../models';
 import { iterate } from './iterate';
+
+function iterateRange(
+  unit: PresetHeaderUnit,
+  tickUnit: PresetHeaderUnit,
+  start: TemporalSupportedObject,
+  end: TemporalSupportedObject,
+  // The first day of the week of English (United States).
+  weekStartsOn: WeekStartsOn = 7,
+  hourWindow: TimelineAxisWindow = { dayStartMinute: 0, dayEndMinute: 1440 },
+) {
+  // The ranges of the tests run from the first instant of a date to the last instant of a date.
+  const range = {
+    startPlainDate: buildTemporalPlainDate(adapter, start),
+    endPlainDate: buildTemporalPlainDate(adapter, end).add({ days: 1 }),
+    ...hourWindow,
+  };
+  return iterate(unit, tickUnit, range, weekStartsOn);
+}
 
 describe('iterate()', () => {
   describe('full aligned ranges', () => {
@@ -7,7 +31,7 @@ describe('iterate()', () => {
       const start = adapter.date('2025-01-01T00:00:00Z', 'default');
       const end = adapter.date('2027-12-31T23:59:59.999Z', 'default');
 
-      const cells = iterate(adapter, 'year', 'year', start, end);
+      const cells = iterateRange('year', 'year', start, end);
 
       expect(cells.length).to.equal(3);
       cells.forEach((cell) => expect(cell.spanInTicks).to.equal(1));
@@ -17,8 +41,8 @@ describe('iterate()', () => {
       const start = adapter.date('2025-07-03T00:00:00Z', 'default');
       const end = adapter.date('2025-07-06T23:59:59.999Z', 'default');
 
-      const dayCells = iterate(adapter, 'day', 'hour', start, end);
-      const hourCells = iterate(adapter, 'hour', 'hour', start, end);
+      const dayCells = iterateRange('day', 'hour', start, end);
+      const hourCells = iterateRange('hour', 'hour', start, end);
 
       expect(dayCells.length).to.equal(4);
       dayCells.forEach((cell) => expect(cell.spanInTicks).to.equal(24));
@@ -30,10 +54,223 @@ describe('iterate()', () => {
       const start = adapter.date('2025-01-01T00:00:00Z', 'default');
       const end = adapter.date('2025-01-28T23:59:59.999Z', 'default');
 
-      const cells = iterate(adapter, 'week', 'day', start, end);
+      const cells = iterateRange('week', 'day', start, end);
       const total = cells.reduce((sum, cell) => sum + cell.spanInTicks, 0);
 
       expect(total).to.equal(28);
+    });
+  });
+
+  describe('hour range trimming', () => {
+    const start = adapter.date('2025-07-03T00:00:00Z', 'default');
+    const end = adapter.date('2025-07-06T23:59:59.999Z', 'default');
+
+    it('should emit only the visible hour cells per day for a trimmed hour range', () => {
+      const hourCells = iterateRange('hour', 'hour', start, end, undefined, {
+        dayStartMinute: 480,
+        dayEndMinute: 1200,
+      });
+
+      expect(hourCells.length).to.equal(4 * 12);
+      expect(hourCells[0].wallClockHour).to.equal(8);
+      expect(hourCells[11].wallClockHour).to.equal(19);
+      expect(hourCells[12].wallClockHour).to.equal(8);
+      hourCells.forEach((cell) => expect(cell.spanInTicks).to.equal(1));
+    });
+
+    it('should index the emitted hour cells contiguously', () => {
+      const hourCells = iterateRange('hour', 'hour', start, end, undefined, {
+        dayStartMinute: 480,
+        dayEndMinute: 1200,
+      });
+
+      hourCells.forEach((cell, i) => expect(cell.index).to.equal(i));
+    });
+
+    it('should span the day cells by the visible hours only', () => {
+      const dayCells = iterateRange('day', 'hour', start, end, undefined, {
+        dayStartMinute: 480,
+        dayEndMinute: 1200,
+      });
+
+      expect(dayCells.length).to.equal(4);
+      dayCells.forEach((cell) => expect(cell.spanInTicks).to.equal(12));
+    });
+
+    it('should behave like the untrimmed iteration when the hour range covers the full day', () => {
+      const trimmed = iterateRange('hour', 'hour', start, end, undefined, {
+        dayStartMinute: 0,
+        dayEndMinute: 1440,
+      });
+      const untrimmed = iterateRange('hour', 'hour', start, end);
+
+      expect(trimmed).to.deep.equal(untrimmed);
+    });
+
+    it('should ignore the hour range when the tick unit is not hour', () => {
+      const cells = iterateRange('week', 'day', start, end, 7, {
+        dayStartMinute: 480,
+        dayEndMinute: 1200,
+      });
+      const untrimmed = iterateRange('week', 'day', start, end);
+
+      expect(cells).to.deep.equal(untrimmed);
+    });
+  });
+
+  // The hour row is a wall-clock grid, like the Event Calendar's time axis: every day
+  // shows the same hour columns whatever the real hours of that day are. Events crossing
+  // a transition stretch or shrink over that fixed grid instead of moving it.
+  describe('across DST transitions', () => {
+    // Mar 8 2026 in America/New_York skips the 02:00 wall-clock hour.
+    const springForward = adapter.date('2026-03-08T00:00:00', 'America/New_York');
+    // Nov 2 2025 in America/New_York repeats the 01:00 wall-clock hour.
+    const fallBack = adapter.date('2025-11-02T00:00:00', 'America/New_York');
+
+    it('should emit 24 hour cells on a spring-forward day', () => {
+      const cells = iterateRange('hour', 'hour', springForward, adapter.endOfDay(springForward));
+
+      expect(cells.length).to.equal(24);
+      cells.forEach((cell) => expect(cell.spanInTicks).to.equal(1));
+    });
+
+    it('should emit 24 hour cells on a fall-back day', () => {
+      const cells = iterateRange('hour', 'hour', fallBack, adapter.endOfDay(fallBack));
+
+      expect(cells.length).to.equal(24);
+      cells.forEach((cell) => expect(cell.spanInTicks).to.equal(1));
+    });
+
+    it('should keep a cell for the hour skipped by the spring-forward transition', () => {
+      const cells = iterateRange('hour', 'hour', springForward, adapter.endOfDay(springForward));
+
+      expect(cells.map((cell) => cell.wallClockHour).slice(0, 5)).to.deep.equal([0, 1, 2, 3, 4]);
+    });
+
+    it('should emit a single cell for the hour repeated by the fall-back transition', () => {
+      const cells = iterateRange('hour', 'hour', fallBack, adapter.endOfDay(fallBack));
+
+      expect(cells.filter((cell) => cell.wallClockHour === 1).length).to.equal(1);
+    });
+
+    it('should span the day cell by the displayed hour count on a DST day', () => {
+      const springDays = iterateRange(
+        'day',
+        'hour',
+        springForward,
+        adapter.endOfDay(springForward),
+      );
+      const fallBackDays = iterateRange('day', 'hour', fallBack, adapter.endOfDay(fallBack));
+
+      expect(springDays.map((cell) => cell.spanInTicks)).to.deep.equal([24]);
+      expect(fallBackDays.map((cell) => cell.spanInTicks)).to.deep.equal([24]);
+    });
+
+    describe('with a trimmed hour window', () => {
+      const HOUR_WINDOW = { dayStartMinute: 0, dayEndMinute: 360 };
+      // Starts exactly on the hour the spring-forward transition skips.
+      const GAP_HOUR_WINDOW = { dayStartMinute: 120, dayEndMinute: 1200 };
+
+      it('should emit one cell per displayed hour on a fall-back day', () => {
+        const end = adapter.endOfDay(adapter.addDays(fallBack, 1));
+
+        const hourCells = iterateRange('hour', 'hour', fallBack, end, undefined, HOUR_WINDOW);
+        const dayCells = iterateRange('day', 'hour', fallBack, end, undefined, HOUR_WINDOW);
+
+        expect(hourCells.length).to.equal(12);
+        expect(dayCells.map((cell) => cell.spanInTicks)).to.deep.equal([6, 6]);
+      });
+
+      it('should emit one cell per displayed hour on a spring-forward day', () => {
+        const end = adapter.endOfDay(adapter.addDays(springForward, 1));
+
+        const hourCells = iterateRange('hour', 'hour', springForward, end, undefined, HOUR_WINDOW);
+        const dayCells = iterateRange('day', 'hour', springForward, end, undefined, HOUR_WINDOW);
+
+        expect(hourCells.length).to.equal(12);
+        expect(dayCells.map((cell) => cell.spanInTicks)).to.deep.equal([6, 6]);
+      });
+
+      it('should emit the full hour row when the window starts on the skipped hour', () => {
+        const end = adapter.endOfDay(springForward);
+
+        const hourCells = iterateRange(
+          'hour',
+          'hour',
+          springForward,
+          end,
+          undefined,
+          GAP_HOUR_WINDOW,
+        );
+        const dayCells = iterateRange(
+          'day',
+          'hour',
+          springForward,
+          end,
+          undefined,
+          GAP_HOUR_WINDOW,
+        );
+
+        expect(hourCells.length).to.equal(18);
+        expect(hourCells[0].wallClockHour).to.equal(2);
+        expect(dayCells.map((cell) => cell.spanInTicks)).to.deep.equal([18]);
+      });
+    });
+
+    it('should keep one day cell per date, one tick wide, after a transition at midnight', () => {
+      // America/Havana springs forward from 00:00 to 01:00 on March 8th, 2026.
+      // The dayAndMonth shape: 8 weeks of day ticks.
+      const start = adapter.startOfDay(adapter.date('2026-03-01T12:00:00', 'America/Havana'));
+      const end = adapter.endOfDay(adapter.addDays(start, 8 * 7 - 1));
+
+      const cells = iterateRange('day', 'day', start, end);
+
+      expect(cells.length).to.equal(56);
+      expect(cells.every((cell) => cell.spanInTicks === 1)).to.equal(true);
+      // March 8th, the 8th cell, starts at 01:00 but keeps its date.
+      expect(cells[7].plainDate).toEqualPlainDate('2026-03-08');
+      expect(
+        cells.every(
+          (cell, index) =>
+            getDayNumber(cell.plainDate) === getDayNumber(cells[0].plainDate) + index,
+        ),
+      ).to.equal(true);
+    });
+
+    it('should keep the first day cell whole when the range starts on a transition at midnight', () => {
+      // America/Havana springs forward from 00:00 to 01:00 on March 8th, 2026, so the
+      // range starts at 01:00.
+      const start = adapter.startOfDay(adapter.date('2026-03-08T12:00:00', 'America/Havana'));
+      const end = adapter.endOfDay(adapter.addDays(start, 2));
+
+      const dayTickCells = iterateRange('day', 'day', start, end);
+      const hourTickCells = iterateRange('day', 'hour', start, end);
+      const hourCells = iterateRange('hour', 'hour', start, end);
+
+      expect(dayTickCells.map((cell) => cell.spanInTicks)).to.deep.equal([1, 1, 1]);
+      expect(hourTickCells.map((cell) => cell.spanInTicks)).to.deep.equal([24, 24, 24]);
+      expect(hourCells.length).to.equal(3 * 24);
+    });
+
+    it('should give unique keys to the cells of a date skipped by a transition', () => {
+      // Pacific/Apia skipped December 30th, 2011 entirely: its wall-clock slot stays on the
+      // axis but resolves to the same instants as December 31st.
+      const start = adapter.startOfDay(adapter.date('2011-12-29T12:00:00', 'Pacific/Apia'));
+      const end = adapter.endOfDay(adapter.date('2012-01-01T12:00:00', 'Pacific/Apia'));
+
+      const dayCells = iterateRange('day', 'day', start, end);
+      const hourCells = iterateRange('hour', 'hour', start, end);
+
+      expect(dayCells.length).to.equal(4);
+      expect(new Set(dayCells.map((cell) => cell.key)).size).to.equal(4);
+      expect(hourCells.length).to.equal(4 * 24);
+      expect(new Set(hourCells.map((cell) => cell.key)).size).to.equal(4 * 24);
+      expect(dayCells.map((cell) => cell.plainDate.toString())).to.deep.equal([
+        '2011-12-29',
+        '2011-12-30',
+        '2011-12-31',
+        '2012-01-01',
+      ]);
     });
   });
 
@@ -45,10 +282,10 @@ describe('iterate()', () => {
       const start = adapter.date('2025-07-01T00:00:00Z', 'default');
       const end = adapter.date('2028-06-30T23:59:59.999Z', 'default');
 
-      const cells = iterate(adapter, 'year', 'day', start, end);
+      const cells = iterateRange('year', 'day', start, end);
 
       expect(cells.length).to.equal(4);
-      expect(adapter.getYear(cells[0].date)).to.equal(2025);
+      expect(cells[0].plainDate).toEqualPlainDate('2025-01-01');
       expect(cells[0].spanInTicks).to.equal(
         adapter.differenceInDays(adapter.date('2026-01-01T00:00:00Z', 'default'), start),
       );
@@ -63,43 +300,45 @@ describe('iterate()', () => {
       const start = adapter.date('2025-01-01T00:00:00Z', 'default');
       const end = adapter.date('2025-02-10T23:59:59.999Z', 'default');
 
-      const cells = iterate(adapter, 'month', 'day', start, end);
+      const cells = iterateRange('month', 'day', start, end);
 
       expect(cells.length).to.equal(2);
       expect(cells[0].spanInTicks).to.equal(31); // January full
       expect(cells[1].spanInTicks).to.equal(10); // Feb 1–10
     });
 
-    it('should expose the aligned `date` plus clamped `start` and `end`', () => {
+    it('should expose the aligned date plus the first and last dates within the range', () => {
       const start = adapter.date('2025-07-15T00:00:00Z', 'default');
       const end = adapter.date('2025-08-15T23:59:59.999Z', 'default');
 
-      const cells = iterate(adapter, 'month', 'day', start, end);
+      const cells = iterateRange('month', 'day', start, end);
 
-      // First cell aligns to July 1st but its clamped start is July 15th.
-      expect(adapter.getDate(cells[0].date)).to.equal(1);
-      expect(cells[0].start).toEqualDateTime(start);
+      // The first cell aligns to July 1st but starts on July 15th within the range.
+      expect(cells[0].plainDate).toEqualPlainDate('2025-07-01');
+      expect(cells[0].firstPlainDate).toEqualPlainDate('2025-07-15');
+      expect(cells[0].lastPlainDate).toEqualPlainDate('2025-07-31');
+      // The last cell ends on the last date of the range.
+      expect(cells[1].firstPlainDate).toEqualPlainDate('2025-08-01');
+      expect(cells[1].lastPlainDate).toEqualPlainDate('2025-08-15');
     });
 
     it('should emit one partial cell per month when the range crosses a year boundary', () => {
       const start = adapter.date('2025-12-28T00:00:00Z', 'default');
       const end = adapter.date('2026-01-05T23:59:59.999Z', 'default');
 
-      const cells = iterate(adapter, 'month', 'day', start, end);
+      const cells = iterateRange('month', 'day', start, end);
 
       expect(cells.length).to.equal(2);
-      expect(adapter.getYear(cells[0].date)).to.equal(2025);
-      expect(adapter.getMonth(cells[0].date)).to.equal(11); // December (0-indexed)
+      expect(cells[0].plainDate).toEqualPlainDate('2025-12-01');
       expect(cells[0].spanInTicks).to.equal(4); // Dec 28-31
-      expect(adapter.getYear(cells[1].date)).to.equal(2026);
-      expect(adapter.getMonth(cells[1].date)).to.equal(0); // January
+      expect(cells[1].plainDate).toEqualPlainDate('2026-01-01');
       expect(cells[1].spanInTicks).to.equal(5); // Jan 1-5
     });
 
     it('should produce exactly one cell when rangeStart equals rangeEnd', () => {
       const date = adapter.date('2025-07-03T00:00:00Z', 'default');
 
-      const cells = iterate(adapter, 'day', 'day', date, date);
+      const cells = iterateRange('day', 'day', date, date);
 
       expect(cells.length).to.equal(1);
       expect(cells[0].spanInTicks).to.equal(1);
@@ -114,7 +353,7 @@ describe('iterate()', () => {
       const start = adapter.date('2025-03-24T00:00:00Z', 'default');
       const end = adapter.date('2025-03-30T23:59:59.999Z', 'default');
 
-      const hourCells = iterate(adapter, 'hour', 'hour', start, end);
+      const hourCells = iterateRange('hour', 'hour', start, end);
 
       expect(hourCells.length).to.equal(7 * 24);
     });
@@ -132,7 +371,7 @@ describe('iterate()', () => {
       // assertions are meaningless.
       expect(adapter.differenceInHours(end, start)).to.equal(742);
 
-      const cells = iterate(adapter, 'month', 'day', start, end);
+      const cells = iterateRange('month', 'day', start, end);
 
       expect(cells.length).to.equal(1);
       expect(cells[0].spanInTicks).to.equal(31);
@@ -145,18 +384,21 @@ describe('iterate()', () => {
       const start = adapter.date('2025-01-01T00:00:00Z', 'default');
       const end = adapter.date('2025-01-02T00:00:00Z', 'default');
 
-      expect(() => iterate(adapter, 'fortnight' as any, 'day', start, end)).to.throw(
+      expect(() => iterateRange('fortnight' as any, 'day', start, end)).to.throw(
         /Unsupported header unit/,
       );
     });
 
-    it('should throw when rangeEnd is before rangeStart', () => {
+    it('should throw when the end date of the range is not after its start date', () => {
       const start = adapter.date('2025-07-31T00:00:00Z', 'default');
-      const end = adapter.date('2025-07-01T00:00:00Z', 'default');
 
-      expect(() => iterate(adapter, 'day', 'day', start, end)).to.throw(
-        /rangeEnd is before rangeStart/,
-      );
+      expect(() =>
+        iterateRange('day', 'day', start, adapter.date('2025-07-01T00:00:00Z', 'default')),
+      ).to.throw(/end date is not after its start date/);
+      // The range ends on its start date.
+      expect(() =>
+        iterateRange('day', 'day', start, adapter.date('2025-07-30T00:00:00Z', 'default')),
+      ).to.throw(/end date is not after its start date/);
     });
 
     it('should throw when the cell count would exceed the 10k safety cap', () => {
@@ -164,7 +406,7 @@ describe('iterate()', () => {
       const start = adapter.date('2024-01-01T00:00:00Z', 'default');
       const end = adapter.date('2025-12-31T23:59:59.999Z', 'default');
 
-      expect(() => iterate(adapter, 'hour', 'hour', start, end)).to.throw(
+      expect(() => iterateRange('hour', 'hour', start, end)).to.throw(
         /produced more than 10,000 cells/,
       );
     });
@@ -177,36 +419,21 @@ describe('iterate()', () => {
       const start = adapter.date('2025-01-08T00:00:00Z', 'default');
       const end = adapter.date('2025-01-22T23:59:59.999Z', 'default');
 
-      const cells = iterate(adapter, 'week', 'day', start, end, 1);
+      const cells = iterateRange('week', 'day', start, end, 1);
 
-      // The aligned `date` on the first cell should be Jan 6 (Monday).
-      expect(adapter.getDate(cells[0].date)).to.equal(6);
-      expect(adapter.getMonth(cells[0].date)).to.equal(0); // January
+      // The first cell should be aligned to Jan 6 (Monday).
+      expect(cells[0].plainDate).toEqualPlainDate('2025-01-06');
     });
 
-    it('should start the first week cell on Sunday when weekStartsOn is 0', () => {
-      // Range: same Wed-to-Wed. With weekStartsOn=0 first cell aligns to Sun 2025-01-05.
+    it('should start the first week cell on Sunday when weekStartsOn is 7', () => {
+      // Range: same Wed-to-Wed. With weekStartsOn=7 first cell aligns to Sun 2025-01-05.
       const start = adapter.date('2025-01-08T00:00:00Z', 'default');
       const end = adapter.date('2025-01-22T23:59:59.999Z', 'default');
 
-      const cells = iterate(adapter, 'week', 'day', start, end, 0);
+      const cells = iterateRange('week', 'day', start, end, 7);
 
-      // The aligned `date` on the first cell should be Jan 5 (Sunday).
-      expect(adapter.getDate(cells[0].date)).to.equal(5);
-      expect(adapter.getMonth(cells[0].date)).to.equal(0); // January
-    });
-
-    it('should produce the same result as default when weekStartsOn is undefined', () => {
-      const start = adapter.date('2025-01-08T00:00:00Z', 'default');
-      const end = adapter.date('2025-01-22T23:59:59.999Z', 'default');
-
-      const withUndefined = iterate(adapter, 'week', 'day', start, end, undefined);
-      const withoutArg = iterate(adapter, 'week', 'day', start, end);
-
-      expect(withUndefined.length).to.equal(withoutArg.length);
-      withUndefined.forEach((cell, i) => {
-        expect(adapter.isSameDay(cell.date, withoutArg[i].date)).to.equal(true);
-      });
+      // The first cell should be aligned to Jan 5 (Sunday).
+      expect(cells[0].plainDate).toEqualPlainDate('2025-01-05');
     });
   });
 });

@@ -1,11 +1,11 @@
-import {
+import type {
   FieldSectionsValueBoundaries,
   SectionNeighbors,
   SectionOrdering,
   FieldSectionValueBoundaries,
   FieldParsedSelectedSections,
 } from './useField.types';
-import {
+import type {
   FieldSectionType,
   FieldSection,
   MuiPickersAdapter,
@@ -18,7 +18,7 @@ import {
 } from '../../../models';
 import { getMonthsInYear } from '../../utils/date-utils';
 import { convertToMeridiem } from '../../utils/time-utils';
-import { PickerValidValue } from '../../models';
+import type { PickerValidValue } from '../../models';
 
 export const getDateSectionConfigFromFormatToken = (
   adapter: MuiPickersAdapter,
@@ -96,7 +96,7 @@ export const getLetterEditingOptions = (
 
 // This format should be the same on all the adapters
 // If some adapter does not respect this convention, then we will need to hardcode the format on each adapter.
-export const FORMAT_SECONDS_NO_LEADING_ZEROS = 's';
+const FORMAT_SECONDS_NO_LEADING_ZEROS = 's';
 
 const NON_LOCALIZED_DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
@@ -415,9 +415,10 @@ export const getSectionsBoundaries = (
     hours: ({ format }) => {
       const lastHourInDay = adapter.getHours(endOfDay);
 
+      // Some days skip midnight (`America/Santiago` on 2026-09-06), but 2000-01-01 has a midnight in all timezones.
       const formattedMidnight = Number(
         removeLocalizedDigits(
-          adapter.formatByString(adapter.startOfDay(today), format),
+          adapter.formatByString(adapter.date('2000-01-01T00:00', timezone), format),
           localizedDigits,
         ),
       );
@@ -584,8 +585,6 @@ export const mergeDateIntoReferenceDate = (
 
       return mergedDate;
     }, referenceDate);
-
-export const isAndroid = () => navigator.userAgent.toLowerCase().includes('android');
 
 export const getSectionOrder = (sections: FieldSection[]): SectionOrdering => {
   const neighbors: SectionNeighbors = {};

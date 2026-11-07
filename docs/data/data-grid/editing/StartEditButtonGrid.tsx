@@ -1,17 +1,14 @@
 import * as React from 'react';
 import Tooltip from '@mui/material/Tooltip';
-import {
+import type {
   GridColDef,
   GridRowsProp,
-  DataGrid,
   GridRowId,
-  GridCellModes,
   GridEventListener,
   GridCellModesModel,
   GridSlotProps,
-  Toolbar,
-  ToolbarButton,
 } from '@mui/x-data-grid';
+import { DataGrid, GridCellModes, Toolbar, ToolbarButton } from '@mui/x-data-grid';
 import {
   randomCreatedDate,
   randomTraderName,
@@ -165,7 +162,7 @@ export default function StartEditButtonGrid() {
 }
 
 const columns: GridColDef[] = [
-  { field: 'name', headerName: 'Name', width: 180, editable: true },
+  { field: 'name', headerName: 'Name', width: 180, editable: true, rowHeader: true },
   {
     field: 'age',
     headerName: 'Age',

@@ -1,10 +1,12 @@
 import { SchedulerLazyLoadingPlugin } from '../../internals/plugins/SchedulerLazyLoadingPlugin';
-import {
+import type {
   EventTimelinePremiumState,
   EventTimelinePremiumParameters,
 } from '../EventTimelinePremiumStore.types';
 import type { EventTimelinePremiumStore } from '../EventTimelinePremiumStore';
 import { eventTimelinePremiumPresetSelectors } from '../../event-timeline-premium-selectors';
+import { getDateRangeKey } from '../../internals/utils/queue';
+import type { DateRange } from '../../internals/utils/queue';
 
 /**
  * The first fetch is gated on `state.hasInitialized`: without it, the selector
@@ -22,25 +24,31 @@ export class EventTimelinePremiumLazyLoadingPlugin<
   constructor(store: EventTimelinePremiumStore<TEvent, any>) {
     super(store);
 
-    store.registerStoreEffect(
-      (state) => {
-        if (!state.hasInitialized) {
-          return null;
-        }
-        const viewConfig = eventTimelinePremiumPresetSelectors.config(state);
-        return `${state.adapter.getTime(viewConfig.start)}|${state.adapter.getTime(viewConfig.end)}`;
-      },
+    this.disposables.defer(
+      store.registerStoreEffect(
+        (state) => {
+          if (!state.hasInitialized) {
+            return null;
+          }
+          return getDateRangeKey(getRangeToFetch(state));
+        },
 
-      (previousKey, nextKey) => {
-        if (previousKey === nextKey || !store.parameters.dataSource) {
-          return;
-        }
+        (previousKey, nextKey) => {
+          if (previousKey === nextKey || !store.parameters.dataSource) {
+            return;
+          }
 
-        this.scheduleFetch(() => {
-          const viewConfig = eventTimelinePremiumPresetSelectors.config(store.state);
-          return { start: viewConfig.start, end: viewConfig.end };
-        }, previousKey === null);
-      },
+          this.scheduleFetch(() => getRangeToFetch(store.state), previousKey === null);
+        },
+      ),
     );
   }
+}
+
+/**
+ * Returns the days of the visible range of the preset.
+ */
+function getRangeToFetch(state: EventTimelinePremiumState): DateRange {
+  const config = eventTimelinePremiumPresetSelectors.config(state);
+  return { start: config.start, end: config.end };
 }

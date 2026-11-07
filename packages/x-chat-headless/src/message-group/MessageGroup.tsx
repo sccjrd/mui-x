@@ -1,8 +1,8 @@
 'use client';
 import * as React from 'react';
-import { useStore } from '@mui/x-internals/store';
+import { useStore } from '@base-ui/utils/store';
 import useSlotProps from '@mui/utils/useSlotProps';
-import { SlotComponentProps } from '@mui/utils/types';
+import type { SlotComponentProps } from '@mui/utils/types';
 import { useChatStore } from '../hooks/useChatStore';
 import { useMessage, useMessageIds } from '../hooks/useMessage';
 import { useMessageAuthor } from '../hooks/useMessageAuthor';
@@ -16,7 +16,7 @@ import { MessageAvatar } from '../message/MessageAvatar';
 import { MessageContent } from '../message/MessageContent';
 import { MessageMeta } from '../message/MessageMeta';
 import { MessageRoot } from '../message/MessageRoot';
-import { type MessageGroupOwnerState } from './messageGroup.types';
+import type { MessageGroupOwnerState } from './messageGroup.types';
 
 /**
  * A function that maps a message to a group key.
@@ -58,7 +58,13 @@ function resolveMessageIndex(messageId: string, index: number | undefined, items
 }
 
 export interface MessageGroupSlots {
+  /**
+   * The component that renders the group.
+   */
   group: React.ElementType;
+  /**
+   * The component that renders the author name.
+   */
   authorName: React.ElementType;
   /**
    * The timestamp element rendered next to the author name in compact mode.
@@ -69,15 +75,33 @@ export interface MessageGroupSlots {
 }
 
 export interface MessageGroupSlotProps {
+  /**
+   * The props used for the group slot.
+   */
   group?: SlotComponentProps<'div', {}, MessageGroupOwnerState>;
+  /**
+   * The props used for the author name slot.
+   */
   authorName?: SlotComponentProps<'div', {}, MessageGroupOwnerState>;
   groupTimestamp?: SlotComponentProps<'span', {}, MessageGroupOwnerState>;
 }
 
 export interface MessageGroupProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'children'> {
+  /**
+   * The content of the component.
+   */
   children?: React.ReactNode;
+  /**
+   * The id of the message this row belongs to.
+   */
   messageId: string;
+  /**
+   * The index of the row in `items`.
+   */
   index?: number;
+  /**
+   * The ids of the messages in the list, in order.
+   */
   items?: string[];
   /**
    * A function that maps a message to a group key.
@@ -86,7 +110,15 @@ export interface MessageGroupProps extends Omit<React.HTMLAttributes<HTMLDivElem
    * @default (message) => message.author?.id ?? message.role ?? ''
    */
   groupKey?: GroupKeyFn;
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
   slots?: Partial<MessageGroupSlots>;
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
   slotProps?: MessageGroupSlotProps;
 }
 
@@ -208,31 +240,28 @@ export const MessageGroup = React.forwardRef(function MessageGroup(
   return (
     <Group {...groupProps}>
       {defaultAuthorName}
-      {children ? (
+      {children !== undefined ? (
         // When custom children are provided (e.g. from DefaultMessageItem),
         // pass `isGrouped` via cloneElement so the inner MessageRoot/ChatMessage
         // receives the correct grouping state for its context.
-        // In compact mode, also inject the author name element into the
-        // children so it appears inside the CSS grid (sharing a row with the avatar).
-        // We wrap in a Fragment to avoid duplicate-key warnings.
         React.Children.map(children, (child) => {
-          if (!React.isValidElement(child) || typeof child.type === 'string') {
+          if (
+            !React.isValidElement(child) ||
+            typeof child.type === 'string' ||
+            child.type === React.Fragment ||
+            !('messageId' in (child.props as Record<string, unknown>))
+          ) {
             return child;
           }
           const clone = child as React.ReactElement<Record<string, unknown>>;
-          if (compactAuthorName) {
-            const existingChildren = (clone.props as { children?: React.ReactNode }).children;
-            return React.cloneElement(clone, {
-              isGrouped: !isFirst,
-              children: (
-                <React.Fragment>
-                  {compactAuthorName}
-                  {existingChildren}
-                </React.Fragment>
-              ),
-            });
-          }
-          return React.cloneElement(clone, { isGrouped: !isFirst });
+          // In compact mode the author label shares the message's CSS grid. Pass
+          // it as a dedicated `groupAuthorName` prop rather than merging it into
+          // the child's `children`, so a consumer's own custom `children` stay
+          // intact (and render children-only) even in compact mode.
+          return React.cloneElement(clone, {
+            isGrouped: !isFirst,
+            ...(compactAuthorName ? { groupAuthorName: compactAuthorName } : {}),
+          });
         })
       ) : (
         <MessageRoot isGrouped={!isFirst} messageId={messageId}>

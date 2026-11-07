@@ -87,6 +87,22 @@ export interface GridClasses {
    */
   aggregationRowOverlayWrapper: string;
   /**
+   * Styles applied to the A1-notation column-letter adornment in the column header (Premium formulas).
+   */
+  formulaColumnHeaderLetter: string;
+  /**
+   * Styles applied to the `ƒx` badge in the column header of a computed column (Premium computed columns).
+   */
+  computedColumnHeaderBadge: string;
+  /**
+   * Styles applied to the cells of the A1-notation row-number column (Premium formulas).
+   */
+  formulaRowNumberCell: string;
+  /**
+   * Styles applied to the formula bar root element (Premium formulas).
+   */
+  formulaBar: string;
+  /**
    * Styles applied to the root element if `autoHeight={true}`.
    */
   autoHeight: string;
@@ -94,6 +110,9 @@ export interface GridClasses {
    * Styles applied to the root element while it is being autosized.
    */
   autosizing: string;
+  /**
+   * Styles applied to the root element if a side panel is open.
+   */
   withSidePanel: string;
   /**
    * Styles applied to the icon of the boolean cell.
@@ -103,6 +122,14 @@ export interface GridClasses {
    * Styles applied to the cell element if the cell is editable.
    */
   'cell--editable': string;
+  /**
+   * Styles applied to the cell element if the cell belongs to a computed column (Premium computed columns).
+   */
+  'cell--computed': string;
+  /**
+   * Styles applied to the cell element if the formula of its computed column evaluates to an error for the row (Premium computed columns).
+   */
+  'cell--computedError': string;
   /**
    * Styles applied to the cell element if the cell is in edit mode.
    */
@@ -253,10 +280,24 @@ export interface GridClasses {
    */
   'columnHeader--sorted': string;
   /**
+   * Styles applied to the column header if the column is a computed column (Premium computed columns).
+   */
+  'columnHeader--computed': string;
+  /**
+   * Styles applied to the column header if the formula of its computed column is invalid (Premium computed columns).
+   */
+  'columnHeader--computedInvalid': string;
+  /**
    * Styles applied to the column header if the column has a filter applied to it.
    */
   'columnHeader--filtered': string;
+  /**
+   * Styles applied to the column header if it is pinned to the left.
+   */
   'columnHeader--pinnedLeft': string;
+  /**
+   * Styles applied to the column header if it is pinned to the right.
+   */
   'columnHeader--pinnedRight': string;
   /**
    * Styles applied to the last column header element.
@@ -518,6 +559,54 @@ export interface GridClasses {
    */
   editLongTextCellTextarea: string;
   /**
+   * Styles applied to the multi-select cell root element.
+   */
+  multiSelectCell: string;
+  /**
+   * Styles applied to each chip in the multi-select cell.
+   */
+  multiSelectCellChip: string;
+  /**
+   * @ignore - do not document.
+   */
+  'multiSelectCellChip--hidden': string;
+  /**
+   * Styles applied to the overflow "+N" chip in the multi-select cell.
+   */
+  multiSelectCellOverflow: string;
+  /**
+   * Styles applied to the multi-select cell expand popup.
+   */
+  multiSelectCellPopup: string;
+  /**
+   * Styles applied to the multi-select cell popper content.
+   */
+  multiSelectCellPopperContent: string;
+  /**
+   * Styles applied to the edit multi-select cell root element.
+   */
+  editMultiSelectCell: string;
+  /**
+   * Styles applied to each chip in the edit multi-select cell.
+   */
+  editMultiSelectCellChip: string;
+  /**
+   * @ignore - do not document.
+   */
+  'editMultiSelectCellChip--hidden': string;
+  /**
+   * Styles applied to the overflow "+N" chip in the edit multi-select cell.
+   */
+  editMultiSelectCellOverflow: string;
+  /**
+   * Styles applied to the edit multi-select cell popup.
+   */
+  editMultiSelectCellPopup: string;
+  /**
+   * Styles applied to the edit multi-select cell popper content.
+   */
+  editMultiSelectCellPopperContent: string;
+  /**
    * Styles applied to the filter icon element.
    */
   filterIcon: string;
@@ -537,6 +626,9 @@ export interface GridClasses {
    * Styles applied to the column header filter row.
    */
   headerFilterRow: string;
+  /**
+   * Styles applied to the element that wraps the main content of the grid.
+   */
   mainContent: string; // TODO: come up with a better name
   /**
    * Styles applied to the main container element.
@@ -844,6 +936,9 @@ export interface GridClasses {
    * Styles applied the column header if `showColumnVerticalBorder={true}`.
    */
   'columnHeader--withRightBorder': string;
+  /**
+   * Styles applied to the column header if it has a left border.
+   */
   'columnHeader--withLeftBorder': string;
   /**
    * Styles applied to the root of the grouping column of the tree data.
@@ -920,6 +1015,10 @@ export interface GridClasses {
    */
   'pivotPanelField--sorted': string;
   /**
+   * Styles applied to the drag preview of a pivot panel field when it's dragged with touch or pen.
+   */
+  'pivotPanelField--dragging': string;
+  /**
    * Styles applied to the pivot panel header.
    */
   pivotPanelHeader: string;
@@ -955,6 +1054,54 @@ export interface GridClasses {
    * Styles applied to the pivot panel switch label.
    */
   pivotPanelSwitchLabel: string;
+  /**
+   * Styles applied to the computed columns panel root element (Premium computed columns).
+   */
+  computedColumnsPanel: string;
+  /**
+   * Styles applied to the computed columns panel header element.
+   */
+  computedColumnsPanelHeader: string;
+  /**
+   * Styles applied to the computed columns panel list view element.
+   */
+  computedColumnsPanelList: string;
+  /**
+   * Styles applied to each item of the computed columns panel list.
+   */
+  computedColumnsPanelListItem: string;
+  /**
+   * Styles applied to the empty state of the computed columns panel list.
+   */
+  computedColumnsPanelEmpty: string;
+  /**
+   * Styles applied to the computed columns panel editor view element.
+   */
+  computedColumnsPanelEditor: string;
+  /**
+   * Styles applied to the field rows of the computed columns panel editor.
+   */
+  computedColumnsPanelField: string;
+  /**
+   * Styles applied to the formula surface of the computed columns panel editor.
+   */
+  computedColumnsPanelFormula: string;
+  /**
+   * Styles applied to the preview element of the computed columns panel editor.
+   */
+  computedColumnsPanelPreview: string;
+  /**
+   * Styles applied to the reference pane (columns and functions to insert) of the computed columns panel editor.
+   */
+  computedColumnsPanelReference: string;
+  /**
+   * Styles applied to the validation block of the computed columns panel editor.
+   */
+  computedColumnsPanelValidation: string;
+  /**
+   * Styles applied to the footer of the computed columns panel editor.
+   */
+  computedColumnsPanelFooter: string;
   /**
    * Styles applied to the prompt root element.
    */
@@ -1034,6 +1181,8 @@ export const gridClassesOverrides = {
     'actionsCell',
     'booleanCell',
     'cell',
+    'cell--computed',
+    'cell--computedError',
     'cell--editable',
     'cell--editing',
     'cell--flex',
@@ -1064,6 +1213,8 @@ export const gridClassesOverrides = {
     'columnHeader--alignCenter',
     'columnHeader--alignLeft',
     'columnHeader--alignRight',
+    'columnHeader--computed',
+    'columnHeader--computedInvalid',
     'columnHeader--dragging',
     'columnHeader--emptyGroup',
     'columnHeader--filledGroup',
@@ -1161,6 +1312,10 @@ export const gridClasses = generateUtilityClasses<GridClassKey>('MuiDataGrid', [
   'aggregationColumnHeader--alignRight',
   'aggregationColumnHeaderLabel',
   'aggregationRowOverlayWrapper',
+  'formulaColumnHeaderLetter',
+  'computedColumnHeaderBadge',
+  'formulaRowNumberCell',
+  'formulaBar',
   'mainContent',
   'withSidePanel',
   'collapsible',
@@ -1200,6 +1355,18 @@ export const gridClasses = generateUtilityClasses<GridClassKey>('MuiDataGrid', [
   'editLongTextCellPopup',
   'editLongTextCellPopperContent',
   'editLongTextCellTextarea',
+  'multiSelectCell',
+  'multiSelectCellChip',
+  'multiSelectCellChip--hidden',
+  'multiSelectCellOverflow',
+  'multiSelectCellPopup',
+  'multiSelectCellPopperContent',
+  'editMultiSelectCell',
+  'editMultiSelectCellChip',
+  'editMultiSelectCellChip--hidden',
+  'editMultiSelectCellOverflow',
+  'editMultiSelectCellPopup',
+  'editMultiSelectCellPopperContent',
   'filler',
   'filterForm',
   'filterFormDeleteIcon',
@@ -1246,9 +1413,11 @@ export const gridClasses = generateUtilityClasses<GridClassKey>('MuiDataGrid', [
   'virtualScrollerContent',
   'virtualScrollerContent--overflowed',
   'virtualScrollerRenderZone',
+  'pivotPanelBody',
   'pivotPanelAvailableFields',
   'pivotPanelField',
   'pivotPanelField--sorted',
+  'pivotPanelField--dragging',
   'pivotPanelFieldActionContainer',
   'pivotPanelFieldCheckbox',
   'pivotPanelFieldDragIcon',
@@ -1263,6 +1432,18 @@ export const gridClasses = generateUtilityClasses<GridClassKey>('MuiDataGrid', [
   'pivotPanelSections',
   'pivotPanelSwitch',
   'pivotPanelSwitchLabel',
+  'computedColumnsPanel',
+  'computedColumnsPanelHeader',
+  'computedColumnsPanelList',
+  'computedColumnsPanelListItem',
+  'computedColumnsPanelEmpty',
+  'computedColumnsPanelEditor',
+  'computedColumnsPanelField',
+  'computedColumnsPanelFormula',
+  'computedColumnsPanelPreview',
+  'computedColumnsPanelReference',
+  'computedColumnsPanelValidation',
+  'computedColumnsPanelFooter',
   'prompt',
   'promptContent',
   'promptText',

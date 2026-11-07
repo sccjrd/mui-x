@@ -4,13 +4,8 @@ import PropTypes from 'prop-types';
 import { useThemeProps } from '@mui/material/styles';
 import { ChartsBrushOverlay } from '@mui/x-charts/ChartsBrushOverlay';
 import { ChartsWrapper } from '@mui/x-charts/ChartsWrapper';
-import {
-  FocusedHeatmapCell,
-  HeatmapTooltip,
-  type HeatmapProps,
-  type HeatmapSlots,
-  type HeatmapSlotProps,
-} from '@mui/x-charts-pro/Heatmap';
+import { FocusedHeatmapCell, HeatmapTooltip } from '@mui/x-charts-pro/Heatmap';
+import type { HeatmapProps, HeatmapSlots, HeatmapSlotProps } from '@mui/x-charts-pro/Heatmap';
 import { ChartsLegend } from '@mui/x-charts/ChartsLegend';
 import { ChartsToolbarPro } from '@mui/x-charts-pro/ChartsToolbarPro';
 import { ChartsOverlay } from '@mui/x-charts/ChartsOverlay';
@@ -21,7 +16,7 @@ import { ChartsSvgLayer } from '@mui/x-charts/ChartsSvgLayer';
 import { ChartsWebGLLayer } from '../ChartsWebGLLayer';
 import { useHeatmapPremiumProps } from './useHeatmapPremiumProps';
 import { ChartsDataProviderPremium } from '../ChartsDataProviderPremium';
-import { type HeatmapPremiumPluginSignatures } from './HeatmapPremium.plugins';
+import type { HeatmapPremiumPluginSignatures } from './HeatmapPremium.plugins';
 import { HeatmapPlotPremium } from './HeatmapPlotPremium';
 
 export interface HeatmapPremiumSlots extends HeatmapSlots {}
@@ -91,11 +86,14 @@ const HeatmapPremium = React.forwardRef(function HeatmapPremium(
   );
 });
 
-HeatmapPremium.propTypes = {
+HeatmapPremium.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * The ref object that exposes the chart API methods.
+   */
   apiRef: PropTypes.shape({
     current: PropTypes.shape({
       exportAsImage: PropTypes.func.isRequired,
@@ -144,7 +142,16 @@ HeatmapPremium.propTypes = {
   /**
    * Options to enable features planned for the next major.
    */
-  experimentalFeatures: PropTypes.object,
+  experimentalFeatures: PropTypes.shape({
+    keyboardActivation: PropTypes.bool,
+  }),
+  /**
+   * If `true`, clicking an item immediately shows the keyboard focus indicator on it.
+   * By default, clicking sets the item that keyboard navigation starts from, but the focus
+   * indicator stays hidden until the user presses a key.
+   * @default false
+   */
+  focusItemOnClick: PropTypes.bool,
   /**
    * The height of the chart in px. If not defined, it takes the height of the parent element.
    */
@@ -246,7 +253,7 @@ HeatmapPremium.propTypes = {
   /**
    * The callback fired when an item is clicked.
    *
-   * @param {React.MouseEvent<HTMLDivElement, MouseEvent>} event The click event.
+   * @param {ChartsActivationEvent<HTMLDivElement>} event The click event.
    * @param {SeriesItemIdentifierWithType<SeriesType>} item The clicked item.
    */
   onItemClick: PropTypes.func,
@@ -297,11 +304,18 @@ HeatmapPremium.propTypes = {
    * @default {}
    */
   slots: PropTypes.object,
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx: PropTypes.oneOfType([
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
     PropTypes.func,
     PropTypes.object,
   ]),
+  /**
+   * The color mode passed to `colors` when it is a function.
+   * Defaults to the mode of the Material UI theme.
+   */
   theme: PropTypes.oneOf(['dark', 'light']),
   /**
    * The title of the chart.
@@ -370,6 +384,7 @@ HeatmapPremium.propTypes = {
           max: PropTypes.oneOfType([PropTypes.instanceOf(Date), PropTypes.number]),
           min: PropTypes.oneOfType([PropTypes.instanceOf(Date), PropTypes.number]),
           type: PropTypes.oneOf(['continuous']).isRequired,
+          unknownColor: PropTypes.string,
         }),
         PropTypes.shape({
           colors: PropTypes.arrayOf(PropTypes.string).isRequired,
@@ -377,6 +392,7 @@ HeatmapPremium.propTypes = {
             PropTypes.oneOfType([PropTypes.instanceOf(Date), PropTypes.number]).isRequired,
           ).isRequired,
           type: PropTypes.oneOf(['piecewise']).isRequired,
+          unknownColor: PropTypes.string,
         }),
         PropTypes.shape({
           colors: PropTypes.arrayOf(PropTypes.string).isRequired,
@@ -443,7 +459,7 @@ HeatmapPremium.propTypes = {
   zoomInteractionConfig: PropTypes.shape({
     pan: PropTypes.arrayOf(
       PropTypes.oneOfType([
-        PropTypes.oneOf(['drag', 'pressAndDrag', 'wheel']),
+        PropTypes.oneOf(['drag', 'keyboard', 'pressAndDrag', 'wheel']),
         PropTypes.shape({
           allowedDirection: PropTypes.oneOf(['x', 'xy', 'y']),
           pointerMode: PropTypes.any,
@@ -460,11 +476,16 @@ HeatmapPremium.propTypes = {
           requiredKeys: PropTypes.arrayOf(PropTypes.string),
           type: PropTypes.oneOf(['pressAndDrag']).isRequired,
         }),
+        PropTypes.shape({
+          pointerMode: PropTypes.any,
+          requiredKeys: PropTypes.array,
+          type: PropTypes.oneOf(['keyboard']).isRequired,
+        }),
       ]).isRequired,
     ),
     zoom: PropTypes.arrayOf(
       PropTypes.oneOfType([
-        PropTypes.oneOf(['brush', 'doubleTapReset', 'pinch', 'tapAndDrag', 'wheel']),
+        PropTypes.oneOf(['brush', 'doubleTapReset', 'keyboard', 'pinch', 'tapAndDrag', 'wheel']),
         PropTypes.shape({
           pointerMode: PropTypes.oneOf(['mouse', 'touch']),
           requiredKeys: PropTypes.arrayOf(PropTypes.string),
@@ -479,6 +500,11 @@ HeatmapPremium.propTypes = {
           pointerMode: PropTypes.oneOf(['mouse', 'touch']),
           requiredKeys: PropTypes.arrayOf(PropTypes.string),
           type: PropTypes.oneOf(['tapAndDrag']).isRequired,
+        }),
+        PropTypes.shape({
+          pointerMode: PropTypes.any,
+          requiredKeys: PropTypes.array,
+          type: PropTypes.oneOf(['keyboard']).isRequired,
         }),
         PropTypes.shape({
           pointerMode: PropTypes.any,

@@ -8,10 +8,12 @@ import Radio from '@mui/material/Radio';
 import {
   DataGridPro,
   GridActionsCellItem,
-  type GridColDef,
-  type GridRowsProp,
-  type DataGridProProps,
   GridActionsCell,
+} from '@mui/x-data-grid-pro';
+import type {
+  GridColDef,
+  GridRowsProp,
+  DataGridProProps,
 } from '@mui/x-data-grid-pro';
 import {
   randomCreatedDate,
@@ -67,7 +69,7 @@ export default function ColumnPinningSectionSeparator() {
 }
 
 const columns: GridColDef[] = [
-  { field: 'name', headerName: 'Name', width: 160, editable: true },
+  { field: 'name', headerName: 'Name', width: 160, editable: true, rowHeader: true },
   { field: 'email', headerName: 'Email', width: 200, editable: true },
   { field: 'age', headerName: 'Age', type: 'number', editable: true },
   {

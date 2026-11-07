@@ -1,11 +1,9 @@
-import {
-  createSchedulerRenderer,
-  SchedulerStoreRunner,
-  AnyEventCalendarStore,
-} from 'test/utils/scheduler';
+import type { AnyEventCalendarStore } from 'test/utils/scheduler';
+import { createSchedulerRenderer, SchedulerStoreRunner } from 'test/utils/scheduler';
 import { screen } from '@mui/internal-test-utils';
 import { SchedulerStoreContext } from '@mui/x-scheduler-internals/use-scheduler-store-context';
 import { eventCalendarClasses } from '@mui/x-scheduler/event-calendar';
+import { describe, it, expect } from 'vitest';
 import { EventCalendarProvider } from '../../../internals/components/EventCalendarProvider';
 import { PreferencesMenu } from './PreferencesMenu';
 import { getPreferencesMenu, openPreferencesMenu } from '../../../internals/utils/test-utils';
@@ -34,6 +32,21 @@ describe('<PreferencesMenu />', () => {
     );
 
     expect(getPreferencesMenu()).not.to.equal(null);
+  });
+
+  it('should expose aria-expanded reflecting the menu open state', async () => {
+    const { user } = render(
+      <EventCalendarProvider events={[]}>
+        <PreferencesMenu />
+      </EventCalendarProvider>,
+    );
+
+    const button = getPreferencesMenu()!;
+    expect(button).to.have.attribute('aria-expanded', 'false');
+
+    await openPreferencesMenu(user);
+
+    expect(button).to.have.attribute('aria-expanded', 'true');
   });
 
   it('should not render the menu when the config equals false', async () => {
@@ -182,6 +195,48 @@ describe('<PreferencesMenu />', () => {
     expect(screen.queryByRole('menuitemcheckbox', { name: /show empty days/i })).to.equal(null);
   });
 
+  describe('defaults of the locale', () => {
+    const isChecked = (name: RegExp) =>
+      screen.getByRole('menuitemradio', { name }).getAttribute('aria-checked');
+
+    it('should check Sunday and the 12-hour clock in English (United States)', async () => {
+      const { user } = render(
+        <EventCalendarProvider
+          events={[]}
+          preferencesMenuConfig={{ toggleWeekStartsOn: true, toggleAmpm: true }}
+        >
+          <PreferencesMenu />
+        </EventCalendarProvider>,
+      );
+
+      await openPreferencesMenu(user);
+
+      expect(isChecked(/sunday/i)).to.equal('true');
+      expect(isChecked(/monday/i)).to.equal('false');
+      expect(isChecked(/12-hour/i)).to.equal('true');
+      expect(isChecked(/24-hour/i)).to.equal('false');
+    });
+
+    it('should check Monday and the 24-hour clock in French', async () => {
+      const { user } = render(
+        <EventCalendarProvider
+          events={[]}
+          dateLocale="fr-FR"
+          preferencesMenuConfig={{ toggleWeekStartsOn: true, toggleAmpm: true }}
+        >
+          <PreferencesMenu />
+        </EventCalendarProvider>,
+      );
+
+      await openPreferencesMenu(user);
+
+      expect(isChecked(/monday/i)).to.equal('true');
+      expect(isChecked(/sunday/i)).to.equal('false');
+      expect(isChecked(/24-hour/i)).to.equal('true');
+      expect(isChecked(/12-hour/i)).to.equal('false');
+    });
+  });
+
   describe('weekStartsOn submenu', () => {
     it('should render Sunday, Monday, Saturday radios when toggleWeekStartsOn is true', async () => {
       const { user } = render(
@@ -225,7 +280,7 @@ describe('<PreferencesMenu />', () => {
       const { user } = render(
         <EventCalendarProvider
           events={[]}
-          defaultPreferences={{ weekStartsOn: 0 }}
+          defaultPreferences={{ weekStartsOn: 7 }}
           preferencesMenuConfig={{ toggleWeekStartsOn: true }}
         >
           <PreferencesMenu />

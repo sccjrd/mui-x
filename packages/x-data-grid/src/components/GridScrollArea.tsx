@@ -24,6 +24,8 @@ import { useTimeout } from '../hooks/utils/useTimeout';
 import { getTotalHeaderHeight } from '../hooks/features/columns/gridColumnsUtils';
 import { createSelector } from '../utils/createSelector';
 import { gridRowsMetaSelector } from '../hooks/features/rows/gridRowsMetaSelector';
+import { gridIsRowDragActiveSelector } from '../hooks/features/rowReorder/gridRowReorderSelector';
+import { gridColumnReorderDragColDefensiveSelector } from '../hooks/features/columnHeaders/gridColumnReorderDragColSelector';
 
 const CLIFF = 1;
 const SLOP = 1.5;
@@ -97,17 +99,27 @@ const offsetSelector = createSelector(
   },
 );
 
+// The drag direction is derived from the reorder state instead of the drag events.
+// An event handler subscribed during render can fire for a render pass that never mounts.
+// A `setState` call from such a handler triggers a React warning.
+// See https://github.com/mui/mui-x/issues/23469.
+const gridDragDirectionSelector = createSelector(
+  gridColumnReorderDragColDefensiveSelector,
+  gridIsRowDragActiveSelector,
+  (dragCol, isRowDragActive): 'horizontal' | 'vertical' | 'none' => {
+    if (dragCol) {
+      return 'horizontal';
+    }
+    if (isRowDragActive) {
+      return 'vertical';
+    }
+    return 'none';
+  },
+);
+
 function GridScrollAreaWrapper(props: ScrollAreaProps) {
   const apiRef = useGridApiContext();
-  const [dragDirection, setDragDirection] = React.useState<'horizontal' | 'vertical' | 'none'>(
-    'none',
-  );
-
-  // Listen for both column and row drag events
-  useGridEvent(apiRef, 'columnHeaderDragStart', () => setDragDirection('horizontal'));
-  useGridEvent(apiRef, 'columnHeaderDragEnd', () => setDragDirection('none'));
-  useGridEvent(apiRef, 'rowDragStart', () => setDragDirection('vertical'));
-  useGridEvent(apiRef, 'rowDragEnd', () => setDragDirection('none'));
+  const dragDirection = useGridSelector(apiRef, gridDragDirectionSelector);
 
   if (dragDirection === 'none') {
     return null;

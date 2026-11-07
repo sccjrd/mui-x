@@ -1,20 +1,34 @@
 'use client';
 import * as React from 'react';
 import useSlotProps from '@mui/utils/useSlotProps';
-import { SlotComponentProps } from '@mui/utils/types';
+import type { SlotComponentProps } from '@mui/utils/types';
 import { useConversationContext } from './internals/ConversationContext';
-import { type ConversationSubtitleOwnerState } from './conversation.types';
+import type { ConversationSubtitleOwnerState } from './conversation.types';
 
 export interface ConversationSubtitleSlots {
+  /**
+   * The component that renders the subtitle.
+   */
   subtitle: React.ElementType;
 }
 
 export interface ConversationSubtitleSlotProps {
+  /**
+   * The props used for the subtitle slot.
+   */
   subtitle?: SlotComponentProps<'div', {}, ConversationSubtitleOwnerState>;
 }
 
 export interface ConversationSubtitleProps extends React.HTMLAttributes<HTMLDivElement> {
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
   slots?: Partial<ConversationSubtitleSlots>;
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
   slotProps?: ConversationSubtitleSlotProps;
 }
 

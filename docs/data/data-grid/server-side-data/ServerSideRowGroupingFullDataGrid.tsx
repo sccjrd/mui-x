@@ -1,9 +1,11 @@
 import * as React from 'react';
-import {
-  DataGridPremium,
+import type {
   GridDataSource,
   GridGroupingColDefOverride,
   GridValidRowModel,
+} from '@mui/x-data-grid-premium';
+import {
+  DataGridPremium,
   useGridApiRef,
   useKeepGroupedColumnsHidden,
 } from '@mui/x-data-grid-premium';
@@ -22,6 +24,7 @@ export default function ServerSideRowGroupingFullDataGrid() {
     dataSet: 'Commodity',
     maxColumns: 20,
     editable: true,
+    multiSelect: true,
   });
 
   const dataSource: GridDataSource = React.useMemo(() => {

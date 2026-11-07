@@ -5,11 +5,17 @@ import generateUtilityClasses from '@mui/utils/generateUtilityClasses';
 import { ANIMATION_DURATION_MS, ANIMATION_TIMING_FUNCTION } from '../internals/animation/animation';
 import { cleanId } from '../internals/cleanId';
 import { useChartId, useDrawingArea } from '../hooks';
-import { type SeriesId } from '../models/seriesType/common';
+import type { SeriesId } from '../models/seriesType/common';
 
 interface AppearingMaskProps {
+  /**
+   * The id of the series the element belongs to.
+   */
   seriesId: SeriesId;
   skipAnimation?: boolean;
+  /**
+   * The content of the component.
+   */
   children: React.ReactNode;
 }
 

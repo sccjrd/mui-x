@@ -2,32 +2,28 @@
 import * as React from 'react';
 import clsx from 'clsx';
 import { styled } from '@mui/material/styles';
-import { createSelector, useStore } from '@base-ui/utils/store';
+import { useStore } from '@base-ui/utils/store';
 import RepeatRounded from '@mui/icons-material/RepeatRounded';
 import { CalendarGrid } from '@mui/x-scheduler-internals/calendar-grid';
-import {
+import type {
   SchedulerEventSide,
   SchedulerRenderableEventOccurrence,
 } from '@mui/x-scheduler-internals/models';
 import type { EventCalendarState } from '@mui/x-scheduler-internals/use-event-calendar';
-import {
-  schedulerEventSelectors,
-  schedulerResourceSelectors,
-} from '@mui/x-scheduler-internals/scheduler-selectors';
+import { schedulerEventSelectors } from '@mui/x-scheduler-internals/scheduler-selectors';
 import { useEventCalendarStoreContext } from '@mui/x-scheduler-internals/use-event-calendar-store-context';
 import { eventCalendarViewSelectors } from '@mui/x-scheduler-internals/event-calendar-selectors';
-import { DayGridEventProps } from './DayGridEvent.types';
+import { getOccurrenceDataTimezone } from '@mui/x-scheduler-internals/internals';
+import type { DayGridEventProps } from './DayGridEvent.types';
 import { isOccurrenceAllDayOrMultipleDay } from '../../../utils/event-utils';
 import { EventDragPreview } from '../../../components/event-drag-preview';
 import { useFormatTime } from '../../../hooks/useFormatTime';
-import { getPaletteVariants, PaletteName } from '../../../utils/tokens';
+import { useEventAccessibleName } from '../../../hooks/useEventAccessibleName';
+import type { PaletteName } from '../../../utils/tokens';
+import { getPaletteVariants } from '../../../utils/tokens';
 import { useEventCalendarStyledContext } from '../../../../event-calendar/EventCalendarStyledContext';
 import { eventCalendarClasses } from '../../../../event-calendar/eventCalendarClasses';
-
-const ARROW_DEPTH = 8; // px - depth of the chevron point
-const LEFT_ARROW_CLIP = `polygon(${ARROW_DEPTH}px 0, 100% 0, 100% 100%, ${ARROW_DEPTH}px 100%, 0 50%)`;
-const RIGHT_ARROW_CLIP = `polygon(0 0, calc(100% - ${ARROW_DEPTH}px) 0, 100% 50%, calc(100% - ${ARROW_DEPTH}px) 100%, 0 100%)`;
-const BOTH_ARROWS_CLIP = `polygon(${ARROW_DEPTH}px 0, calc(100% - ${ARROW_DEPTH}px) 0, 100% 50%, calc(100% - ${ARROW_DEPTH}px) 100%, ${ARROW_DEPTH}px 100%, 0 50%)`;
+import { getArrowEdgeStyles, getArrowFocusVisibleStyles } from '../arrowClips';
 
 const DayGridEventBaseStyles = (theme: any) => ({
   containerType: 'inline-size',
@@ -75,25 +71,8 @@ const DayGridEventRoot = styled(CalendarGrid.DayEvent, {
       [`& .${eventCalendarClasses.dayGridEventRecurringIcon}`]: {
         color: 'var(--event-on-surface-bold)',
       },
-      '&[data-starting-before-edge]': {
-        borderTopLeftRadius: 0,
-        borderBottomLeftRadius: 0,
-        clipPath: LEFT_ARROW_CLIP,
-        paddingLeft: ARROW_DEPTH + 8,
-      },
-      '&[data-ending-after-edge]': {
-        borderTopRightRadius: 0,
-        borderBottomRightRadius: 0,
-        clipPath: RIGHT_ARROW_CLIP,
-        paddingRight: ARROW_DEPTH + 8,
-      },
-      '&[data-starting-before-edge][data-ending-after-edge]': {
-        clipPath: BOTH_ARROWS_CLIP,
-      },
-      '&[data-starting-before-edge]:focus-visible, &[data-ending-after-edge]:focus-visible': {
-        clipPath: 'none',
-        borderRadius: (theme.shape.borderRadius as number) * 0.75,
-      },
+      ...getArrowEdgeStyles(theme, 8),
+      ...getArrowFocusVisibleStyles((theme.shape.borderRadius as number) * 0.75),
     },
     '&[data-variant="invisible"]': {
       width: '100%',
@@ -135,7 +114,7 @@ const DayGridEventTitle = styled('p', {
 })(({ theme }) => ({
   margin: 0,
   fontWeight: theme.typography.fontWeightMedium,
-  fontSize: theme.typography.caption.fontSize,
+  fontSize: 'var(--EventCalendar-fontSize-eventTitle, 0.75rem)',
   lineHeight: 1.43,
   flexGrow: 1,
   '[data-variant="filled"] &': {
@@ -211,10 +190,10 @@ const DayGridEventResizeHandler = styled(CalendarGrid.DayEventResizeHandler, {
     opacity: 1,
   },
   '&[data-start]': {
-    left: 0,
+    insetInlineStart: 0,
   },
   '&[data-end]': {
-    right: 0,
+    insetInlineEnd: 0,
   },
 });
 
@@ -270,31 +249,29 @@ const DayGridEventLinesClamp = styled('span', {
   flexGrow: 1,
 });
 
-const isResizableSelector = createSelector(
-  (
-    state: EventCalendarState,
-    side: SchedulerEventSide,
-    occurrence: SchedulerRenderableEventOccurrence,
-  ) => {
-    if (!schedulerEventSelectors.isResizable(state, occurrence.id, side)) {
-      return false;
-    }
+const isResizableSelector = (
+  state: EventCalendarState,
+  side: SchedulerEventSide,
+  occurrence: SchedulerRenderableEventOccurrence,
+) => {
+  if (!schedulerEventSelectors.isResizable(state, occurrence.id, side)) {
+    return false;
+  }
 
-    const view = eventCalendarViewSelectors.view(state);
+  const view = eventCalendarViewSelectors.view(state);
 
-    // There is only one day cell in the day view
-    if (view === 'day') {
-      return false;
-    }
+  // There is only one day cell in the day view
+  if (view === 'day') {
+    return false;
+  }
 
-    // In month view, only multi-day and all-day events can be resized
-    if (view === 'month') {
-      return isOccurrenceAllDayOrMultipleDay(occurrence, state.adapter);
-    }
+  // In month view, only multi-day and all-day events can be resized
+  if (view === 'month') {
+    return isOccurrenceAllDayOrMultipleDay(occurrence);
+  }
 
-    return true;
-  },
-);
+  return true;
+};
 
 export const DayGridEvent = React.forwardRef(function DayGridEvent(
   props: DayGridEventProps,
@@ -311,15 +288,15 @@ export const DayGridEvent = React.forwardRef(function DayGridEvent(
   const isEndResizable = useStore(store, isResizableSelector, 'end', occurrence);
   const isRecurring = useStore(store, schedulerEventSelectors.isRecurring, occurrence.id);
 
-  const resource = useStore(
-    store,
-    schedulerResourceSelectors.processedResource,
-    occurrence.resource,
-  );
-  const color = useStore(store, schedulerEventSelectors.color, occurrence.id);
+  const color = useStore(store, schedulerEventSelectors.color, occurrence.id, undefined);
 
   // Feature hooks
   const formatTime = useFormatTime();
+  const accessibleName = useEventAccessibleName({
+    occurrence,
+    isRecurring,
+    localeText,
+  });
 
   const content = React.useMemo(() => {
     switch (variant) {
@@ -351,15 +328,7 @@ export const DayGridEvent = React.forwardRef(function DayGridEvent(
       case 'compact':
         return (
           <DayGridEventCardWrapper className={classes.dayGridEventCardWrapper}>
-            <EventColorIndicator
-              className={classes.eventColorIndicator}
-              role="img"
-              aria-label={
-                resource?.title
-                  ? localeText.resourceAriaLabel(resource.title)
-                  : localeText.noResourceAriaLabel
-              }
-            />
+            <EventColorIndicator className={classes.eventColorIndicator} aria-hidden="true" />
 
             <DayGridEventCardContent className={classes.dayGridEventCardContent}>
               <DayGridEventLinesClamp
@@ -367,8 +336,8 @@ export const DayGridEvent = React.forwardRef(function DayGridEvent(
                 style={{ '--number-of-lines': 1 } as React.CSSProperties}
               >
                 <DayGridEventTime className={classes.dayGridEventTime}>
-                  <span>{formatTime(occurrence.displayTimezone.start.value)}</span>
-                  <span> - {formatTime(occurrence.displayTimezone.end.value)}</span>
+                  <span>{formatTime(occurrence.displayTimezone.start)}</span>
+                  <span> - {formatTime(occurrence.displayTimezone.end)}</span>
                 </DayGridEventTime>
                 <DayGridEventTitle className={classes.dayGridEventTitle} as="span">
                   {occurrence.title}
@@ -395,11 +364,9 @@ export const DayGridEvent = React.forwardRef(function DayGridEvent(
   }, [
     variant,
     occurrence.title,
-    occurrence.displayTimezone.start.value,
-    occurrence.displayTimezone.end.value,
+    occurrence.displayTimezone.start,
+    occurrence.displayTimezone.end,
     isRecurring,
-    resource?.title,
-    localeText,
     formatTime,
     classes,
   ]);
@@ -435,9 +402,11 @@ export const DayGridEvent = React.forwardRef(function DayGridEvent(
     <DayGridEventRoot
       eventId={occurrence.id}
       occurrenceKey={occurrence.key}
+      dataTimezone={getOccurrenceDataTimezone(occurrence)}
       isDraggable={isDraggable}
       renderDragPreview={(parameters) => <EventDragPreview {...parameters} />}
       aria-hidden={variant === 'invisible'}
+      aria-label={accessibleName}
       {...sharedProps}
       className={clsx(classes.dayGridEvent, sharedProps.className)}
     >

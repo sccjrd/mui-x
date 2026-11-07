@@ -1,11 +1,11 @@
-import * as React from 'react';
-import { SxProps } from '@mui/system';
-import { Theme } from '@mui/material/styles';
-import { SlotComponentPropsFromProps } from '@mui/x-internals/types';
-import { YearCalendarClasses } from './yearCalendarClasses';
-import { BaseDateValidationProps, YearValidationProps } from '../internals/models/validation';
-import { PickerOwnerState, PickerValidDate, TimezoneProps } from '../models';
-import { FormProps } from '../internals/models/formProps';
+import type * as React from 'react';
+import type { SxProps } from '@mui/system';
+import type { Theme } from '@mui/material/styles';
+import type { SlotComponentPropsFromProps } from '@mui/x-internals/types';
+import type { YearCalendarClasses } from './yearCalendarClasses';
+import type { BaseDateValidationProps, YearValidationProps } from '../internals/models/validation';
+import type { PickerOwnerState, PickerValidDate, TimezoneProps } from '../models';
+import type { FormProps } from '../internals/models/formProps';
 
 export interface YearButtonOwnerState extends PickerOwnerState {
   isYearSelected: boolean;
@@ -49,7 +49,13 @@ export interface YearCalendarProps
     BaseDateValidationProps,
     TimezoneProps,
     FormProps {
+  /**
+   * If `true`, the component is focused when it mounts.
+   */
   autoFocus?: boolean;
+  /**
+   * A CSS class name applied to the root element.
+   */
   className?: string;
   /**
    * Override or extend the styles applied to the component.
@@ -94,8 +100,20 @@ export interface YearCalendarProps
    * @default false
    */
   disableHighlightToday?: boolean;
+  /**
+   * @ignore
+   */
   onYearFocus?: (year: number) => void;
+  /**
+   * @ignore
+   */
   hasFocus?: boolean;
+  /**
+   * @ignore
+   */
   onFocusedViewChange?: (hasFocus: boolean) => void;
+  /**
+   * @ignore
+   */
   gridLabelId?: string;
 }

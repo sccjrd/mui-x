@@ -2,6 +2,7 @@ import type {
   GridRowModel,
   GridRowId,
   GridRowModelUpdate,
+  GridRowModelReplace,
   GridValidRowModel,
   GridTreeNode,
 } from '../gridRows';
@@ -67,10 +68,10 @@ export interface GridRowApi {
    */
   setRows: (rows: GridRowModel[]) => void;
   /**
-   * Allows to update, insert and delete rows.
-   * @param {GridRowModelUpdate[]} updates An array of rows with an `action` specifying what to do.
+   * Allows to update, insert, replace and delete rows.
+   * @param {Array<GridRowModelUpdate | GridRowModelReplace>} updates An array of rows with an `action` specifying what to do.
    */
-  updateRows: (updates: GridRowModelUpdate[]) => void;
+  updateRows: (updates: Array<GridRowModelUpdate | GridRowModelReplace>) => void;
   /**
    * Gets the row data with a given id.
    * @param {GridRowId} id The id of the row.
@@ -152,11 +153,41 @@ export interface GridRowProApi {
   collapseAllRows: () => void;
 }
 
+export interface GridUpdateNestedRowsOptions {
+  /**
+   * Id of the group whose children the non-delete updates replace, in their given order.
+   */
+  replaceChildrenOf?: GridRowId;
+  /**
+   * Whether the state update goes through the `throttleRowsMs` throttle.
+   * @default false
+   */
+  throttle?: boolean;
+}
+
 export interface GridRowProPrivateApi {
   /**
-   * Allows to update, insert and delete rows at a specific nested level.
-   * @param {GridRowModelUpdate[]} updates An array of rows with an `action` specifying what to do.
-   * @param {string[]} nestedLevel The nested level of the rows to update, it represents the path to the row in the tree based on `node.groupingKey`.
+   * Allows to update, insert, replace and delete rows at a specific nested level.
+   * @param {Array<GridRowModelUpdate | GridRowModelReplace>} updates An array of rows with an `action` specifying what to do.
+   * @param {string[]} nestedLevel The nested level of the rows to update, it represents the path to the row in the tree based on `node.groupingKey`. If omitted, each row keeps its current parent.
+   * @param {GridUpdateNestedRowsOptions} options Additional options for the update.
    */
-  updateNestedRows: (updates: GridRowModelUpdate[], nestedLevel?: string[]) => void;
+  updateNestedRows: (
+    updates: Array<GridRowModelUpdate | GridRowModelReplace>,
+    nestedLevel?: string[],
+    options?: GridUpdateNestedRowsOptions,
+  ) => void;
+}
+
+export interface GridRowSpanningPrivateApi {
+  /**
+   * Recomputes the row spanning state from scratch.
+   * Row spanning recomputes on its own after row, sort, filter, pagination,
+   * and column updates. Features that change the values cells resolve to
+   * without emitting any of those events (for example a formula evaluation
+   * pass, whose value overlay changes evaluated results in place) call this
+   * method to keep the spans in sync. No-op when the `rowSpanning` prop is
+   * not enabled.
+   */
+  resetRowSpanningState: () => void;
 }

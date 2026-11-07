@@ -1,6 +1,6 @@
+import type { GridColDef } from '@mui/x-data-grid';
 import {
   DataGrid,
-  GridColDef,
   Toolbar,
   ToolbarButton,
   useGridApiContext,
@@ -12,6 +12,7 @@ const columns: GridColDef[] = [
   {
     field: 'firstName',
     headerName: 'First name',
+    rowHeader: true,
     width: 150,
     editable: true,
     filterable: false,
@@ -20,6 +21,7 @@ const columns: GridColDef[] = [
   {
     field: 'lastName',
     headerName: 'Last name',
+    rowHeader: true,
     width: 150,
   },
   {

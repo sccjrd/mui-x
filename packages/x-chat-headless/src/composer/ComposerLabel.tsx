@@ -1,16 +1,22 @@
 'use client';
 import * as React from 'react';
 import useSlotProps from '@mui/utils/useSlotProps';
-import { SlotComponentProps } from '@mui/utils/types';
+import type { SlotComponentProps } from '@mui/utils/types';
 import { useChatLocaleText } from '../chat/internals/ChatLocaleContext';
 import { useComposerContext } from './internals/ComposerContext';
-import { type ComposerOwnerState } from './composer.types';
+import type { ComposerOwnerState } from './composer.types';
 
 export interface ComposerLabelSlots {
+  /**
+   * The component that renders the label.
+   */
   label: React.ElementType;
 }
 
 export interface ComposerLabelSlotProps {
+  /**
+   * The props used for the label slot.
+   */
   label?: SlotComponentProps<'label', {}, ComposerOwnerState>;
 }
 
@@ -30,7 +36,15 @@ export interface ComposerLabelProps extends Omit<
    * omitted, so the default is consistent with the textarea's `aria-label`.
    */
   children?: React.ReactNode;
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
   slots?: Partial<ComposerLabelSlots>;
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
   slotProps?: ComposerLabelSlotProps;
 }
 

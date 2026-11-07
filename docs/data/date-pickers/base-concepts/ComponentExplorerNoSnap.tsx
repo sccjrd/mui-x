@@ -1,5 +1,4 @@
 import * as React from 'react';
-// @ts-ignore
 import { HighlightedCode } from '@mui/internal-core-docs/HighlightedCode';
 import { DemoContainer, DemoItem } from '@mui/x-date-pickers/internals/demo';
 import Stack from '@mui/material/Stack';
@@ -27,12 +26,7 @@ type ExportedElements = keyof typeof exportedElements;
 
 interface State {
   valueType:
-    | 'date'
-    | 'time'
-    | 'dateTime'
-    | 'dateRange'
-    | 'timeRange'
-    | 'dateTimeRange';
+    'date' | 'time' | 'dateTime' | 'dateRange' | 'timeRange' | 'dateTimeRange';
   family: 'field' | 'view' | 'picker';
 }
 

@@ -1,5 +1,14 @@
 {
-  "props": {},
+  "props": {
+    "seriesId": { "type": { "name": "string" }, "required": true },
+    "shape": {
+      "type": {
+        "name": "enum",
+        "description": "'circle'<br>&#124;&nbsp;'cross'<br>&#124;&nbsp;'diamond'<br>&#124;&nbsp;'square'<br>&#124;&nbsp;'star'<br>&#124;&nbsp;'triangle'<br>&#124;&nbsp;'wye'"
+      },
+      "required": true
+    }
+  },
   "name": "LineHighlightElement",
   "imports": [
     "import { LineHighlightElement } from '@mui/x-charts/LineChart';",
@@ -11,6 +20,5 @@
   "muiName": "MuiLineHighlightElement",
   "filename": "/packages/x-charts/src/LineChart/LineHighlightElement.tsx",
   "inheritance": null,
-  "demos": "<ul><li><a href=\"/x/react-charts/areas-demo/\">Charts - Areas demos</a></li>\n<li><a href=\"/x/react-charts/line-demo/\">Charts - Line demos</a></li>\n<li><a href=\"/x/react-charts/lines/\">Charts - Lines</a></li></ul>",
-  "cssComponent": false
+  "demos": "<ul><li><a href=\"/x/react-charts/areas-demo/\">Charts - Areas demos</a></li>\n<li><a href=\"/x/react-charts/line-demo/\">Charts - Line demos</a></li>\n<li><a href=\"/x/react-charts/lines/\">Charts - Lines</a></li></ul>"
 }

@@ -1,4 +1,5 @@
-import { DescribeJalaliAdapterTestSuite } from './describeJalaliAdapter.types';
+import { it, expect } from 'vitest';
+import type { DescribeJalaliAdapterTestSuite } from './describeJalaliAdapter.types';
 
 export const testFormat: DescribeJalaliAdapterTestSuite = ({ adapter }) => {
   it('should format the seconds without leading zeroes for format "s"', () => {

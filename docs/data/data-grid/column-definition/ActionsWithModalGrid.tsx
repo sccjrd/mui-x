@@ -1,12 +1,6 @@
 import * as React from 'react';
-import {
-  DataGrid,
-  GridActionsCellItem,
-  GridRowId,
-  GridColDef,
-  GridActionsCell,
-  GridRenderCellParams,
-} from '@mui/x-data-grid';
+import type { GridRowId, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
+import { DataGrid, GridActionsCellItem, GridActionsCell } from '@mui/x-data-grid';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { randomUserName } from '@mui/x-data-grid-generator';
 import Dialog from '@mui/material/Dialog';
@@ -49,7 +43,7 @@ function ActionsCell(props: GridRenderCellParams) {
 }
 
 const columns: GridColDef<Row>[] = [
-  { field: 'name', type: 'string' },
+  { field: 'name', type: 'string', rowHeader: true },
   {
     field: 'actions',
     type: 'actions',

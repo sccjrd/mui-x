@@ -1,21 +1,58 @@
 import type { RefObject } from '@mui/x-internals/types';
 import { isDeepEqual } from '@mui/x-internals/isDeepEqual';
 import {
-  type GridCellEditStopParams,
-  type GridRowEditStopParams,
-  type GridEvents,
   gridVisibleRowsSelector,
   gridVisibleColumnFieldsSelector,
   gridColumnFieldsSelector,
 } from '@mui/x-data-grid-pro';
+import type {
+  GridCellEditStopParams,
+  GridRowEditStopParams,
+  GridEvents,
+  GridValidRowModel,
+} from '@mui/x-data-grid-pro';
+import { asReplaceUpdates } from '@mui/x-data-grid-pro/internals';
 import type { GridApiPremium } from '../../../models/gridApiPremium';
 import type { DataGridPremiumProcessedProps } from '../../../models/dataGridPremiumProps';
+import type { GridPremiumFeatureDependencies } from '../../../models/gridFeatureDependencies';
+import { createComputedColumnsHistoryHandler } from '../computedColumns/gridComputedColumnsHistory';
+import type { GridComputedColumnsHistoryData } from '../computedColumns/gridComputedColumnsHistory';
 import type {
   GridHistoryEventHandler,
   GridCellEditHistoryData,
   GridRowEditHistoryData,
   GridClipboardPasteHistoryData,
 } from './gridHistoryInterfaces';
+
+/**
+ * The row, when it has to be put back as the very object that was captured rather than
+ * rebuilt from the values held in the history entry, and `undefined` otherwise.
+ * Rebuilding is lossless for a plain object, but a class instance would come back without
+ * its identity and without the `#private` state that no merge can carry over.
+ */
+const rowToRestore = (row: GridValidRowModel | undefined): GridValidRowModel | undefined => {
+  if (!row) {
+    return undefined;
+  }
+  const proto = Object.getPrototypeOf(row);
+  return proto === Object.prototype || proto === null ? undefined : row;
+};
+
+/**
+ * The row as it stood when the entry was created. A cell entry cannot be undone from
+ * `oldValue` alone once the row is a class instance, because writing the field back
+ * rebuilds the row as a new object.
+ */
+const rowsBeforeEdit = new WeakMap<object, GridValidRowModel>();
+
+/**
+ * The row the edit actually stored. `processRowUpdate()` resolves long after
+ * `cellEditStop`/`rowEditStop` have fired, so `store()` only ever sees the row the grid
+ * computed optimistically, never the one that landed. By the time an entry is undone,
+ * though, the row that landed is the row the grid holds — and a redo is only reachable
+ * through an undo, so capturing it there is enough to put the same object back.
+ */
+const rowsAfterEdit = new WeakMap<object, GridValidRowModel>();
 
 /**
  * Create the default handler for cellEditStop events.
@@ -27,19 +64,17 @@ export const createCellEditHistoryHandler = (
     store: (params: GridCellEditStopParams) => {
       const { id, field } = params;
 
-      const oldValue = apiRef.current.getRow(id)[field];
+      const oldRow = apiRef.current.getRow(id);
+      const oldValue = oldRow[field];
       const newValue = apiRef.current.getRowWithUpdatedValues(id, field)[field];
 
       if (isDeepEqual(oldValue, newValue)) {
         return null;
       }
 
-      return {
-        id,
-        field,
-        oldValue,
-        newValue,
-      };
+      const data = { id, field, oldValue, newValue };
+      rowsBeforeEdit.set(data, oldRow);
+      return data;
     },
 
     validate: (data: GridCellEditHistoryData, direction: 'undo' | 'redo') => {
@@ -78,13 +113,23 @@ export const createCellEditHistoryHandler = (
     undo: async (data: GridCellEditHistoryData) => {
       const { id, field, oldValue } = data;
 
+      const row = apiRef.current.getRow(id);
+      if (row) {
+        rowsAfterEdit.set(data, row);
+      }
+      const restoredRow = rowToRestore(rowsBeforeEdit.get(data));
+
       if (apiRef.current.state.props.dataSource?.updateRow) {
-        const row = apiRef.current.getRow(id);
         await apiRef.current.dataSource.editRow({
           rowId: id,
-          updatedRow: { ...row, [field]: oldValue },
+          // `{ ...row, [field]: oldValue }` would hand `dataSource.updateRow()` a plain
+          // object where the grid holds an instance. There is no way to rebuild an
+          // instance with one field changed, so the whole captured row goes back.
+          updatedRow: restoredRow ?? { ...row, [field]: oldValue },
           previousRow: row,
         });
+      } else if (restoredRow) {
+        apiRef.current.updateRows([{ _action: 'replace', row: restoredRow }]);
       } else {
         apiRef.current.updateRows([{ id, [field]: oldValue }]);
       }
@@ -102,13 +147,17 @@ export const createCellEditHistoryHandler = (
     redo: async (data: GridCellEditHistoryData) => {
       const { id, field, newValue } = data;
 
+      const row = apiRef.current.getRow(id);
+      const restoredRow = rowToRestore(rowsAfterEdit.get(data));
+
       if (apiRef.current.state.props.dataSource?.updateRow) {
-        const row = apiRef.current.getRow(id);
         await apiRef.current.dataSource.editRow({
           rowId: id,
-          updatedRow: { ...row, [field]: newValue },
+          updatedRow: restoredRow ?? { ...row, [field]: newValue },
           previousRow: row,
         });
+      } else if (restoredRow) {
+        apiRef.current.updateRows([{ _action: 'replace', row: restoredRow }]);
       } else {
         apiRef.current.updateRows([{ id, [field]: newValue }]);
       }
@@ -179,14 +228,24 @@ export const createRowEditHistoryHandler = (
     },
 
     undo: async (data: GridRowEditHistoryData) => {
-      const { id, oldRow, newRow } = data;
+      const { id, oldRow } = data;
+
+      const row = apiRef.current.getRow(id);
+      if (row) {
+        rowsAfterEdit.set(data, row);
+      }
+      const restoredRow = rowToRestore(oldRow);
 
       if (apiRef.current.state.props.dataSource?.updateRow) {
         await apiRef.current.dataSource.editRow({
           rowId: id,
           updatedRow: oldRow,
-          previousRow: newRow,
+          // `newRow` is what the grid computed while the row was in edit mode, always a
+          // plain object. The row the grid holds is what the edit actually stored.
+          previousRow: row ?? data.newRow,
         });
+      } else if (restoredRow) {
+        apiRef.current.updateRows([{ _action: 'replace', row: restoredRow }]);
       } else {
         apiRef.current.updateRows([{ id, ...oldRow }]);
       }
@@ -202,14 +261,19 @@ export const createRowEditHistoryHandler = (
     },
 
     redo: async (data: GridRowEditHistoryData) => {
-      const { id, oldRow, newRow } = data;
+      const { id, newRow } = data;
+
+      const row = apiRef.current.getRow(id);
+      const restoredRow = rowToRestore(rowsAfterEdit.get(data));
 
       if (apiRef.current.state.props.dataSource?.updateRow) {
         await apiRef.current.dataSource.editRow({
           rowId: id,
-          updatedRow: newRow,
-          previousRow: oldRow,
+          updatedRow: restoredRow ?? newRow,
+          previousRow: row ?? data.oldRow,
         });
+      } else if (restoredRow) {
+        apiRef.current.updateRows([{ _action: 'replace', row: restoredRow }]);
       } else {
         apiRef.current.updateRows([{ id, ...newRow }]);
       }
@@ -299,8 +363,9 @@ export const createClipboardPasteHistoryHandler = (
           }
         }
 
-        // Restore all rows to their original state
-        apiRef.current.updateRows(oldRowsValues);
+        // Restore all rows to their original state.
+        // Replace instead of merge: keeps row identity and `#private` state, and removes fields the paste added.
+        apiRef.current.updateRows(asReplaceUpdates(oldRowsValues));
 
         if (differentFieldIndex >= 0) {
           requestAnimationFrame(() => {
@@ -338,7 +403,7 @@ export const createClipboardPasteHistoryHandler = (
         }
 
         // Restore all rows to the pasted state
-        apiRef.current.updateRows(newRowsValues);
+        apiRef.current.updateRows(asReplaceUpdates(newRowsValues));
 
         if (differentFieldIndex >= 0) {
           requestAnimationFrame(() => {
@@ -359,14 +424,37 @@ export const createClipboardPasteHistoryHandler = (
  */
 export const createDefaultHistoryHandlers = (
   apiRef: RefObject<GridApiPremium>,
-  props: Pick<DataGridPremiumProcessedProps, 'columns' | 'isCellEditable' | 'dataSource'>,
+  props: Pick<
+    DataGridPremiumProcessedProps,
+    'columns' | 'isCellEditable' | 'dataSource' | 'disableComputedColumns' | 'disableFormulas'
+  > & {
+    /**
+     * The injected formula feature (`featureDependencies.formula`). Passed on its own
+     * because the `featureDependencies` object is usually created inline: the feature
+     * itself cannot change after the first render.
+     */
+    formulaFeature: GridPremiumFeatureDependencies['formula'];
+  },
 ) => {
   const handlers = {} as Record<
     GridEvents,
     | GridHistoryEventHandler<GridCellEditHistoryData>
     | GridHistoryEventHandler<GridRowEditHistoryData>
     | GridHistoryEventHandler<GridClipboardPasteHistoryData>
+    | GridHistoryEventHandler<GridComputedColumnsHistoryData>
   >;
+
+  // Computed columns are tracked whenever they are available, editing or not: a
+  // handler on every grid would put the undo/redo buttons in every toolbar.
+  const canHaveComputedColumns =
+    props.formulaFeature !== undefined &&
+    !props.disableComputedColumns &&
+    !props.disableFormulas &&
+    !props.dataSource;
+
+  if (canHaveComputedColumns) {
+    handlers.computedColumnsChange = createComputedColumnsHistoryHandler(apiRef);
+  }
 
   const canHaveEditing = props.isCellEditable || props.columns.some((col) => col.editable);
 

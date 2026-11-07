@@ -1,12 +1,14 @@
 'use client';
 import clsx from 'clsx';
-import { type SxProps, type Theme, useThemeProps } from '@mui/material/styles';
+import { useThemeProps } from '@mui/material/styles';
+import type { SxProps, Theme } from '@mui/material/styles';
 import PropTypes from 'prop-types';
 import * as React from 'react';
 import { useUtilityClasses } from './chartsSurfaceClasses';
 import { ChartsSvgLayer } from '../ChartsSvgLayer';
 // eslint-disable-next-line import/no-cycle
-import { ChartsLayerContainer, type ChartsLayerContainerProps } from '../ChartsLayerContainer';
+import { ChartsLayerContainer } from '../ChartsLayerContainer';
+import type { ChartsLayerContainerProps } from '../ChartsLayerContainer';
 
 export interface ChartsSurfaceProps
   extends
@@ -25,7 +27,13 @@ export interface ChartsSurfaceProps
     >,
     Pick<ChartsLayerContainerProps, 'title' | 'desc'> {
   className?: string;
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx?: SxProps<Theme>;
+  /**
+   * The content of the component.
+   */
   children?: React.ReactNode;
 }
 
@@ -63,11 +71,14 @@ const ChartsSurface = React.forwardRef<HTMLDivElement, ChartsSurfaceProps>(funct
   );
 });
 
-ChartsSurface.propTypes = {
+ChartsSurface.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * The content of the component.
+   */
   children: PropTypes.node,
   className: PropTypes.string,
   /**
@@ -75,6 +86,9 @@ ChartsSurface.propTypes = {
    * Used to provide an accessible description for the chart.
    */
   desc: PropTypes.string,
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx: PropTypes.oneOfType([
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
     PropTypes.func,

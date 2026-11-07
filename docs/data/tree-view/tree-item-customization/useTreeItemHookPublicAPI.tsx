@@ -4,9 +4,10 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
-import { TreeItem, TreeItemProps } from '@mui/x-tree-view/TreeItem';
+import type { TreeItemProps } from '@mui/x-tree-view/TreeItem';
+import { TreeItem } from '@mui/x-tree-view/TreeItem';
 import { useTreeItem } from '@mui/x-tree-view/useTreeItem';
-import { MUI_X_PRODUCTS } from './products';
+import { MUI_X_PRODUCTS } from '../datasets/disabledAndEditableProducts';
 
 interface CustomLabelProps {
   children: string;

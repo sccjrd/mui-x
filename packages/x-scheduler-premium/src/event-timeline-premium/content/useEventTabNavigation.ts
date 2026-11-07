@@ -1,12 +1,13 @@
 'use client';
 import * as React from 'react';
 import { useStableCallback } from '@base-ui/utils/useStableCallback';
-import {
+import type {
   SchedulerEventOccurrence,
   SchedulerResource,
-  TemporalSupportedObject,
 } from '@mui/x-scheduler-internals/models';
-import type { Adapter } from '@mui/x-scheduler-internals/use-adapter';
+import { getTabbableDescendants } from '@mui/x-internals/domUtils';
+import { computeElementPositionInCollection } from '@mui/x-scheduler-internals/internals';
+import type { TimelineAxis } from '@mui/x-scheduler-internals/internals';
 
 type ResourceWithOccurrences = {
   resource: SchedulerResource;
@@ -23,59 +24,74 @@ type ResourceWithOccurrences = {
  * mounts it. Returns `false` at row boundaries so default Tab moves to the next row.
  */
 export function useEventTabNavigation(params: {
-  adapter: Adapter;
+  /**
+   * The visible resources with the occurrences that occupy space on the axis, in row
+   * render order. Occurrences hidden by the hour window must already be excluded:
+   * they never mount, so navigating to one would swallow Tab forever.
+   */
   resources: readonly ResourceWithOccurrences[];
   scrollerRef: React.RefObject<HTMLDivElement | null>;
-  collectionStart: TemporalSupportedObject;
-  collectionEnd: TemporalSupportedObject;
+  axis: TimelineAxis;
+  durationMs: number;
   tickCount: number;
   tickWidth: number;
   titleColumnWidth: number;
+  isRtl: boolean;
 }) {
   const {
-    adapter,
     resources,
     scrollerRef,
-    collectionStart,
-    collectionEnd,
+    axis,
+    durationMs,
     tickCount,
     tickWidth,
     titleColumnWidth,
+    isRtl,
   } = params;
 
-  const pendingFocusKeyRef = React.useRef<string | null>(null);
-
-  // Map (timestamp - collectionStart) into [0, 1]
-  const collectionStartTs = React.useMemo(
-    () => adapter.getTime(collectionStart),
-    [adapter, collectionStart],
-  );
-  const totalMs = React.useMemo(
-    () => Math.max(1, adapter.getTime(collectionEnd) - collectionStartTs),
-    [adapter, collectionEnd, collectionStartTs],
-  );
+  const pendingFocusRef = React.useRef<{
+    key: string;
+    resourceId: string;
+    direction: 1 | -1;
+  } | null>(null);
 
   const eventsTotalWidth = tickCount * tickWidth;
 
   const computeFractionRange = useStableCallback((occurrence: SchedulerEventOccurrence) => {
-    const clamp = (ms: number) => Math.min(Math.max(ms - collectionStartTs, 0), totalMs);
-    return {
-      fractionStart: clamp(occurrence.displayTimezone.start.timestamp) / totalMs,
-      fractionEnd: clamp(occurrence.displayTimezone.end.timestamp) / totalMs,
-    };
+    const { position, duration } = computeElementPositionInCollection({
+      start: occurrence.displayTimezone.start,
+      end: occurrence.displayTimezone.end,
+      collection: axis,
+      durationMs,
+    });
+    return { fractionStart: position, fractionEnd: position + duration };
   });
 
-  const focusEventInDom = (key: string): boolean => {
+  // Scoped by `data-resource-id`: occurrence keys are event-scoped, not unique
+  // across rows, so an unscoped lookup could match a same-key copy rendered in
+  // a different row instead of the one being navigated to.
+  // Walking backwards lands on the last focusable element inside the event, so Shift+Tab
+  // mirrors the forward order (event root, then its content).
+  const focusEventInDom = (key: string, resourceId: string, direction: 1 | -1): boolean => {
     const scroller = scrollerRef.current;
     if (!scroller) {
       return false;
     }
-    const el = scroller.querySelector<HTMLElement>(`[data-occurrence-key="${CSS.escape(key)}"]`);
-    if (el) {
-      el.focus({ preventScroll: true });
-      return true;
+    const el = scroller.querySelector<HTMLElement>(
+      `[data-resource-id="${CSS.escape(resourceId)}"] [data-occurrence-key="${CSS.escape(key)}"]`,
+    );
+    if (!el) {
+      return false;
     }
-    return false;
+    const tabbables = direction === -1 ? getTabbableDescendants(el) : [];
+    const target = tabbables.length > 0 ? tabbables[tabbables.length - 1] : el;
+    target.focus({ preventScroll: true });
+    // The selector cannot tell an element hidden by CSS from a visible one, so the root
+    // takes the focus when the content refused it.
+    if (document.activeElement !== target) {
+      el.focus({ preventScroll: true });
+    }
+    return true;
   };
 
   const scrollEventIntoView = useStableCallback((occurrence: SchedulerEventOccurrence) => {
@@ -83,22 +99,25 @@ export function useEventTabNavigation(params: {
       return;
     }
     const { fractionStart, fractionEnd } = computeFractionRange(occurrence);
-    const eventLeft = fractionStart * eventsTotalWidth;
-    const eventRight = fractionEnd * eventsTotalWidth;
+    const eventStart = fractionStart * eventsTotalWidth;
+    const eventEnd = fractionEnd * eventsTotalWidth;
     const eventsViewportWidth = scrollerRef.current.clientWidth - titleColumnWidth;
-    // scrollLeft is measured from the start of scrollerContent; the events area
+    // The scroll offset is measured from the start of scrollerContent; the events area
     // begins after the pinned title column, so the visible events window is
-    // [scrollLeft, scrollLeft + clientWidth - titleColumnWidth) in event coords.
-    const viewportLeft = scrollerRef.current.scrollLeft;
-    const viewportRight = viewportLeft + eventsViewportWidth;
+    // [offset, offset + clientWidth - titleColumnWidth) in event coords.
+    // In RTL, `scrollLeft` goes from 0 down to negative values.
+    const viewportStart = Math.abs(scrollerRef.current.scrollLeft);
+    const viewportEnd = viewportStart + eventsViewportWidth;
+    const scrollSign = isRtl ? -1 : 1;
     // Small breathing room so the target doesn't land flush against the edge,
     // which can re-trigger browser scroll-into-view on focus.
     const PADDING = 32;
-    if (eventLeft < viewportLeft) {
+    if (eventStart < viewportStart) {
       // eslint-disable-next-line react-compiler/react-compiler -- intentional DOM scroll mutation
-      scrollerRef.current.scrollLeft = Math.max(0, eventLeft - PADDING);
-    } else if (eventRight > viewportRight) {
-      scrollerRef.current.scrollLeft = Math.max(0, eventRight - eventsViewportWidth + PADDING);
+      scrollerRef.current.scrollLeft = scrollSign * Math.max(0, eventStart - PADDING);
+    } else if (eventEnd > viewportEnd) {
+      scrollerRef.current.scrollLeft =
+        scrollSign * Math.max(0, eventEnd - eventsViewportWidth + PADDING);
     }
   });
 
@@ -111,13 +130,27 @@ export function useEventTabNavigation(params: {
     if (!scroller || !scroller.contains(active)) {
       return false;
     }
-    const currentKey = active.getAttribute('data-occurrence-key');
-    if (!currentKey) {
+    const eventRoot = active.closest<HTMLElement>('[data-occurrence-key]');
+    if (!eventRoot) {
       // Focus isn't on an event; let the default Tab behavior handle row/cell moves.
       return false;
     }
-    const row = active.closest<HTMLElement>('[data-resource-id]');
-    const resourceId = row?.getAttribute('data-resource-id');
+    // Focusable content rendered inside the event (a slot rendering a link, for instance)
+    // comes right after its root in the tab order, so default Tab handles the moves inside
+    // the event and this hook only takes over when leaving it.
+    const tabbables = getTabbableDescendants(eventRoot);
+    if (direction === 1) {
+      const activeIndex = active === eventRoot ? -1 : tabbables.indexOf(active);
+      if (activeIndex < tabbables.length - 1) {
+        return false;
+      }
+    } else if (active !== eventRoot) {
+      return false;
+    }
+    const currentKey = eventRoot.getAttribute('data-occurrence-key')!;
+    const resourceId = eventRoot
+      .closest<HTMLElement>('[data-resource-id]')
+      ?.getAttribute('data-resource-id');
     if (!resourceId) {
       return false;
     }
@@ -139,11 +172,13 @@ export function useEventTabNavigation(params: {
     // Scroll first so the target is in/near the viewport. If it's already mounted,
     // we focus directly; otherwise we queue the focus and the layout effect picks
     // it up once the virtualizer re-renders with the new column range.
+    // `next` comes from this same row's occurrence list, so it always belongs to
+    // `resourceId`.
     scrollEventIntoView(next);
-    if (focusEventInDom(next.key)) {
-      pendingFocusKeyRef.current = null;
+    if (focusEventInDom(next.key, resourceId, direction)) {
+      pendingFocusRef.current = null;
     } else {
-      pendingFocusKeyRef.current = next.key;
+      pendingFocusRef.current = { key: next.key, resourceId, direction };
     }
     return true;
   };
@@ -152,9 +187,9 @@ export function useEventTabNavigation(params: {
   // how virtualized-out events get focused once the scroll-driven re-render mounts
   // them. Stays a no-op when no focus is queued.
   React.useLayoutEffect(() => {
-    const key = pendingFocusKeyRef.current;
-    if (key && focusEventInDom(key)) {
-      pendingFocusKeyRef.current = null;
+    const pending = pendingFocusRef.current;
+    if (pending && focusEventInDom(pending.key, pending.resourceId, pending.direction)) {
+      pendingFocusRef.current = null;
     }
   });
 

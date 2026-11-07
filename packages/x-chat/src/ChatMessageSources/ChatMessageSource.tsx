@@ -4,11 +4,11 @@ import PropTypes from 'prop-types';
 import clsx from 'clsx';
 import useSlotProps from '@mui/utils/useSlotProps';
 import type { SlotComponentProps } from '@mui/utils/types';
+import { useMessageContentTabIndex } from '@mui/x-chat-headless';
+import { safeUri } from '@mui/x-chat-headless/internals';
 import { styled, createUseThemeProps } from '../internals/zero-styled';
-import {
-  useChatMessageSourceUtilityClasses,
-  type ChatMessageSourceClasses,
-} from './chatMessageSourceClasses';
+import { useChatMessageSourceUtilityClasses } from './chatMessageSourceClasses';
+import type { ChatMessageSourceClasses } from './chatMessageSourceClasses';
 
 const useThemeProps = createUseThemeProps('MuiChatMessageSource');
 
@@ -75,10 +75,24 @@ export interface ChatMessageSourceProps {
   title?: string;
   /** 1-based position number displayed as a muted badge. */
   index?: number;
+  /**
+   * The content of the component.
+   */
   children?: React.ReactNode;
   className?: string;
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes?: Partial<ChatMessageSourceClasses>;
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
   slots?: ChatMessageSourceSlots;
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
   slotProps?: ChatMessageSourceSlotProps;
 }
 
@@ -108,6 +122,10 @@ const ChatMessageSource = React.forwardRef(function ChatMessageSource(
   const Index = slots?.index ?? ChatMessageSourceIndexStyled;
   const LinkSlot = slots?.link ?? ChatMessageSourceLinkStyled;
 
+  // Inside a roving message list the source link leaves the tab order until
+  // the user drills into the message (Enter); it stays mouse-clickable.
+  const contentTabIndex = useMessageContentTabIndex();
+
   const rootProps = useSlotProps({
     elementType: Root,
     externalSlotProps: slotProps?.root,
@@ -133,10 +151,11 @@ const ChatMessageSource = React.forwardRef(function ChatMessageSource(
     externalSlotProps: slotProps?.link,
     ownerState: {},
     additionalProps: {
-      href,
+      href: safeUri(href) || undefined,
       target: '_blank',
       rel: 'noreferrer noopener',
       className: classes.link,
+      tabIndex: contentTabIndex,
     },
   });
 
@@ -148,12 +167,18 @@ const ChatMessageSource = React.forwardRef(function ChatMessageSource(
   );
 }) as ChatMessageSourceComponent;
 
-ChatMessageSource.propTypes = {
+ChatMessageSource.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * The content of the component.
+   */
   children: PropTypes.node,
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes: PropTypes.object,
   className: PropTypes.string,
   /**
@@ -164,7 +189,15 @@ ChatMessageSource.propTypes = {
    * 1-based position number displayed as a muted badge.
    */
   index: PropTypes.number,
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
   slotProps: PropTypes.object,
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
   slots: PropTypes.object,
   /**
    * Display title for the source. Falls back to `href` when omitted.

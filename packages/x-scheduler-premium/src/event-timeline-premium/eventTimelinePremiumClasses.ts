@@ -1,16 +1,20 @@
 import generateUtilityClass from '@mui/utils/generateUtilityClass';
 import generateUtilityClasses from '@mui/utils/generateUtilityClasses';
-import {
+import type {
   EventDialogClasses,
-  eventDialogClassKeys,
+  EventContextMenuClasses,
   ErrorContainerClasses,
-  errorContainerClassKeys,
   EventSkeletonClasses,
+} from '@mui/x-scheduler/internals';
+import {
+  eventDialogClassKeys,
+  eventContextMenuClassKeys,
+  errorContainerClassKeys,
   eventSkeletonClassKeys,
 } from '@mui/x-scheduler/internals';
 
 export interface EventTimelinePremiumClasses
-  extends EventDialogClasses, ErrorContainerClasses, EventSkeletonClasses {
+  extends EventDialogClasses, EventContextMenuClasses, ErrorContainerClasses, EventSkeletonClasses {
   /** Styles applied to the root element. */
   root: string;
   /** Styles applied to the content section element. */
@@ -57,6 +61,42 @@ export interface EventTimelinePremiumClasses
   eventLinesClamp: string;
   /** Styles applied to event recurring icon elements. */
   eventRecurringIcon: string;
+  /** Styles applied to the dependency arrows overlay element. */
+  dependencyArrows: string;
+  /** Styles applied to the dependency terminals overlay element. */
+  dependencyTerminals: string;
+  /** Styles applied to event dependency terminal elements. */
+  eventDependencyTerminal: string;
+  /** Styles applied to the dependency dialog root element. */
+  dependencyDialog: string;
+  /** Styles applied to the dependency dialog paper element. */
+  dependencyDialogPaper: string;
+  /** Styles applied to the dependency dialog header element. */
+  dependencyDialogHeader: string;
+  /** Styles applied to the dependency dialog title element. */
+  dependencyDialogTitle: string;
+  /** Styles applied to the dependency dialog close button element. */
+  dependencyDialogCloseButton: string;
+  /** Styles applied to the dependency dialog content element. */
+  dependencyDialogContent: string;
+  /** Styles applied to the dependency dialog form element, or its details section when read-only. */
+  dependencyDialogForm: string;
+  /** Styles applied to the dependency dialog body element. */
+  dependencyDialogBody: string;
+  /** Styles applied to the dependency dialog details element. */
+  dependencyDialogDetails: string;
+  /** Styles applied to the dependency dialog event chip elements. */
+  dependencyDialogEventChip: string;
+  /** Styles applied to the dependency dialog lag field element. */
+  dependencyDialogLag: string;
+  /** Styles applied to the dependency dialog lag unit select element. */
+  dependencyDialogLagUnit: string;
+  /** Styles applied to the lag note of the read-only dependency dialog. */
+  dependencyDialogLagNote: string;
+  /** Styles applied to the dependency dialog divider element. */
+  dependencyDialogDivider: string;
+  /** Styles applied to the dependency dialog actions element. */
+  dependencyDialogActions: string;
 }
 
 export type EventTimelinePremiumClassKey = keyof EventTimelinePremiumClasses;
@@ -91,8 +131,27 @@ export const eventTimelinePremiumClasses: EventTimelinePremiumClasses = generate
     'eventResizeHandler',
     'eventLinesClamp',
     'eventRecurringIcon',
+    'dependencyArrows',
+    'dependencyTerminals',
+    'eventDependencyTerminal',
+    'dependencyDialog',
+    'dependencyDialogPaper',
+    'dependencyDialogHeader',
+    'dependencyDialogTitle',
+    'dependencyDialogCloseButton',
+    'dependencyDialogContent',
+    'dependencyDialogForm',
+    'dependencyDialogBody',
+    'dependencyDialogDetails',
+    'dependencyDialogEventChip',
+    'dependencyDialogLag',
+    'dependencyDialogLagUnit',
+    'dependencyDialogLagNote',
+    'dependencyDialogDivider',
+    'dependencyDialogActions',
     ...errorContainerClassKeys,
     ...eventSkeletonClassKeys,
     ...eventDialogClassKeys,
+    ...eventContextMenuClassKeys,
   ],
 );

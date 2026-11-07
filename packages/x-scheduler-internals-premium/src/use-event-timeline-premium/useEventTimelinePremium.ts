@@ -1,23 +1,20 @@
 'use client';
-import { useOnMount } from '@base-ui/utils/useOnMount';
 import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
-import { useRefWithInit } from '@base-ui/utils/useRefWithInit';
+import { useDisposable } from '@mui/x-internals/useDisposable';
 import { useAdapter } from '@mui/x-scheduler-internals/use-adapter';
 import { EventTimelinePremiumStore } from './EventTimelinePremiumStore';
-import { EventTimelinePremiumParameters } from './EventTimelinePremiumStore.types';
+import type { EventTimelinePremiumStoreParameters } from './EventTimelinePremiumStore.types';
 
 export function useEventTimelinePremium<TEvent extends object, TResource extends object>(
-  parameters: EventTimelinePremiumParameters<TEvent, TResource>,
+  parameters: EventTimelinePremiumStoreParameters<TEvent, TResource>,
 ): EventTimelinePremiumStore<TEvent, TResource> {
-  const adapter = useAdapter(parameters.dateLocale);
-  const store = useRefWithInit(() => new EventTimelinePremiumStore(parameters, adapter)).current;
+  const adapter = useAdapter();
+  const store = useDisposable(() => new EventTimelinePremiumStore(parameters, adapter));
 
   useIsoLayoutEffect(
     () => store.updateStateFromParameters(parameters, adapter),
     [store, adapter, parameters],
   );
-
-  useOnMount(store.disposeEffect);
 
   return store;
 }

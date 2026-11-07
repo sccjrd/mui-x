@@ -1,9 +1,9 @@
 import { getValueToPositionMapper, useScatterSeriesContext, useXAxes, useYAxes } from '../hooks';
 import { useZAxes } from '../hooks/useZAxis';
-import {
-  type DefaultizedScatterSeriesType,
-  type ScatterItemIdentifier,
-  type ScatterValueType,
+import type {
+  DefaultizedScatterSeriesType,
+  ScatterItemIdentifier,
+  ScatterValueType,
 } from '../models/seriesType/scatter';
 import getMarkerSize from './seriesConfig/getMarkerSize';
 
@@ -14,6 +14,9 @@ export interface ResolvedScatterItem {
    * The resolved marker size of the scatter point, accounting for any size axis.
    */
   markerSize: number;
+  /**
+   * The scatter series to render.
+   */
   series: DefaultizedScatterSeriesType;
   scatterPoint: ScatterValueType;
 }

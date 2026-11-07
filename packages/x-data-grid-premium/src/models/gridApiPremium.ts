@@ -1,7 +1,9 @@
 import type { GridPrivateOnlyApiCommon } from '@mui/x-data-grid/internals';
 import type {
   GridApiCommon,
+  GridCallbackDetails,
   GridColumnPinningApi,
+  GridControlledStateReasonLookup,
   GridDetailPanelApi,
   GridDetailPanelPrivateApi,
   GridRowPinningApi,
@@ -19,6 +21,7 @@ import type {
   GridDataSourceApiPremium,
 } from '../hooks/features/dataSource/models';
 import type { GridAggregationPrivateApi } from '../hooks/features/aggregation/gridAggregationInterfaces';
+import type { GridFormulaPrivateApi } from '../hooks/features/formula/gridFormulaInterfaces';
 import type {
   GridPivotingApi,
   GridPivotingPrivateApi,
@@ -30,6 +33,10 @@ import type {
   GridChartsIntegrationPrivateApi,
 } from '../hooks/features/chartsIntegration/gridChartsIntegrationInterfaces';
 import type { GridHistoryApi } from '../hooks/features/history/gridHistoryInterfaces';
+import type {
+  GridComputedColumnsApi,
+  GridComputedColumnsPrivateApi,
+} from '../hooks/features/computedColumns/gridComputedColumnsInterfaces';
 
 /**
  * The api of Data Grid Premium.
@@ -52,6 +59,7 @@ export interface GridApiPremium
     GridSidebarApi,
     GridChartsIntegrationApi,
     GridHistoryApi,
+    GridComputedColumnsApi,
     // APIs that are private in Community plan, but public in Pro and Premium plans
     GridRowMultiSelectionApi,
     GridColumnReorderApi {}
@@ -62,7 +70,18 @@ export interface GridPrivateApiPremium
     GridPrivateOnlyApiCommon<GridApiPremium, GridPrivateApiPremium, DataGridPremiumProcessedProps>,
     GridDataSourcePremiumPrivateApi,
     GridAggregationPrivateApi,
+    // The formula feature is injectable — its private API methods only exist
+    // when the feature is provided through `featureDependencies`.
+    Partial<GridFormulaPrivateApi>,
+    // Registered by the formula feature as well: validation needs the engine.
+    Partial<GridComputedColumnsPrivateApi>,
     GridDetailPanelPrivateApi,
     GridRowReorderPrivateApi,
     GridPivotingPrivateApi,
     GridChartsIntegrationPrivateApi {}
+
+/**
+ * The details passed to the callbacks of Data Grid Premium, with `apiRef` typed to `GridApiPremium`.
+ */
+export type GridCallbackDetailsPremium<K extends keyof GridControlledStateReasonLookup = any> =
+  GridCallbackDetails<K, GridApiPremium>;

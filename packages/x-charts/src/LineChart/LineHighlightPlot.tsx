@@ -1,29 +1,35 @@
 'use client';
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import { type SlotComponentPropsFromProps } from '@mui/x-internals/types';
+import type { SlotComponentPropsFromProps } from '@mui/x-internals/types';
 import { useStore } from '../internals/store/useStore';
-import { LineHighlightElement, type LineHighlightElementProps } from './LineHighlightElement';
+import { LineHighlightElement } from './LineHighlightElement';
+import type { LineHighlightElementProps } from './LineHighlightElement';
 import { getValueToPositionMapper } from '../hooks/getValueToPositionMapper';
 import { DEFAULT_X_AXIS_KEY } from '../constants';
 import { useLineSeriesContext } from '../hooks/useLineSeries';
 import getColor from './seriesConfig/getColor';
 import { useChartsContext } from '../context/ChartsProvider';
-import {
-  type UseChartCartesianAxisSignature,
-  selectorChartsHighlightXAxisIndex,
-} from '../internals/plugins/featurePlugins/useChartCartesianAxis';
+import { selectorChartsHighlightXAxisIndex } from '../internals/plugins/featurePlugins/useChartCartesianAxis';
+import type { UseChartCartesianAxisSignature } from '../internals/plugins/featurePlugins/useChartCartesianAxis';
 import { useXAxes, useYAxes } from '../hooks/useAxis';
 import type { UseChartBrushSignature } from '../internals/plugins/featurePlugins/useChartBrush';
 import type { LineHighlightPropsOverrides } from '../models/chartsSlotsComponentsProps';
 
 export interface LineHighlightPlotSlots {
+  /**
+   * The component that renders the line highlight.
+   * @default LineHighlightElement
+   */
   lineHighlight?: React.JSXElementConstructor<
     LineHighlightElementProps & LineHighlightPropsOverrides
   >;
 }
 
 export interface LineHighlightPlotSlotProps {
+  /**
+   * The props used for the `lineHighlight` slot.
+   */
   lineHighlight?: SlotComponentPropsFromProps<
     LineHighlightElementProps,
     LineHighlightPropsOverrides,
@@ -173,7 +179,7 @@ function getStartEndMarkIndex(data: readonly (number | null)[], type: 'start' | 
   return index < 0 ? undefined : index;
 }
 
-LineHighlightPlot.propTypes = {
+LineHighlightPlot.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |

@@ -1,14 +1,13 @@
 import * as React from 'react';
 import { createTheme, useTheme, ThemeProvider } from '@mui/material/styles';
 import { useDemoData } from '@mui/x-data-grid-generator';
+import type { GridEventListener, GridPivotModel } from '@mui/x-data-grid-premium';
 import {
   DataGridPremium,
   GridChartsPanel,
   GridChartsIntegrationContextProvider,
   GridChartsRendererProxy,
   gridColumnGroupsUnwrappedModelSelector,
-  GridEventListener,
-  GridPivotModel,
   useGridApiRef,
   GridSidebarValue,
 } from '@mui/x-data-grid-premium';
@@ -33,6 +32,7 @@ export default function GridChartsIntegrationLocalization() {
     dataSet: 'Commodity',
     rowLength: 1000,
     editable: true,
+    multiSelect: true,
   });
   const apiRef = useGridApiRef();
 

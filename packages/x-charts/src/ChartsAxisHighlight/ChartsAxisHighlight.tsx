@@ -5,7 +5,7 @@ import composeClasses from '@mui/utils/composeClasses';
 import { getAxisHighlightUtilityClass } from './chartsAxisHighlightClasses';
 import ChartsYHighlight from './ChartsYAxisHighlight';
 import ChartsXHighlight from './ChartsXAxisHighlight';
-import { type ChartsAxisHighlightProps } from './ChartsAxisHighlight.types';
+import type { ChartsAxisHighlightProps } from './ChartsAxisHighlight.types';
 
 const useUtilityClasses = () => {
   const slots = {
@@ -40,12 +40,18 @@ function ChartsAxisHighlight(props: ChartsAxisHighlightProps) {
   );
 }
 
-ChartsAxisHighlight.propTypes = {
+ChartsAxisHighlight.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * The type of highlight for the x-axis.
+   */
   x: PropTypes.oneOf(['band', 'line', 'none']),
+  /**
+   * The type of highlight for the y-axis.
+   */
   y: PropTypes.oneOf(['band', 'line', 'none']),
 } as any;
 

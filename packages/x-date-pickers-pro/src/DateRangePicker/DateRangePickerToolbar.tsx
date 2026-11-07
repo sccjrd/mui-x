@@ -5,13 +5,15 @@ import clsx from 'clsx';
 import Typography from '@mui/material/Typography';
 import { styled, useThemeProps } from '@mui/material/styles';
 import composeClasses from '@mui/utils/composeClasses';
-import {
-  PickersToolbar,
-  PickersToolbarButton,
+import type {
   BaseToolbarProps,
   ExportedBaseToolbarProps,
   PickerRangeValue,
   PickerToolbarOwnerState,
+} from '@mui/x-date-pickers/internals';
+import {
+  PickersToolbar,
+  PickersToolbarButton,
   useToolbarOwnerState,
 } from '@mui/x-date-pickers/internals';
 import {
@@ -19,11 +21,9 @@ import {
   usePickerContext,
   usePickerTranslations,
 } from '@mui/x-date-pickers/hooks';
-import { PickerValidDate } from '@mui/x-date-pickers/models';
-import {
-  DateRangePickerToolbarClasses,
-  getDateRangePickerToolbarUtilityClass,
-} from './dateRangePickerToolbarClasses';
+import type { PickerValidDate } from '@mui/x-date-pickers/models';
+import type { DateRangePickerToolbarClasses } from './dateRangePickerToolbarClasses';
+import { getDateRangePickerToolbarUtilityClass } from './dateRangePickerToolbarClasses';
 import { usePickerRangePositionContext } from '../hooks';
 
 const useUtilityClasses = (classes: Partial<DateRangePickerToolbarClasses> | undefined) => {
@@ -126,7 +126,7 @@ const DateRangePickerToolbar = React.forwardRef(function DateRangePickerToolbar(
   );
 }) as DateRangePickerToolbarComponent;
 
-DateRangePickerToolbar.propTypes = {
+DateRangePickerToolbar.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -135,6 +135,9 @@ DateRangePickerToolbar.propTypes = {
    * Override or extend the styles applied to the component.
    */
   classes: PropTypes.object,
+  /**
+   * A CSS class name applied to the root element.
+   */
   className: PropTypes.string,
   /**
    * If `true`, show the toolbar even in desktop mode.
@@ -149,6 +152,10 @@ DateRangePickerToolbar.propTypes = {
     PropTypes.func,
     PropTypes.object,
   ]),
+  /**
+   * The id of the toolbar title element.
+   * The picker uses it to label its popup.
+   */
   titleId: PropTypes.string,
   /**
    * Toolbar date format.

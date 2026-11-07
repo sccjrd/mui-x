@@ -1,13 +1,20 @@
 'use client';
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import { PickerRangeValue, PickerViewRendererLookup } from '@mui/x-date-pickers/internals';
+import type { PickerRangeValue, PickerViewRendererLookup } from '@mui/x-date-pickers/internals';
 import { useStaticRangePicker } from '../internals/hooks/useStaticRangePicker';
-import { StaticDateRangePickerProps } from './StaticDateRangePicker.types';
+import type { StaticDateRangePickerProps } from './StaticDateRangePicker.types';
 import { useDateRangePickerDefaultizedProps } from '../DateRangePicker/shared';
 import { renderDateRangeViewCalendar } from '../dateRangeViewRenderers';
-import { rangeValueManager } from '../internals/utils/valueManagers';
 import { validateDateRange } from '../validation';
+import { rangeValueManager } from '../internals/utils/valueManagers';
+
+// Static pickers render no field, so they skip the field-only manager members.
+const manager = {
+  valueType: 'date' as const,
+  validator: validateDateRange,
+  internal_valueManager: rangeValueManager,
+};
 
 type StaticDateRangePickerComponent = ((
   props: StaticDateRangePickerProps & React.RefAttributes<HTMLDivElement>,
@@ -59,16 +66,14 @@ const StaticDateRangePicker = React.forwardRef(function StaticDateRangePicker(
   const { renderPicker } = useStaticRangePicker<'day', typeof props>({
     ref,
     props,
-    valueManager: rangeValueManager,
-    valueType: 'date',
-    validator: validateDateRange,
+    manager,
     steps: null,
   });
 
   return renderPicker();
 }) as StaticDateRangePickerComponent;
 
-StaticDateRangePicker.propTypes = {
+StaticDateRangePicker.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -85,6 +90,9 @@ StaticDateRangePicker.propTypes = {
    * @default 1 if `displayStaticWrapperAs === 'mobile'`, 2 otherwise.
    */
   calendars: PropTypes.oneOf([1, 2, 3]),
+  /**
+   * A CSS class name applied to the root element.
+   */
   className: PropTypes.string,
   /**
    * Position the current month is rendered in.
@@ -187,6 +195,10 @@ StaticDateRangePicker.propTypes = {
    */
   onAccept: PropTypes.func,
   /**
+   * Callback fired when the Cancel action is triggered.
+   */
+  onCancel: PropTypes.func,
+  /**
    * Callback fired when the value changes.
    * @template TValue The value type. It will be the same type as `value` or `null`. It can be in `[start, end]` format in case of range value.
    * @template TError The validation error type. It will be either `string` or a `null`. It can be in `[start, end]` format in case of range value.
@@ -200,7 +212,8 @@ StaticDateRangePicker.propTypes = {
   /**
    * Callback fired when component requests to be closed.
    * Can be fired when selecting (by default on `desktop` mode) or clearing a value.
-   * @deprecated Please avoid using as it will be removed in next major version.
+   * @deprecated Use `onCancel` or `onAccept` instead, depending on the action you want to react to.
+   * This callback will be removed in the next major version.
    */
   onClose: PropTypes.func,
   /**

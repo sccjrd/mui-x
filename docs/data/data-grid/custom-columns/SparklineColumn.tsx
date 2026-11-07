@@ -1,11 +1,10 @@
 import * as React from 'react';
-import {
-  DataGrid,
+import type {
   GridColDef,
   GridColTypeDef,
   GridRenderCellParams,
-  GRID_STRING_COL_DEF,
 } from '@mui/x-data-grid';
+import { DataGrid, GRID_STRING_COL_DEF } from '@mui/x-data-grid';
 import { SparkLineChart } from '@mui/x-charts/SparkLineChart';
 
 type SparkLineChartProps = React.ComponentProps<typeof SparkLineChart>;
@@ -41,7 +40,7 @@ const sparklineColumnType: GridColTypeDef<number[]> = {
 };
 
 const columns: GridColDef<(typeof rows)[number]>[] = [
-  { field: 'name', headerName: 'Package name', width: 180 },
+  { field: 'name', headerName: 'Package name', width: 180, rowHeader: true },
   {
     field: 'monthlyDownloads',
     ...sparklineColumnType,

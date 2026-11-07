@@ -3,17 +3,16 @@ import * as React from 'react';
 import PropTypes from 'prop-types';
 import resolveComponentProps from '@mui/utils/resolveComponentProps';
 import refType from '@mui/utils/refType';
-import { PickerViewRendererLookup, PickerRangeValue } from '@mui/x-date-pickers/internals';
+import type { PickerViewRendererLookup, PickerRangeValue } from '@mui/x-date-pickers/internals';
 import { extractValidationProps } from '@mui/x-date-pickers/validation';
-import { PickerOwnerState } from '@mui/x-date-pickers/models';
+import type { PickerOwnerState } from '@mui/x-date-pickers/models';
 import { usePickerAdapter } from '@mui/x-date-pickers/hooks';
-import { rangeValueManager } from '../internals/utils/valueManagers';
-import { DesktopDateRangePickerProps } from './DesktopDateRangePicker.types';
+import type { DesktopDateRangePickerProps } from './DesktopDateRangePicker.types';
 import { useDateRangePickerDefaultizedProps } from '../DateRangePicker/shared';
 import { renderDateRangeViewCalendar } from '../dateRangeViewRenderers';
 import { SingleInputDateRangeField } from '../SingleInputDateRangeField';
 import { useDesktopRangePicker } from '../internals/hooks/useDesktopRangePicker';
-import { validateDateRange } from '../validation';
+import { useDateRangeManager } from '../managers';
 
 type DesktopDateRangePickerComponent = ((
   props: DesktopDateRangePickerProps & React.RefAttributes<HTMLDivElement>,
@@ -34,6 +33,7 @@ const DesktopDateRangePicker = React.forwardRef(function DesktopDateRangePicker(
   ref: React.Ref<HTMLDivElement>,
 ) {
   const adapter = usePickerAdapter();
+  const manager = useDateRangeManager();
 
   // Props with the default values common to all date time pickers
   const defaultizedProps = useDateRangePickerDefaultizedProps<DesktopDateRangePickerProps>(
@@ -75,16 +75,14 @@ const DesktopDateRangePicker = React.forwardRef(function DesktopDateRangePicker(
   const { renderPicker } = useDesktopRangePicker<'day', typeof props>({
     ref,
     props,
-    valueManager: rangeValueManager,
-    valueType: 'date',
-    validator: validateDateRange,
+    manager,
     steps: null,
   });
 
   return renderPicker();
 }) as DesktopDateRangePickerComponent;
 
-DesktopDateRangePicker.propTypes = {
+DesktopDateRangePicker.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -101,6 +99,9 @@ DesktopDateRangePicker.propTypes = {
    * @default 2
    */
   calendars: PropTypes.oneOf([1, 2, 3]),
+  /**
+   * A CSS class name applied to the root element.
+   */
   className: PropTypes.string,
   /**
    * If `true`, the Picker will close after submitting the full date.
@@ -238,6 +239,10 @@ DesktopDateRangePicker.propTypes = {
    * - `shortcut` (optional): the shortcut metadata if the value was accepted via a shortcut selection
    */
   onAccept: PropTypes.func,
+  /**
+   * Callback fired when the Cancel action is triggered.
+   */
+  onCancel: PropTypes.func,
   /**
    * Callback fired when the value changes.
    * @template TValue The value type. It will be the same type as `value` or `null`. It can be in `[start, end]` format in case of range value.

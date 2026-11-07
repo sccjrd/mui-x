@@ -1,20 +1,29 @@
 'use client';
 import * as React from 'react';
 import useSlotProps from '@mui/utils/useSlotProps';
-import { SlotComponentProps } from '@mui/utils/types';
-import { ChatProvider, type ChatProviderProps } from '../ChatProvider';
+import type { SlotComponentProps } from '@mui/utils/types';
+import { ChatProvider } from '../ChatProvider';
+import type { ChatProviderProps } from '../ChatProvider';
 import type { ChatLocaleText } from './internals/chatLocaleText';
 import { ChatLocaleProvider } from './internals/ChatLocaleContext';
-import { ChatVariantProvider, type ChatVariant } from './internals/ChatVariantContext';
-import { ChatDensityProvider, type ChatDensity } from './internals/ChatDensityContext';
+import { ChatVariantProvider } from './internals/ChatVariantContext';
+import type { ChatVariant } from './internals/ChatVariantContext';
+import { ChatDensityProvider } from './internals/ChatDensityContext';
+import type { ChatDensity } from './internals/ChatDensityContext';
 
 export interface ChatRootSlots {
+  /**
+   * The component that renders the root.
+   */
   root: React.ElementType;
 }
 
 export interface ChatRootOwnerState {}
 
 export interface ChatRootSlotProps {
+  /**
+   * The props used for the root slot.
+   */
   root?: SlotComponentProps<'div', {}, ChatRootOwnerState>;
 }
 
@@ -22,6 +31,9 @@ export interface ChatRootProps<Cursor = string>
   extends
     ChatProviderProps<Cursor>,
     Omit<React.HTMLAttributes<HTMLDivElement>, 'children' | 'onError'> {
+  /**
+   * The props used for the locale text slot.
+   */
   localeText?: Partial<ChatLocaleText>;
   /**
    * The visual layout variant of the chat.
@@ -39,7 +51,15 @@ export interface ChatRootProps<Cursor = string>
    * - `'comfortable'` – Increased vertical spacing between messages.
    */
   density?: ChatDensity;
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
   slots?: Partial<ChatRootSlots>;
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
   slotProps?: ChatRootSlotProps;
 }
 
@@ -88,6 +108,7 @@ export const ChatRoot = React.forwardRef(function ChatRoot<Cursor = string>(
     streamFlushInterval,
     partRenderers,
     storeClass,
+    features,
     ...other
   } = props;
 
@@ -130,6 +151,7 @@ export const ChatRoot = React.forwardRef(function ChatRoot<Cursor = string>(
       partRenderers={partRenderers}
       storeClass={storeClass}
       roleDisplayNames={roleDisplayNames}
+      features={features}
     >
       <ChatLocaleProvider localeText={localeText}>
         {(() => {

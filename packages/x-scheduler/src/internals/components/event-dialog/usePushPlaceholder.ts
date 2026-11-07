@@ -1,0 +1,53 @@
+'use client';
+import { useSchedulerStoreContext } from '@mui/x-scheduler-internals/use-scheduler-store-context';
+import {
+  schedulerOccurrencePlaceholderSelectors,
+  schedulerOtherSelectors,
+} from '@mui/x-scheduler-internals/scheduler-selectors';
+import { getPrimaryResourceId } from '@mui/x-scheduler-internals/internals';
+import type { EventDialogFormValues } from './utils';
+import { computeRange, RANGE_FORM_KEYS } from './utils';
+
+// Gate on the whole hook: only writes to these keys reach the placeholder.
+const PLACEHOLDER_KEYS: ReadonlySet<string> = new Set([...RANGE_FORM_KEYS, 'resourceIds']);
+
+/**
+ * Returns a function that live-updates the creation placeholder in the store
+ * from the form values. No-op when the dialog is not creating an event or when
+ * none of the written keys affects the placeholder.
+ */
+export function usePushPlaceholder() {
+  const store = useSchedulerStoreContext();
+
+  return function pushPlaceholder(values: EventDialogFormValues, changedKeys: string[]) {
+    // Read the store directly: the callback runs synchronously after each write,
+    // and subscribing would re-render the whole dialog on every push.
+    const rawPlaceholder = schedulerOccurrencePlaceholderSelectors.value(store.state);
+    if (rawPlaceholder?.type !== 'creation') {
+      return;
+    }
+    if (!changedKeys.some((key) => PLACEHOLDER_KEYS.has(key))) {
+      return;
+    }
+
+    const displayTimezone = schedulerOtherSelectors.displayTimezone(store.state);
+    const { start, end, surfaceType } = computeRange(values, displayTimezone);
+    // A custom field can hold a date that doesn't exist, like 2025-06-31: the placeholder stays
+    // where it was, since the grids can't place a bound that isn't an instant.
+    if (!Number.isFinite(start) || !Number.isFinite(end)) {
+      return;
+    }
+    const surfaceTypeToUse = rawPlaceholder.lockSurfaceType
+      ? rawPlaceholder.surfaceType
+      : surfaceType;
+
+    store.setOccurrencePlaceholder({
+      type: 'creation',
+      surfaceType: surfaceTypeToUse,
+      resourceId: getPrimaryResourceId(values.resourceIds),
+      start,
+      end,
+      lockSurfaceType: rawPlaceholder.lockSurfaceType,
+    });
+  };
+}

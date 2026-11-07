@@ -2,6 +2,7 @@
 // See https://github.com/date-fns/date-fns/issues/1781
 /* eslint-disable import/extensions */
 /* v8 ignore start */
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment -- This v2 adapter is tested with v2 aliases; the workspace installs v4 imports.
 // @ts-nocheck
 import addSeconds from 'date-fns-jalali/addSeconds/index.js';
 import addMinutes from 'date-fns-jalali/addMinutes/index.js';
@@ -49,7 +50,7 @@ import defaultLocale from 'date-fns-jalali/locale/fa-IR/index.js';
 import type { Locale as DateFnsLocale } from 'date-fns-jalali';
 import longFormatters from 'date-fns-jalali/_lib/format/longFormatters/index.js';
 /* v8 ignore end */
-import { AdapterFormats, AdapterOptions, MuiPickersAdapter } from '../models';
+import type { AdapterFormats, AdapterOptions, MuiPickersAdapter } from '../models';
 import { AdapterDateFnsBase } from '../AdapterDateFnsBase';
 
 const defaultFormats: AdapterFormats = {

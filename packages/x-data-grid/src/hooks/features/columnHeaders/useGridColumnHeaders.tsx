@@ -28,17 +28,18 @@ import type { GridFilterActiveItemsLookup } from '../filter';
 import type { GridColumnGroupIdentifier, GridColumnIdentifier } from '../focus';
 import type { GridColumnMenuState } from '../columnMenu';
 import {
-  type GridColumnVisibilityModel,
   gridColumnPositionsSelector,
   gridVisiblePinnedColumnDefinitionsSelector,
   gridColumnLookupSelector,
 } from '../columns';
+import type { GridColumnVisibilityModel } from '../columns';
 import type { GridGroupingStructure } from '../columnGrouping/gridColumnGroupsInterfaces';
 import { gridColumnGroupsUnwrappedModelSelector } from '../columnGrouping/gridColumnGroupsSelector';
 import { GridScrollbarFillerCell as ScrollbarFiller } from '../../../components/GridScrollbarFillerCell';
 import { getPinnedCellOffset } from '../../../internals/utils/getPinnedCellOffset';
 import { GridColumnHeaderSeparatorSides } from '../../../components/columnHeaders/GridColumnHeaderSeparator';
 import { gridClasses } from '../../../constants/gridClasses';
+import { gridColumnReorderDragColDefensiveSelector } from './gridColumnReorderDragColSelector';
 import {
   shouldCellShowLeftBorder,
   shouldCellShowRightBorder,
@@ -101,11 +102,12 @@ export const useGridColumnHeaders = (props: UseGridColumnHeadersProps) => {
     hasOtherElementInTabSequence,
   } = props;
 
-  const [dragCol, setDragCol] = React.useState('');
   const [resizeCol, setResizeCol] = React.useState('');
 
   const apiRef = useGridPrivateApiContext();
   const rootProps = useGridRootProps();
+  // Set by the HTML drag and drop and the pointer events paths of column reordering
+  const dragCol = useGridSelector(apiRef, gridColumnReorderDragColDefensiveSelector) ?? '';
   const columnGroupsModel = useGridSelector(apiRef, gridColumnGroupsUnwrappedModelSelector);
   const columnPositions = useGridSelector(apiRef, gridColumnPositionsSelector);
   const renderContext = useGridSelector(apiRef, gridRenderContextColumnsSelector);
@@ -133,15 +135,6 @@ export const useGridColumnHeaders = (props: UseGridColumnHeadersProps) => {
     [],
   );
 
-  const handleColumnReorderStart = React.useCallback<GridEventListener<'columnHeaderDragStart'>>(
-    (params) => setDragCol(params.field),
-    [],
-  );
-  const handleColumnReorderStop = React.useCallback<GridEventListener<'columnHeaderDragEndNative'>>(
-    () => setDragCol(''),
-    [],
-  );
-
   const leftRenderContext = React.useMemo(() => {
     return pinnedColumns.left.length
       ? {
@@ -162,8 +155,6 @@ export const useGridColumnHeaders = (props: UseGridColumnHeadersProps) => {
 
   useGridEvent(apiRef, 'columnResizeStart', handleColumnResizeStart);
   useGridEvent(apiRef, 'columnResizeStop', handleColumnResizeStop);
-  useGridEvent(apiRef, 'columnHeaderDragStart', handleColumnReorderStart);
-  useGridEvent(apiRef, 'columnHeaderDragEndNative', handleColumnReorderStop);
 
   // Helper for computation common between getColumnHeaders and getColumnGroupHeaders
   const getColumnsToRender = (params?: GetHeadersParams) => {

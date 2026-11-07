@@ -1,11 +1,10 @@
-import {
-  DataGridPremium,
+import type {
   GridColDef,
   GridRowModel,
   GridPivotModel,
   GridInitialState,
-  GridSidebarValue,
 } from '@mui/x-data-grid-premium';
+import { DataGridPremium, GridSidebarValue } from '@mui/x-data-grid-premium';
 
 const rows: GridRowModel[] = [
   {
@@ -83,7 +82,7 @@ const rows: GridRowModel[] = [
 ];
 
 const columns: GridColDef[] = [
-  { field: 'product', headerName: 'Product' },
+  { field: 'product', headerName: 'Product', rowHeader: true },
   { field: 'region', headerName: 'Region' },
   { field: 'quarter', headerName: 'Quarter' },
   {

@@ -2,22 +2,30 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { SxProps, Theme } from '@mui/system';
-import {
-  ConversationHeaderActions,
-  type ConversationHeaderActionsProps,
+import type { SxProps, Theme } from '@mui/system';
+import { ConversationHeaderActions } from '@mui/x-chat-headless';
+import type {
+  ConversationHeaderActionsProps,
+  ConversationHeaderActionsSlots,
 } from '@mui/x-chat-headless';
 import { styled, createUseThemeProps } from '../internals/zero-styled';
-import {
-  useChatConversationUtilityClasses,
-  type ChatConversationClasses,
-} from './chatConversationClasses';
+import { mergeSlotProps } from '../internals/mergeSlotProps';
+import { useChatConversationUtilityClasses } from './chatConversationClasses';
+import type { ChatConversationClasses } from './chatConversationClasses';
 
 const useThemeProps = createUseThemeProps('MuiChatConversationHeaderActions');
 
+export interface ChatConversationHeaderActionsSlots extends ConversationHeaderActionsSlots {}
+
 export interface ChatConversationHeaderActionsProps extends ConversationHeaderActionsProps {
   className?: string;
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx?: SxProps<Theme>;
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes?: Partial<ChatConversationClasses>;
 }
 
@@ -45,31 +53,50 @@ const ChatConversationHeaderActions = React.forwardRef<
       ref={ref}
       {...other}
       slots={{
-        actions: slots?.actions ?? ChatConversationHeaderActionsStyled,
         ...slots,
+        actions: slots?.actions ?? ChatConversationHeaderActionsStyled,
       }}
       slotProps={{
         ...slotProps,
-        actions: {
-          className: clsx(classes.headerActions, className),
-          sx,
-          ...(slotProps?.actions as object),
-        } as any,
+        actions: mergeSlotProps(
+          {
+            className: clsx(classes.headerActions, className),
+            sx,
+          },
+          slotProps?.actions,
+        ) as any,
       }}
     />
   );
 });
 
-ChatConversationHeaderActions.propTypes = {
+ChatConversationHeaderActions.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * The content of the component.
+   */
   children: PropTypes.node,
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes: PropTypes.object,
   className: PropTypes.string,
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
   slotProps: PropTypes.object,
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
   slots: PropTypes.object,
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx: PropTypes.oneOfType([
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
     PropTypes.func,

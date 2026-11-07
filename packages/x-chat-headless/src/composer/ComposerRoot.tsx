@@ -1,20 +1,27 @@
 'use client';
 import * as React from 'react';
 import useSlotProps from '@mui/utils/useSlotProps';
-import { SlotComponentProps } from '@mui/utils/types';
+import type { SlotComponentProps } from '@mui/utils/types';
 import { useChatComposer } from '../hooks/useChatComposer';
 import { useChatStatus } from '../hooks/useChatStatus';
 import { useChatStore } from '../hooks/useChatStore';
+import { useChatLocaleText } from '../chat/internals/ChatLocaleContext';
 import type { ChatAttachmentsConfig } from '../types/chat-entities';
 import { getDataAttributes } from '../internals/getDataAttributes';
 import { ComposerContextProvider } from './internals/ComposerContext';
-import { type ComposerRootOwnerState } from './composer.types';
+import type { ComposerRootOwnerState } from './composer.types';
 
 export interface ComposerRootSlots {
+  /**
+   * The component that renders the root.
+   */
   root: React.ElementType;
 }
 
 export interface ComposerRootSlotProps {
+  /**
+   * The props used for the root slot.
+   */
   root?: SlotComponentProps<'form', {}, ComposerRootOwnerState>;
 }
 
@@ -31,13 +38,25 @@ export interface ComposerRootProps extends Omit<
    * after the handler returns.
    */
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
+  /**
+   * If `true`, the composer is disabled.
+   * @default false
+   */
   disabled?: boolean;
   /**
    * Configuration for attachment validation constraints.
    * When provided, file attachments are validated against these rules.
    */
   attachmentConfig?: ChatAttachmentsConfig;
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
   slots?: Partial<ComposerRootSlots>;
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
   slotProps?: ComposerRootSlotProps;
 }
 
@@ -53,6 +72,7 @@ export const ComposerRoot = React.forwardRef(function ComposerRoot(
   const composer = useChatComposer();
   const status = useChatStatus();
   const store = useChatStore();
+  const localeText = useChatLocaleText();
   const ownerState = React.useMemo<ComposerRootOwnerState>(
     () => ({
       isSubmitting: composer.isSubmitting,
@@ -103,6 +123,9 @@ export const ComposerRoot = React.forwardRef(function ComposerRoot(
     ownerState,
     additionalProps: {
       ref,
+      // A named accessible form is exposed as a landmark, letting assistive
+      // technology jump straight to the composer.
+      'aria-label': localeText.composerLandmarkLabel,
       ...getDataAttributes({
         isSubmitting: ownerState.isSubmitting,
         hasValue: ownerState.hasValue,

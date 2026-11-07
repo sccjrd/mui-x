@@ -2,20 +2,20 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
 import { useTreeItem } from '@mui/x-tree-view/useTreeItem';
+import type { TreeItemProps } from '@mui/x-tree-view/TreeItem';
 import {
   TreeItemCheckbox,
   TreeItemContent,
   TreeItemIconContainer,
   TreeItemLabel,
   TreeItemRoot,
-  TreeItemProps,
   TreeItemGroupTransition,
 } from '@mui/x-tree-view/TreeItem';
 import { TreeItemIcon } from '@mui/x-tree-view/TreeItemIcon';
 import { TreeItemProvider } from '@mui/x-tree-view/TreeItemProvider';
 import { TreeItemDragAndDropOverlay } from '@mui/x-tree-view/TreeItemDragAndDropOverlay';
 import { TreeItemLabelInput } from '@mui/x-tree-view/TreeItemLabelInput';
-import { MUI_X_PRODUCTS } from './products';
+import { MUI_X_PRODUCTS } from '../datasets/disabledAndEditableProducts';
 
 const CustomTreeItem = React.forwardRef(function CustomTreeItem(
   { id, itemId, label, disabled, children }: TreeItemProps,

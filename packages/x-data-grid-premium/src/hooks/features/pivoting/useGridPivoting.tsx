@@ -1,24 +1,24 @@
 import * as React from 'react';
 import {
-  type GridColDef,
-  type GridRowId,
-  type GridRowModel,
   gridDataRowIdsSelector,
   gridRowIdSelector,
   gridRowsLoadingSelector,
   gridRowsLookupSelector,
 } from '@mui/x-data-grid-pro';
+import type { GridColDef, GridRowId, GridRowModel } from '@mui/x-data-grid-pro';
 import useEnhancedEffect from '@mui/utils/useEnhancedEffect';
 import useOnMount from '@mui/utils/useOnMount';
 import type { RefObject } from '@mui/x-internals/types';
 import {
-  type GridStateInitializer,
   useGridApiMethod,
   useGridRegisterPipeProcessor,
   useGridSelector,
-  type GridPipeProcessor,
   gridPivotInitialColumnsSelector,
+  isReplaceUpdate,
+  getReplaceRow,
+  warnIfReplaceLosesPrototype,
 } from '@mui/x-data-grid-pro/internals';
+import type { GridStateInitializer, GridPipeProcessor } from '@mui/x-data-grid-pro/internals';
 import type { GridInitialStatePremium } from '../../../models/gridStatePremium';
 import type { DataGridPremiumProcessedProps } from '../../../models/dataGridPremiumProps';
 
@@ -155,7 +155,12 @@ export const useGridPivoting = (
 
   const getInitialData = React.useCallback(() => {
     if (!exportedStateRef.current) {
-      exportedStateRef.current = apiRef.current.exportState();
+      // The computed columns model is not pivot state: it stays live while pivoting is
+      // active (the columns are only injected again once it is deactivated), so a
+      // definition added, edited or removed in the meantime is neither replayed away nor
+      // hidden from `exportState()`.
+      const { computedColumns, ...exportedState } = apiRef.current.exportState();
+      exportedStateRef.current = exportedState;
     }
 
     let rows: GridRowModel[] = [];
@@ -503,13 +508,20 @@ export const useGridPivoting = (
         nonPivotDataRef.current.rows.forEach((row) => {
           rowsMap.set(gridRowIdSelector(apiRef, row), row);
         });
-        rows.forEach((row) => {
-          const rowId = gridRowIdSelector(apiRef, row);
+        rows.forEach((update) => {
+          if (isReplaceUpdate(update)) {
+            const row = getReplaceRow(update);
+            const rowId = gridRowIdSelector(apiRef, row);
+            warnIfReplaceLosesPrototype(rowsMap.get(rowId), row);
+            rowsMap.set(rowId, row);
+            return;
+          }
+          const rowId = gridRowIdSelector(apiRef, update);
           // eslint-disable-next-line no-underscore-dangle
-          if (row._action === 'delete') {
+          if (update._action === 'delete') {
             rowsMap.delete(rowId);
           } else {
-            rowsMap.set(rowId, row);
+            rowsMap.set(rowId, update);
           }
         });
 

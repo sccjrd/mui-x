@@ -1,11 +1,8 @@
 import * as React from 'react';
-import {
-  DataGrid,
-  GridColDef,
-  GridRenderEditCellParams,
-  useGridApiContext,
-} from '@mui/x-data-grid';
-import Autocomplete, { AutocompleteProps } from '@mui/material/Autocomplete';
+import type { GridColDef, GridRenderEditCellParams } from '@mui/x-data-grid';
+import { DataGrid, useGridApiContext } from '@mui/x-data-grid';
+import type { AutocompleteProps } from '@mui/material/Autocomplete';
+import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 
@@ -129,6 +126,7 @@ const rows = [
 const columns: GridColDef[] = [
   {
     field: 'country',
+    rowHeader: true,
     headerName: 'Country',
     width: 200,
     editable: true,

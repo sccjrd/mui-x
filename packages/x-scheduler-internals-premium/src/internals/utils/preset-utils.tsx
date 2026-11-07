@@ -1,87 +1,88 @@
 import * as React from 'react';
-import { TemporalAdapter } from '@mui/x-scheduler-internals/base-ui-copy';
-import { getEndOfWeek, getStartOfWeek } from '@mui/x-scheduler-internals/internals';
 import {
-  TemporalSupportedObject,
-  EventTimelinePremiumPreset,
-  PresetConfig,
-  PresetHeaderUnit,
-} from '../../models';
-
-type FormatDate = (adapter: TemporalAdapter, date: TemporalSupportedObject) => string;
+  addToAdapterDate,
+  formatDayOfMonth,
+  formatMonthAndYear,
+  formatMonthShort,
+  formatTime,
+  formatWeekdayNarrow,
+  formatWeekdayShortMonthShortAndDayOfMonth,
+  formatWeekdayShortMonthShortAndDayOfMonthRange,
+  formatYear,
+  getDayNumber,
+  getPlainDateWeekStart,
+} from '@mui/x-scheduler-internals/internals';
+import type { BaseTemporal, PlainDateDuration } from '@mui/x-scheduler-internals/internals';
+import type { EventTimelinePremiumPreset, PresetDefinition, PresetHeaderUnit } from '../../models';
 
 const DAY_AND_HOUR_DAYS = 4;
 
-const formatYear: FormatDate = (adapter, date) => String(adapter.getYear(date));
-
-const formatMonth3Letters: FormatDate = (adapter, date) => adapter.format(date, 'month3Letters');
-
-const formatWeekday1Letter: FormatDate = (adapter, date) => adapter.format(date, 'weekday1Letter');
-
-function formatWeekDayMonthAndDayOfMonth(adapter: TemporalAdapter, date: TemporalSupportedObject) {
-  const f = adapter.formats;
-  return adapter.formatByString(date, `${f.weekday3Letters}, ${f.month3Letters} ${f.dayOfMonth}`);
+/**
+ * The range and the navigation of a preset made of `unitCount` periods of a `unit`, like days or
+ * months. The range starts on the first day of the period of the visible date,
+ * `getStartPlainDate()`, and ends before the period that follows the last one.
+ */
+function createPlainDateRange(
+  unit: keyof PlainDateDuration,
+  getStartPlainDate: PresetDefinition['getStartPlainDate'] = (plainDate) => plainDate,
+): Pick<PresetDefinition, 'getStartPlainDate' | 'getEndPlainDate' | 'navigate'> {
+  const toDuration = (amount: number) => ({ [unit]: amount }) as PlainDateDuration;
+  return {
+    getStartPlainDate,
+    getEndPlainDate: (startPlainDate, unitCount) => startPlainDate.add(toDuration(unitCount)),
+    navigate: (adapter, date, amount) => addToAdapterDate(adapter, date, toDuration(amount)),
+  };
 }
 
-function formatMonthAndYear(adapter: TemporalAdapter, date: TemporalSupportedObject) {
-  const f = adapter.formats;
-  return adapter.formatByString(date, `${f.monthFullLetter} ${f.yearPadded}`);
+/**
+ * The number of days of the range, `endPlainDate` being the date after it.
+ */
+export function getDayCount(
+  startPlainDate: BaseTemporal.PlainDate,
+  endPlainDate: BaseTemporal.PlainDate,
+) {
+  return getDayNumber(endPlainDate) - getDayNumber(startPlainDate);
 }
 
-function formatHourLabel(adapter: TemporalAdapter, date: TemporalSupportedObject, ampm: boolean) {
-  const f = adapter.formats;
-  const pattern = ampm
-    ? `${f.hours12h}:${f.minutesPadded} ${f.meridiem}`
-    : `${f.hours24h}:${f.minutesPadded}`;
-  return adapter.formatByString(date, pattern);
-}
-
-export const EVENT_TIMELINE_PREMIUM_PRESET_CONFIGS: Readonly<
-  Record<EventTimelinePremiumPreset, PresetConfig>
+export const EVENT_TIMELINE_PREMIUM_PRESET_DEFINITIONS: Readonly<
+  Record<EventTimelinePremiumPreset, PresetDefinition>
 > = {
   dayAndHour: {
     timeResolution: 'hour',
     tickWidth: 64,
     headers: [
-      {
-        unit: 'day',
-        renderCell: ({ adapter, start }) => formatWeekDayMonthAndDayOfMonth(adapter, start),
-      },
+      { unit: 'day', format: formatWeekdayShortMonthShortAndDayOfMonth },
       {
         unit: 'hour',
-        renderCell: ({ adapter, date, ampm }) => formatHourLabel(adapter, date, ampm),
+        // The hour row ticks in hours, so `iterate()` sets `wallClockHour` on all its cells.
+        renderCell: ({ locale, wallClockHour, ampm }) =>
+          formatTime(locale, wallClockHour! * 60, ampm),
       },
     ],
     unitCount: DAY_AND_HOUR_DAYS,
-    getStartDate: (adapter, visibleDate) => adapter.startOfDay(visibleDate),
-    getEndDate: (adapter, start, unitCount) =>
-      adapter.endOfDay(adapter.addDays(start, unitCount - 1)),
+    ...createPlainDateRange('days'),
     // `unitCount` is in days (the navigation step), but the grid ticks in hours. Pin
-    // the CSS tick count to `4 × 24` so the grid width stays stable across DST and
-    // matches the 24 hour cells `iterate()` emits per day.
+    // the CSS tick count to `days × 24`: the hour row is a wall-clock grid, so it emits
+    // the same cell count on every day, DST transitions included.
     getCssUnitCount: () => DAY_AND_HOUR_DAYS * 24,
-    navigate: (adapter, date, amount) => adapter.addDays(date, amount),
   },
   dayAndMonth: {
     timeResolution: 'day',
     tickWidth: 120,
     headers: [
-      { unit: 'month', formatDate: formatMonthAndYear },
+      { unit: 'month', format: formatMonthAndYear },
       {
         unit: 'day',
-        renderCell: ({ adapter, date }) => (
+        renderCell: ({ locale, plainDate }) => (
           <span data-slot="dayCell">
-            <span data-slot="weekday">{adapter.format(date, 'weekday1Letter')}</span>
-            <span data-slot="dayOfMonth">{adapter.format(date, 'dayOfMonth')}</span>
+            <span data-slot="weekday">{formatWeekdayNarrow(locale, plainDate)}</span>
+            <span data-slot="dayOfMonth">{formatDayOfMonth(locale, plainDate)}</span>
           </span>
         ),
       },
     ],
     unitCount: 8 * 7, // 8 weeks
-    getStartDate: (adapter, visibleDate) => adapter.startOfDay(visibleDate),
-    getEndDate: (adapter, start, unitCount) =>
-      adapter.endOfDay(adapter.addDays(start, unitCount - 1)),
-    navigate: (adapter, date, amount) => adapter.addDays(date, amount),
+    ...createPlainDateRange('days'),
   },
   dayAndWeek: {
     timeResolution: 'day',
@@ -89,42 +90,32 @@ export const EVENT_TIMELINE_PREMIUM_PRESET_CONFIGS: Readonly<
     headers: [
       {
         unit: 'week',
-        renderCell: ({ adapter, start, end }) =>
-          `${formatWeekDayMonthAndDayOfMonth(adapter, start)} - ${formatWeekDayMonthAndDayOfMonth(adapter, adapter.addDays(end, -1))}`,
+        renderCell: ({ locale, firstPlainDate, lastPlainDate }) =>
+          formatWeekdayShortMonthShortAndDayOfMonthRange(locale, firstPlainDate, lastPlainDate),
       },
-      { unit: 'day', formatDate: formatWeekday1Letter },
+      { unit: 'day', format: formatWeekdayNarrow },
     ],
     unitCount: 16, // 16 weeks
-    getStartDate: (adapter, visibleDate, weekStartsOn) =>
-      getStartOfWeek(adapter, visibleDate, weekStartsOn),
-    getEndDate: (adapter, start, unitCount, weekStartsOn) =>
-      getEndOfWeek(adapter, adapter.addWeeks(start, unitCount - 1), weekStartsOn),
-    getCssUnitCount: (adapter, start, end) => adapter.differenceInDays(end, start) + 1,
-    navigate: (adapter, date, amount) => adapter.addWeeks(date, amount),
+    ...createPlainDateRange('weeks', getPlainDateWeekStart),
+    getCssUnitCount: getDayCount,
   },
   monthAndYear: {
     timeResolution: 'day',
     tickWidth: 6,
     headers: [
-      { unit: 'year', formatDate: formatYear },
-      { unit: 'month', formatDate: formatMonth3Letters },
+      { unit: 'year', format: formatYear },
+      { unit: 'month', format: formatMonthShort },
     ],
     unitCount: 3 * 12, // 3 years
-    getStartDate: (adapter, visibleDate) => adapter.startOfMonth(visibleDate),
-    getEndDate: (adapter, start, unitCount) =>
-      adapter.endOfMonth(adapter.addMonths(start, unitCount - 1)),
-    getCssUnitCount: (adapter, start, end) => adapter.differenceInDays(end, start) + 1,
-    navigate: (adapter, date, amount) => adapter.addMonths(date, amount),
+    ...createPlainDateRange('months', (plainDate) => plainDate.with({ day: 1 })),
+    getCssUnitCount: getDayCount,
   },
   year: {
     timeResolution: 'year',
     tickWidth: 200,
-    headers: [{ unit: 'year', formatDate: formatYear }],
+    headers: [{ unit: 'year', format: formatYear }],
     unitCount: 30, // 30 years
-    getStartDate: (adapter, visibleDate) => adapter.startOfYear(visibleDate),
-    getEndDate: (adapter, start, unitCount) =>
-      adapter.endOfYear(adapter.addYears(start, unitCount - 1)),
-    navigate: (adapter, date, amount) => adapter.addYears(date, amount),
+    ...createPlainDateRange('years', (plainDate) => plainDate.with({ month: 1, day: 1 })),
   },
 };
 
@@ -143,6 +134,6 @@ const TICKS_PER_DAY: Record<PresetHeaderUnit, number> = {
  * Higher = more zoomed in. Used to derive the canonical zoom ordering of presets.
  */
 export function getPresetPxPerDay(preset: EventTimelinePremiumPreset): number {
-  const { timeResolution, tickWidth } = EVENT_TIMELINE_PREMIUM_PRESET_CONFIGS[preset];
+  const { timeResolution, tickWidth } = EVENT_TIMELINE_PREMIUM_PRESET_DEFINITIONS[preset];
   return tickWidth * TICKS_PER_DAY[timeResolution];
 }

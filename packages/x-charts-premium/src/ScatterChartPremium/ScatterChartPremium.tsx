@@ -2,39 +2,39 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import { useThemeProps } from '@mui/material/styles';
-import {
-  HighlightedScatterMark,
-  type ScatterChartProps,
-  type ScatterChartSlots,
-  type ScatterChartSlotProps,
+import { HighlightedScatterMark, FocusedScatterMark } from '@mui/x-charts/ScatterChart';
+import type {
+  ScatterChartProps,
+  ScatterChartSlots,
+  ScatterChartSlotProps,
 } from '@mui/x-charts/ScatterChart';
 import { ChartsGrid } from '@mui/x-charts/ChartsGrid';
 import { ChartsOverlay } from '@mui/x-charts/ChartsOverlay';
 import { ChartsAxis } from '@mui/x-charts/ChartsAxis';
 import { ChartsAxisHighlight } from '@mui/x-charts/ChartsAxisHighlight';
 import { ChartsLegend } from '@mui/x-charts/ChartsLegend';
-import { ChartsTooltip, type ChartsTooltipProps } from '@mui/x-charts/ChartsTooltip';
+import { ChartsTooltip } from '@mui/x-charts/ChartsTooltip';
+import type { ChartsTooltipProps } from '@mui/x-charts/ChartsTooltip';
+import type { WithDataAttributes } from '@mui/utils/types';
 import type { TooltipPropsOverrides } from '@mui/x-charts/models';
 import { ChartsWrapper } from '@mui/x-charts/ChartsWrapper';
 import { ChartsBrushOverlay } from '@mui/x-charts/ChartsBrushOverlay';
 import { ChartsLayerContainer } from '@mui/x-charts/ChartsLayerContainer';
 import { ChartsSvgLayer } from '@mui/x-charts/ChartsSvgLayer';
 import { useScatterChartProps } from '@mui/x-charts/internals';
-import {
-  type ChartsToolbarProSlotProps,
-  type ChartsToolbarProSlots,
+import type {
+  ChartsToolbarProSlotProps,
+  ChartsToolbarProSlots,
 } from '@mui/x-charts-pro/ChartsToolbarPro';
 import { ChartsZoomSlider } from '@mui/x-charts-pro/ChartsZoomSlider';
-import { type ChartsSlotPropsPro, type ChartsSlotsPro } from '@mui/x-charts-pro/internals';
+import type { ChartsSlotPropsPro, ChartsSlotsPro } from '@mui/x-charts-pro/internals';
 import { ChartsDataProviderPremium } from '../ChartsDataProviderPremium';
 import { useChartsContainerPremiumProps } from '../ChartsContainerPremium/useChartsContainerPremiumProps';
-import { type ChartsContainerPremiumProps } from '../ChartsContainerPremium';
+import type { ChartsContainerPremiumProps } from '../ChartsContainerPremium';
 import { ChartsToolbarPro } from '../ChartsToolbarPro';
 import { ScatterPlotPremium } from './ScatterPlotPremium';
-import {
-  SCATTER_CHART_PREMIUM_PLUGINS,
-  type ScatterChartPremiumPluginSignatures,
-} from './ScatterChartPremium.plugins';
+import { SCATTER_CHART_PREMIUM_PLUGINS } from './ScatterChartPremium.plugins';
+import type { ScatterChartPremiumPluginSignatures } from './ScatterChartPremium.plugins';
 import { ChartsWebGLLayer } from '../ChartsWebGLLayer';
 
 export interface ScatterChartPremiumSlots
@@ -45,7 +45,9 @@ export interface ScatterChartPremiumSlotProps
     Omit<ScatterChartSlotProps, 'toolbar' | 'tooltip'>,
     ChartsToolbarProSlotProps,
     Partial<ChartsSlotPropsPro> {
-  tooltip?: Partial<ChartsTooltipProps<'item' | 'none'>> & TooltipPropsOverrides;
+  tooltip?: WithDataAttributes<
+    Partial<ChartsTooltipProps<'item' | 'none'>> & TooltipPropsOverrides
+  >;
 }
 
 export interface ScatterChartPremiumProps
@@ -71,7 +73,15 @@ export interface ScatterChartPremiumProps
    * @default 'svg-single'
    */
   renderer?: 'svg-single' | 'svg-batch' | 'webgl';
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
   slots?: ScatterChartPremiumSlots;
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
   slotProps?: ScatterChartPremiumSlotProps;
 }
 
@@ -155,6 +165,7 @@ const ScatterChartPremium = React.forwardRef(function ScatterChartPremium(
             )}
             <ChartsOverlay {...overlayProps} />
             <ChartsAxisHighlight {...axisHighlightProps} />
+            <FocusedScatterMark />
             <ChartsBrushOverlay />
             {children}
           </ChartsSvgLayer>
@@ -165,11 +176,14 @@ const ScatterChartPremium = React.forwardRef(function ScatterChartPremium(
   );
 });
 
-ScatterChartPremium.propTypes = {
+ScatterChartPremium.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * The ref object that exposes the chart API methods.
+   */
   apiRef: PropTypes.shape({
     current: PropTypes.shape({
       exportAsImage: PropTypes.func.isRequired,
@@ -200,6 +214,9 @@ ScatterChartPremium.propTypes = {
     preventHighlight: PropTypes.bool,
     preventTooltip: PropTypes.bool,
   }),
+  /**
+   * The content of the component.
+   */
   children: PropTypes.node,
   className: PropTypes.string,
   /**
@@ -246,7 +263,17 @@ ScatterChartPremium.propTypes = {
   /**
    * Options to enable features planned for the next major.
    */
-  experimentalFeatures: PropTypes.object,
+  experimentalFeatures: PropTypes.shape({
+    keyboardActivation: PropTypes.bool,
+    progressiveRendering: PropTypes.bool,
+  }),
+  /**
+   * If `true`, clicking an item immediately shows the keyboard focus indicator on it.
+   * By default, clicking sets the item that keyboard navigation starts from, but the focus
+   * indicator stays hidden until the user presses a key.
+   * @default false
+   */
+  focusItemOnClick: PropTypes.bool,
   /**
    * Option to display a cartesian grid in the background.
    */
@@ -422,7 +449,7 @@ ScatterChartPremium.propTypes = {
   /**
    * The function called for onClick events.
    * The second argument contains information about all line/bar elements at the current mouse position.
-   * @param {MouseEvent} event The mouse event recorded on the `<svg/>` element.
+   * @param {ChartsActivationEvent} event The event recorded on the `<svg/>` element.
    * @param {null | ChartsAxisData} data The data about the clicked axis and items associated with it.
    */
   onAxisClick: PropTypes.func,
@@ -486,13 +513,28 @@ ScatterChartPremium.propTypes = {
    * If unset or `false`, the animations respects the user's `prefers-reduced-motion` setting.
    */
   skipAnimation: PropTypes.bool,
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
   slotProps: PropTypes.object,
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
   slots: PropTypes.object,
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx: PropTypes.oneOfType([
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
     PropTypes.func,
     PropTypes.object,
   ]),
+  /**
+   * The color mode passed to `colors` when it is a function.
+   * Defaults to the mode of the Material UI theme.
+   */
   theme: PropTypes.oneOf(['dark', 'light']),
   /**
    * The title of the chart.
@@ -554,6 +596,7 @@ ScatterChartPremium.propTypes = {
           max: PropTypes.oneOfType([PropTypes.instanceOf(Date), PropTypes.number]),
           min: PropTypes.oneOfType([PropTypes.instanceOf(Date), PropTypes.number]),
           type: PropTypes.oneOf(['continuous']).isRequired,
+          unknownColor: PropTypes.string,
         }),
         PropTypes.shape({
           colors: PropTypes.arrayOf(PropTypes.string).isRequired,
@@ -561,6 +604,7 @@ ScatterChartPremium.propTypes = {
             PropTypes.oneOfType([PropTypes.instanceOf(Date), PropTypes.number]).isRequired,
           ).isRequired,
           type: PropTypes.oneOf(['piecewise']).isRequired,
+          unknownColor: PropTypes.string,
         }),
         PropTypes.shape({
           colors: PropTypes.arrayOf(PropTypes.string).isRequired,
@@ -627,7 +671,7 @@ ScatterChartPremium.propTypes = {
   zoomInteractionConfig: PropTypes.shape({
     pan: PropTypes.arrayOf(
       PropTypes.oneOfType([
-        PropTypes.oneOf(['drag', 'pressAndDrag', 'wheel']),
+        PropTypes.oneOf(['drag', 'keyboard', 'pressAndDrag', 'wheel']),
         PropTypes.shape({
           allowedDirection: PropTypes.oneOf(['x', 'xy', 'y']),
           pointerMode: PropTypes.any,
@@ -644,11 +688,16 @@ ScatterChartPremium.propTypes = {
           requiredKeys: PropTypes.arrayOf(PropTypes.string),
           type: PropTypes.oneOf(['pressAndDrag']).isRequired,
         }),
+        PropTypes.shape({
+          pointerMode: PropTypes.any,
+          requiredKeys: PropTypes.array,
+          type: PropTypes.oneOf(['keyboard']).isRequired,
+        }),
       ]).isRequired,
     ),
     zoom: PropTypes.arrayOf(
       PropTypes.oneOfType([
-        PropTypes.oneOf(['brush', 'doubleTapReset', 'pinch', 'tapAndDrag', 'wheel']),
+        PropTypes.oneOf(['brush', 'doubleTapReset', 'keyboard', 'pinch', 'tapAndDrag', 'wheel']),
         PropTypes.shape({
           pointerMode: PropTypes.oneOf(['mouse', 'touch']),
           requiredKeys: PropTypes.arrayOf(PropTypes.string),
@@ -663,6 +712,11 @@ ScatterChartPremium.propTypes = {
           pointerMode: PropTypes.oneOf(['mouse', 'touch']),
           requiredKeys: PropTypes.arrayOf(PropTypes.string),
           type: PropTypes.oneOf(['tapAndDrag']).isRequired,
+        }),
+        PropTypes.shape({
+          pointerMode: PropTypes.any,
+          requiredKeys: PropTypes.array,
+          type: PropTypes.oneOf(['keyboard']).isRequired,
         }),
         PropTypes.shape({
           pointerMode: PropTypes.any,

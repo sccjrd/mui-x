@@ -1,11 +1,13 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import { forwardRef } from '@mui/x-internals/forwardRef';
-import { useComponentRenderer, type RenderProp } from '@mui/x-internals/useComponentRenderer';
+import { useComponentRenderer } from '@mui/x-internals/useComponentRenderer';
+import type { RenderProp } from '@mui/x-internals/useComponentRenderer';
 import useForkRef from '@mui/utils/useForkRef';
 import { useGridRootProps } from '../../hooks/utils/useGridRootProps';
 import type { GridSlotProps } from '../../models';
-import { type QuickFilterState, useQuickFilterContext } from './QuickFilterContext';
+import { useQuickFilterContext } from './QuickFilterContext';
+import type { QuickFilterState } from './QuickFilterContext';
 
 export type QuickFilterTriggerProps = Omit<GridSlotProps['baseButton'], 'className'> & {
   /**
@@ -62,7 +64,7 @@ const QuickFilterTrigger = forwardRef<HTMLButtonElement, QuickFilterTriggerProps
   },
 );
 
-QuickFilterTrigger.propTypes = {
+QuickFilterTrigger.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -71,18 +73,42 @@ QuickFilterTrigger.propTypes = {
    * Override or extend the styles applied to the component.
    */
   className: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
+  /**
+   * If `true`, the button is disabled.
+   */
   disabled: PropTypes.bool,
+  /**
+   * The id of the button element.
+   */
   id: PropTypes.string,
   /**
    * A function to customize rendering of the component.
    */
   render: PropTypes.oneOfType([PropTypes.element, PropTypes.func]),
+  /**
+   * The ARIA role of the button element.
+   */
   role: PropTypes.string,
+  /**
+   * The size of the button.
+   */
   size: PropTypes.oneOf(['large', 'medium', 'small']),
+  /**
+   * Element placed before the children.
+   */
   startIcon: PropTypes.node,
   style: PropTypes.object,
+  /**
+   * The `tabIndex` of the button element.
+   */
   tabIndex: PropTypes.number,
+  /**
+   * The title of the button element.
+   */
   title: PropTypes.string,
+  /**
+   * @ignore
+   */
   touchRippleRef: PropTypes.any,
 } as any;
 

@@ -1,9 +1,6 @@
 import * as React from 'react';
-import {
-  DataGridPremium,
-  GridColDef,
-  GridPastedValueParser,
-} from '@mui/x-data-grid-premium';
+import type { GridColDef, GridPastedValueParser } from '@mui/x-data-grid-premium';
+import { DataGridPremium } from '@mui/x-data-grid-premium';
 
 const numberPastedValueParser: GridPastedValueParser = (value, _, column) => {
   if (column.type === 'number' && Number.isNaN(Number(value))) {
@@ -13,7 +10,13 @@ const numberPastedValueParser: GridPastedValueParser = (value, _, column) => {
 };
 
 const columns: GridColDef[] = [
-  { field: 'product', headerName: 'Product', width: 150, editable: true },
+  {
+    field: 'product',
+    headerName: 'Product',
+    width: 150,
+    editable: true,
+    rowHeader: true,
+  },
   {
     field: 'region',
     headerName: 'Region',

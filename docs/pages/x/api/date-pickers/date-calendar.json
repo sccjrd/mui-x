@@ -2,6 +2,7 @@
   "props": {
     "autoFocus": { "type": { "name": "bool" } },
     "classes": { "type": { "name": "object" }, "additionalInfo": { "cssApi": true } },
+    "className": { "type": { "name": "string" } },
     "dayOfWeekFormatter": {
       "type": { "name": "func" },
       "default": "(date: PickerValidDate) => adapter.format(date, 'weekdayShort').charAt(0).toUpperCase()",
@@ -240,6 +241,5 @@
   "forwardsRefTo": "HTMLDivElement",
   "filename": "/packages/x-date-pickers/src/DateCalendar/DateCalendar.tsx",
   "inheritance": null,
-  "demos": "<ul><li><a href=\"/x/react-date-pickers/custom-components/\">Custom slots and subcomponents</a></li>\n<li><a href=\"/x/react-date-pickers/date-calendar/\">Date Calendar</a></li>\n<li><a href=\"/x/react-date-pickers/date-picker/\">Date Picker</a></li>\n<li><a href=\"/x/react-date-pickers/validation/\">Date and Time Pickers - Validation</a></li></ul>",
-  "cssComponent": false
+  "demos": "<ul><li><a href=\"/x/react-date-pickers/custom-components/\">Custom slots and subcomponents</a></li>\n<li><a href=\"/x/react-date-pickers/date-calendar/\">Date Calendar</a></li>\n<li><a href=\"/x/react-date-pickers/date-picker/\">Date Picker</a></li>\n<li><a href=\"/x/react-date-pickers/validation/\">Date and Time Pickers - Validation</a></li></ul>"
 }

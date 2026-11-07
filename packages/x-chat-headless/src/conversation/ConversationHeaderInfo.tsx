@@ -1,11 +1,14 @@
 'use client';
 import * as React from 'react';
 import useSlotProps from '@mui/utils/useSlotProps';
-import { SlotComponentProps } from '@mui/utils/types';
+import type { SlotComponentProps } from '@mui/utils/types';
 import { useConversationContext } from './internals/ConversationContext';
-import { type ConversationHeaderInfoOwnerState } from './conversation.types';
+import type { ConversationHeaderInfoOwnerState } from './conversation.types';
 
 export interface ConversationHeaderInfoSlots {
+  /**
+   * The component that renders the header info.
+   */
   headerInfo: React.ElementType;
 }
 
@@ -17,8 +20,19 @@ export interface ConversationHeaderInfoProps extends Omit<
   React.HTMLAttributes<HTMLDivElement>,
   'children'
 > {
+  /**
+   * The content of the component.
+   */
   children?: React.ReactNode;
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
   slots?: Partial<ConversationHeaderInfoSlots>;
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
   slotProps?: ConversationHeaderInfoSlotProps;
 }
 

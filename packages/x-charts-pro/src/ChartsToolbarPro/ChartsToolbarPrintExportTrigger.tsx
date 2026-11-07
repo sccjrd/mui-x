@@ -1,11 +1,12 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import { forwardRef } from '@mui/x-internals/forwardRef';
-import { type RenderProp, useComponentRenderer } from '@mui/x-internals/useComponentRenderer';
+import { useComponentRenderer } from '@mui/x-internals/useComponentRenderer';
+import type { RenderProp } from '@mui/x-internals/useComponentRenderer';
 import { useChartsSlots } from '@mui/x-charts/internals';
 import { useChartProApiContext } from '../context';
-import { type ChartPrintExportOptions } from '../internals/plugins/useChartProExport';
-import { type ChartsSlotPropsPro, type ChartsSlotsPro } from '../internals/material';
+import type { ChartPrintExportOptions } from '../internals/plugins/useChartProExport';
+import type { ChartsSlotPropsPro, ChartsSlotsPro } from '../internals/material';
 
 export interface ChartsToolbarPrintExportOptions extends ChartPrintExportOptions {
   /**
@@ -45,7 +46,9 @@ const ChartsToolbarPrintExportTrigger = forwardRef<
   const apiRef = useChartProApiContext();
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    apiRef.current.exportAsPrint(options);
+    apiRef.current.exportAsPrint(options).catch((error) => {
+      console.error('MUI X Charts: Error exporting chart as print:', error);
+    });
     onClick?.(event);
   };
 
@@ -59,13 +62,19 @@ const ChartsToolbarPrintExportTrigger = forwardRef<
   return <React.Fragment>{element}</React.Fragment>;
 });
 
-ChartsToolbarPrintExportTrigger.propTypes = {
+ChartsToolbarPrintExportTrigger.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
   className: PropTypes.string,
+  /**
+   * If `true`, the button is disabled.
+   */
   disabled: PropTypes.bool,
+  /**
+   * The id of the button element.
+   */
   id: PropTypes.string,
   /**
    * The options to apply on the Print export.
@@ -77,13 +86,20 @@ ChartsToolbarPrintExportTrigger.propTypes = {
     fileName: PropTypes.string,
     nonce: PropTypes.string,
     onBeforeExport: PropTypes.func,
+    onStylesheetError: PropTypes.func,
   }),
   /**
    * A function to customize the rendering of the component.
    */
   render: PropTypes.oneOfType([PropTypes.element, PropTypes.func]),
+  /**
+   * The size of the button.
+   */
   size: PropTypes.oneOf(['large', 'medium', 'small']),
   style: PropTypes.object,
+  /**
+   * The `tabIndex` of the button element.
+   */
   tabIndex: PropTypes.number,
 } as any;
 

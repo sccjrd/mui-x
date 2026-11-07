@@ -1,8 +1,9 @@
 import * as path from 'path';
 import * as childProcess from 'child_process';
-import { type Browser, chromium, type ConsoleMessage, type Page } from '@playwright/test';
+import { chromium } from '@playwright/test';
+import type { Browser, ConsoleMessage, Page } from '@playwright/test';
 import fs from 'node:fs/promises';
-import { test as base } from 'vitest';
+import { describe, expect, it, test as base, afterAll, beforeEach, afterEach } from 'vitest';
 import { minimatch } from 'minimatch';
 
 declare global {
@@ -12,7 +13,7 @@ declare global {
   }
 }
 
-// Tests that need a longer timeout.
+// Suites that get an extra 100ms wait before the screenshot.
 const timeSensitiveSuites = [
   'ColumnAutosizingAsync',
   'DensitySelectorGrid',
@@ -24,6 +25,12 @@ const timeSensitiveSuites = [
   'RowSpanningClassSchedule',
   'ListView',
   'RowSpanningCalendar',
+  // The grid measures its container once on mount and then corrects that
+  // measurement through the resize debounce, so the overlay is one pixel short
+  // for the first ~60ms. Its content is centered, which turns that pixel into a
+  // half-pixel offset and moves the text to a different device row depending on
+  // whether the screenshot beat the correction.
+  'NoColumnsOverlay',
 ];
 
 interface RouteConfig {
@@ -38,8 +45,8 @@ interface RouteConfig {
    */
   viewport?: { width: number; height: number };
   /**
-   * Wait for this selector before screenshotting, on top of the testcase
-   * `aria-busy` gate (which only tracks font loading, not async demo data).
+   * Wait for this selector before screenshotting, on top of `navigateToTest`.
+   * Prefer rendering `data-screenshot-pending` while the demo loads, so no rule is needed.
    */
   waitForSelector?: string;
 }
@@ -70,6 +77,17 @@ const TEST_RULES: RouteRule[] = [
     // Dedicated tests handle mouse positioning.
     enabled: false,
   },
+  {
+    test: '/docs-charts-map/MarsMap',
+    // `MapImagePlot` renders its `<image>` only after the texture loads and is
+    // reprojected. The `<img>` wait below does not see that load.
+    waitForSelector: 'svg image',
+  },
+  {
+    test: '/test-regressions-charts/ImageExportAutoSize',
+    // The exported image is screenshotted by a dedicated `test` block below.
+    enabled: false,
+  },
 
   // Overview composites embed desktop-breakpoint media queries that don't
   // match at the default 1000x700 viewport, leaving panes hidden in
@@ -80,11 +98,17 @@ const TEST_RULES: RouteRule[] = [
 
   {
     test: '/test-regressions-data-grid/DataGridScrollRestoration',
-    // The grid restores its scroll to top:2000/left:2000 after an async remount.
-    // `aria-rowindex` is the absolute dataset position, so a mid-viewport row for
-    // the restored scroll (top:2000, 52px rows => row ~41 => aria-rowindex 43)
-    // only enters the DOM once the virtualizer has rendered the scrolled window.
-    waitForSelector: '.MuiDataGrid-row[aria-rowindex="43"] .MuiDataGrid-cell',
+    // The grid restores its scroll to top:2000/left:2000 after an async remount,
+    // and the cell has to pin both axes. `aria-rowindex` is the absolute dataset
+    // position, so the row for the restored vertical scroll (top:2000, 52px rows
+    // => row ~41 => aria-rowindex 43) only enters the DOM once the virtualizer
+    // has rendered the scrolled window. Rows are rendered for that window while
+    // the horizontal render context can still be empty though, which paints row
+    // separators but no column headers and no cell contents, so pin the column
+    // too: `maturityDate` is inside the column window for left:2000 and outside
+    // the one for left:0.
+    waitForSelector:
+      '.MuiDataGrid-row[aria-rowindex="43"] .MuiDataGrid-cell[data-field="maturityDate"]',
   },
 ];
 
@@ -108,9 +132,8 @@ async function main() {
       // is a no-op on Linux Chromium, so without this flag screenshots pick
       // up LCD subpixel color fringes that vary across hosts.
       '--disable-lcd-text',
-      // We could add the hide-scrollbars flag, which should improve argos
-      // flaky tests based on the scrollbars.
-      // '--hide-scrollbars',
+      // Not `--hide-scrollbars`: it also hides the scrollbars of the components under test.
+      // Only the page scrollbar is hidden, see `TestViewer`.
     ],
     headless: false,
   });
@@ -155,10 +178,31 @@ async function main() {
   });
 
   async function navigateToTest(page: Page, route: string) {
+    // Screenshots taken with fallback faces look like a repo-wide text rendering
+    // change. Wait here rather than at page creation: every caller is inside a
+    // test or hook, so vitest's timeouts cover it, and nothing that does not need
+    // fonts (route discovery, page setup) is blocked. It has to happen before the
+    // fixture mounts -- components that measure text at mount would otherwise
+    // bake in fallback metrics that the later font swap does not recompute.
     // Use client-side routing which is much faster than full page navigation via page.goto().
-    return page.evaluate((_route) => {
+    await page.evaluate(async (_route) => {
+      await window.muiFixture.fontsReady;
       window.muiFixture.navigate(_route);
     }, route);
+
+    // Wait until nothing in the test case is marked `data-screenshot-pending`: the viewer until the
+    // test case mounted and its fonts loaded, and demos while they load something the timers
+    // don't cover, for example a script from the network. Content that mounts once that's done
+    // still has its timers faked. The timers only run after this wait, so a marker must not wait
+    // for a timer, or the test times out.
+    const testcase = await page.waitForSelector(
+      `[data-testid="testcase"][data-testpath="${route}"]:not(:has([data-screenshot-pending]))`,
+    );
+
+    // Run the timers the test case scheduled while mounting, then switch to real timers.
+    await page.evaluate(() => window.muiFixture.flushTimers());
+
+    return testcase;
   }
 
   describe('visual regressions', () => {
@@ -208,16 +252,12 @@ async function main() {
 
             await page.setViewportSize(routeConfig?.viewport ?? DEFAULT_VIEWPORT);
 
-            await navigateToTest(page, route.url);
-
             // Move cursor offscreen to not trigger unwanted hover effects.
             await page.mouse.move(0, 0);
 
-            const screenshotPath = path.resolve(screenshotDir, `.${route.url}.png`);
+            const testcase = await navigateToTest(page, route.url);
 
-            const testcase = await page.waitForSelector(
-              `[data-testid="testcase"][data-testpath="${route.url}"]:not([aria-busy="true"])`,
-            );
+            const screenshotPath = path.resolve(screenshotDir, `.${route.url}.png`);
 
             if (routeConfig?.waitForSelector) {
               // Scope the wait to this route's testcase: pooled pages keep the
@@ -240,18 +280,14 @@ async function main() {
                   // Force lazy-loaded images to load
                   img.setAttribute('loading', 'eager');
                 }
-                const { promise, resolve, reject } = Promise.withResolvers<void>();
+                const { promise, resolve } = Promise.withResolvers<void>();
                 img.onload = () => resolve();
-                img.onerror = reject;
+                // Most image requests are aborted in `newTestPage`, so an error still means settled.
+                img.onerror = () => resolve();
                 promises.push(promise);
               }
               await Promise.all(promises);
             });
-
-            if (/^\/docs-charts-.*/.test(route.url)) {
-              // Run one tick of the clock to get the final animation state
-              await sleep(10);
-            }
 
             if (timeSensitiveSuites.some((suite) => route.url.includes(suite))) {
               await sleep(100);
@@ -273,11 +309,7 @@ async function main() {
       const route = '/docs-data-grid-virtualization/ColumnVirtualizationGrid';
       const screenshotPath = path.resolve(screenshotDir, `.${route}ScrollLeft400px.png`);
 
-      await navigateToTest(page, route);
-
-      const testcase = await page.waitForSelector(
-        `[data-testid="testcase"][data-testpath="${route}"]:not([aria-busy="true"])`,
-      );
+      const testcase = await navigateToTest(page, route);
 
       await sleep(100);
       await page.evaluate(() => {
@@ -302,11 +334,7 @@ async function main() {
       const route = '/test-regressions-data-grid/ColumnFluidWidthScrollClamp';
       const screenshotPath = path.resolve(screenshotDir, `.${route}AfterResize.png`);
 
-      await navigateToTest(page, route);
-
-      const testcase = await page.waitForSelector(
-        `[data-testid="testcase"][data-testpath="${route}"]:not([aria-busy="true"])`,
-      );
+      const testcase = await navigateToTest(page, route);
 
       await page.getByRole('button', { name: 'Scroll to max' }).click();
       await page.getByRole('button', { name: 'Shrink username' }).click();
@@ -356,11 +384,6 @@ async function main() {
 
       await navigateToTest(page, route);
 
-      // Make sure demo got loaded
-      await page.waitForSelector(
-        `[data-testid="testcase"][data-testpath="${route}"]:not([aria-busy="true"])`,
-      );
-
       const charts = await page.locator('svg').all();
 
       await charts[0].click();
@@ -379,13 +402,7 @@ async function main() {
       const route = '/test-regressions-charts/LineChartPointerInteraction';
       const screenshotPath = path.resolve(screenshotDir, `.${route}LineHighlight.png`);
 
-      await navigateToTest(page, route);
-
-      const testcase = await page.waitForSelector(
-        `[data-testid="testcase"][data-testpath="${route}"]:not([aria-busy="true"])`,
-      );
-
-      await sleep(10);
+      const testcase = await navigateToTest(page, route);
 
       await enablePointerDot(page, onTestFinished);
 
@@ -412,13 +429,7 @@ async function main() {
       const route = '/test-regressions-charts/LineChartPointerInteraction';
       const screenshotPath = path.resolve(screenshotDir, `.${route}AreaHighlight.png`);
 
-      await navigateToTest(page, route);
-
-      const testcase = await page.waitForSelector(
-        `[data-testid="testcase"][data-testpath="${route}"]:not([aria-busy="true"])`,
-      );
-
-      await sleep(10);
+      const testcase = await navigateToTest(page, route);
 
       await enablePointerDot(page, onTestFinished);
 
@@ -558,6 +569,35 @@ async function main() {
         await download.saveAs(screenshotPath);
       } finally {
         await page.close();
+      }
+    });
+
+    it('should export a chart sized by its parent element as PNG', async () => {
+      const route = '/test-regressions-charts/ImageExportAutoSize';
+      const screenshotPath = path.resolve(screenshotDir, `.${route}PNG.png`);
+
+      const page = await pool.acquire();
+      // The export catches its own errors and logs them, which would leave the download
+      // promise hanging until the test times out. Surface the error instead.
+      const { promise: exportError, reject } = Promise.withResolvers<never>();
+      const handler = (msg: ConsoleMessage) => {
+        if (msg.type() === 'error') {
+          reject(new Error(msg.text()));
+        }
+      };
+      page.on('console', handler);
+      try {
+        await navigateToTest(page, route);
+
+        const downloadPromise = page.waitForEvent('download');
+        await page.getByRole('button', { name: 'Export Image' }).click();
+
+        const download = await Promise.race([downloadPromise, exportError]);
+
+        await download.saveAs(screenshotPath);
+      } finally {
+        page.off('console', handler);
+        pool.release(page);
       }
     });
 
@@ -723,6 +763,14 @@ async function getDrawingArea(page: Page) {
 
 type NewPageOptions = Parameters<Browser['newPage']>[0];
 
+/**
+ * A 20×15 grey PNG, the size of the `w20` flags from flagcdn.com.
+ */
+const FLAG_PLACEHOLDER_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAABQAAAAPCAIAAABr+ngCAAAAFklEQVR42mM4QwFgGNU8qnlUM5U1AwD/6s1PCbpwUAAAAABJRU5ErkJggg==',
+  'base64',
+);
+
 async function newTestPage(browser: Browser, newPageOptions: NewPageOptions = {}): Promise<Page> {
   // reuse viewport from `vrtest`
   // https://github.com/nathanmarks/vrtest/blob/1185b852a6c1813cedf5d81f6d6843d9a241c1ce/src/server/runner.js#L44
@@ -730,10 +778,19 @@ async function newTestPage(browser: Browser, newPageOptions: NewPageOptions = {}
 
   // Block images since they slow down tests (need download).
   // They're also most likely decorative for documentation demos
+  const allowedImages = [
+    // Map raster base maps are reprojected on a canvas, so they must actually load.
+    '/static/x/charts/mars-viking-mdim21.jpg',
+  ];
   await page.route(/./, async (route, request) => {
     const type = request.resourceType();
-    // Block all images except the flags
-    if (type === 'image' && !request.url().startsWith('https://flagcdn.com')) {
+    if (type === 'image' && request.url().startsWith('https://flagcdn.com/')) {
+      // Serve flags from a local placeholder instead of the CDN.
+      route.fulfill({ contentType: 'image/png', body: FLAG_PLACEHOLDER_PNG });
+    } else if (
+      type === 'image' &&
+      !allowedImages.some((allowed) => request.url().includes(allowed))
+    ) {
       route.abort();
     } else {
       route.continue();
@@ -754,8 +811,8 @@ async function newTestPage(browser: Browser, newPageOptions: NewPageOptions = {}
   });
 
   const baseUrl = 'http://localhost:5001';
-  // Wait for all requests to finish.
-  // This should load shared resources such as fonts.
+  // Wait for all requests to finish. Fonts are awaited per navigation in
+  // `navigateToTest`, not here.
   await page.goto(baseUrl, { waitUntil: 'networkidle' });
 
   await page.waitForFunction(() => window.muiFixture?.isReady);

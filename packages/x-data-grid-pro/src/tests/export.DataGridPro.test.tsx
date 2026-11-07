@@ -1,13 +1,9 @@
-import {
-  type GridColDef,
-  useGridApiRef,
-  DataGridPro,
-  type GridApi,
-  type DataGridProProps,
-} from '@mui/x-data-grid-pro';
-import { type RefObject } from '@mui/x-internals/types';
+import { useGridApiRef, DataGridPro } from '@mui/x-data-grid-pro';
+import type { GridColDef, GridApi, DataGridProProps } from '@mui/x-data-grid-pro';
+import type { RefObject } from '@mui/x-internals/types';
 import { createRenderer, act } from '@mui/internal-test-utils';
 import { includeRowSelection } from 'test/utils/helperFn';
+import { describe, it, expect } from 'vitest';
 
 const isJSDOM = /jsdom/.test(window.navigator.userAgent);
 
@@ -169,6 +165,35 @@ describe('<DataGridPro /> - Export', () => {
           '3,"Reebok \n\r Reebok"',
         ].join('\r\n'),
       );
+    });
+
+    it('should keep whitespace and empty values at the start and end of the output', () => {
+      function TestCaseCSVExport() {
+        apiRef = useGridApiRef();
+        return (
+          <div style={{ width: 300, height: 300 }}>
+            <DataGridPro
+              {...baselineProps}
+              apiRef={apiRef}
+              columns={[{ field: 'brand', headerName: 'Brand' }]}
+              rows={[
+                { id: 0, brand: ' Nike' },
+                { id: 1, brand: 'Adidas ' },
+                { id: 2, brand: '' },
+              ]}
+            />
+          </div>
+        );
+      }
+
+      render(<TestCaseCSVExport />);
+      expect(apiRef.current?.getDataAsCsv({ includeHeaders: false })).to.equal(
+        [' Nike', 'Adidas ', ''].join('\r\n'),
+      );
+      expect(apiRef.current?.getDataAsCsv()).to.equal(
+        ['Brand', ' Nike', 'Adidas ', ''].join('\r\n'),
+      );
+      expect(apiRef.current?.getDataAsCsv({ getRowsToExport: () => [] })).to.equal('Brand');
     });
 
     it('should allow to change the delimiter', () => {

@@ -1,11 +1,13 @@
 'use client';
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import { ChartsSurface, type ChartsSurfaceProps } from '@mui/x-charts/ChartsSurface';
-import { type ChartAnyPluginSignature, type ChartSeriesType } from '@mui/x-charts/internals';
+import { ChartsSurface } from '@mui/x-charts/ChartsSurface';
+import type { ChartsSurfaceProps } from '@mui/x-charts/ChartsSurface';
+import type { ChartAnyPluginSignature, ChartSeriesType } from '@mui/x-charts/internals';
 import { useChartsContainerProProps } from './useChartsContainerProProps';
-import { type AllPluginSignatures } from '../internals/plugins/allPlugins';
-import { ChartsDataProviderPro, type ChartsDataProviderProProps } from '../ChartsDataProviderPro';
+import type { AllPluginSignatures } from '../internals/plugins/allPlugins';
+import { ChartsDataProviderPro } from '../ChartsDataProviderPro';
+import type { ChartsDataProviderProProps } from '../ChartsDataProviderPro';
 
 export interface ChartsContainerProSlots {}
 
@@ -73,11 +75,17 @@ ChartsContainerPro.propTypes = {
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * The ref object that exposes the chart API methods.
+   */
   apiRef: PropTypes.shape({
     current: PropTypes.shape({
       setZoomData: PropTypes.func.isRequired,
     }),
   }),
+  /**
+   * The content of the component.
+   */
   children: PropTypes.node,
   className: PropTypes.string,
   /**
@@ -89,6 +97,10 @@ ChartsContainerPro.propTypes = {
    * An array of objects that can be used to populate series and axes data using their `dataKey` property.
    */
   dataset: PropTypes.arrayOf(PropTypes.object),
+  /**
+   * The description of the chart.
+   * Used to provide an accessible description for the chart.
+   */
   desc: PropTypes.string,
   /**
    * If `true`, the charts will not listen to the mouse move event.
@@ -157,12 +169,23 @@ ChartsContainerPro.propTypes = {
    * If unset or `false`, the animations respects the user's `prefers-reduced-motion` setting.
    */
   skipAnimation: PropTypes.bool,
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx: PropTypes.oneOfType([
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
     PropTypes.func,
     PropTypes.object,
   ]),
+  /**
+   * The color mode passed to `colors` when it is a function.
+   * Defaults to the mode of the Material UI theme.
+   */
   theme: PropTypes.oneOf(['dark', 'light']),
+  /**
+   * The title of the chart.
+   * Used to provide an accessible label for the chart.
+   */
   title: PropTypes.string,
   /**
    * The width of the chart in px. If not defined, it takes the width of the parent element.

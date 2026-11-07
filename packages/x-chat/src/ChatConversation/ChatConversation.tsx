@@ -2,19 +2,27 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { SxProps, Theme } from '@mui/system';
-import { ConversationRoot, type ConversationRootProps } from '@mui/x-chat-headless';
+import type { SxProps, Theme } from '@mui/system';
+import { ConversationRoot, markChatLayoutPane } from '@mui/x-chat-headless';
+import type { ConversationRootProps, ConversationRootSlots } from '@mui/x-chat-headless';
 import { styled, createUseThemeProps } from '../internals/zero-styled';
-import {
-  useChatConversationUtilityClasses,
-  type ChatConversationClasses,
-} from './chatConversationClasses';
+import { mergeSlotProps } from '../internals/mergeSlotProps';
+import { useChatConversationUtilityClasses } from './chatConversationClasses';
+import type { ChatConversationClasses } from './chatConversationClasses';
 
 const useThemeProps = createUseThemeProps('MuiChatConversation');
 
+export interface ChatConversationSlots extends ConversationRootSlots {}
+
 export interface ChatConversationProps extends ConversationRootProps {
   className?: string;
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx?: SxProps<Theme>;
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes?: Partial<ChatConversationClasses>;
 }
 
@@ -42,37 +50,63 @@ const ChatConversation = React.forwardRef<HTMLDivElement, ChatConversationProps>
         ref={ref}
         {...other}
         slots={{
-          root: slots?.root ?? ChatConversationStyled,
           ...slots,
+          root: slots?.root ?? ChatConversationStyled,
         }}
         slotProps={{
           ...slotProps,
-          root: {
-            className: clsx(classes.root, className),
-            sx,
-            ...slotProps?.root,
-          } as any,
+          root: mergeSlotProps(
+            {
+              className: clsx(classes.root, className),
+              sx,
+            },
+            slotProps?.root,
+          ) as any,
         }}
       />
     );
   },
 );
 
-ChatConversation.propTypes = {
+ChatConversation.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * The content of the component.
+   */
   children: PropTypes.node,
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes: PropTypes.object,
   className: PropTypes.string,
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
   slotProps: PropTypes.object,
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
   slots: PropTypes.object,
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx: PropTypes.oneOfType([
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
     PropTypes.func,
     PropTypes.object,
   ]),
 } as any;
+
+// Mirror the headless `ConversationRoot` pane marker on the Material wrapper so
+// `ChatLayout` assigns it to the thread pane (the symbol lives on the headless
+// primitive, not this wrapper).
+// `markChatLayoutPane` mutates the component in place and returns it for the
+// `const X = markChatLayoutPane(...)` form; here the return is intentionally discarded.
+void markChatLayoutPane(ChatConversation, 'thread');
 
 export { ChatConversation };

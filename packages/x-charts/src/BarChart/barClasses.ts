@@ -1,7 +1,7 @@
 import generateUtilityClass from '@mui/utils/generateUtilityClass';
 import composeClasses from '@mui/utils/composeClasses';
 import generateUtilityClasses from '@mui/utils/generateUtilityClasses';
-import { type SeriesId } from '../models/seriesType/common';
+import type { SeriesId } from '../models/seriesType/common';
 
 export interface BarClasses {
   /** Styles applied to the bar plot element. */
@@ -21,12 +21,21 @@ export interface BarClasses {
 export type BarClassKey = keyof BarClasses;
 
 export interface BarElementOwnerState {
+  /**
+   * The id of the series the element belongs to.
+   */
   seriesId: SeriesId;
+  /**
+   * The index of the data point in the series.
+   */
   dataIndex: number;
   color: string;
   isFaded: boolean;
   isHighlighted: boolean;
   isFocused: boolean;
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes?: Partial<BarClasses>;
 }
 
@@ -44,7 +53,13 @@ export const barClasses: BarClasses = generateUtilityClasses('MuiBarChart', [
 ]);
 
 export interface UseUtilityClassesOptions {
+  /**
+   * If `true`, animations are skipped.
+   */
   skipAnimation?: boolean;
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes?: Partial<BarClasses>;
 }
 

@@ -3,7 +3,11 @@ import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
 import { ChatRoot, ChatVariantProvider, ChatDensityProvider } from '@mui/x-chat-headless';
+import type { ChatVariant } from '@mui/x-chat-headless';
+import resolveComponentProps from '@mui/utils/resolveComponentProps';
 import { styled, createUseThemeProps } from '../internals/zero-styled';
+import { ChatSlotsProvider } from '../internals/ChatSlotsContext';
+import { mergeSlotProps } from '../internals/mergeSlotProps';
 import { useChatBoxUtilityClasses } from './chatBoxClasses';
 import { ChatBoxContent } from './ChatBoxContent';
 import type { ChatBoxProps } from './ChatBox.types';
@@ -14,14 +18,19 @@ const ChatBoxStyled = styled('div', {
   name: 'MuiChatBox',
   slot: 'Root',
   overridesResolver: (_, styles) => styles.root,
-})(({ theme }) => ({
+})<{ ownerState: { variant: ChatVariant } }>(({ theme, ownerState }) => ({
+  '--ChatBox-conversationListWidth': '260px',
   boxSizing: 'border-box',
+  position: 'relative',
   display: 'flex',
   flexDirection: 'column',
   width: '100%',
   height: '100%',
   minHeight: 0,
   containerType: 'inline-size',
+  containerName: 'chatbox',
+  isolation: 'isolate',
+  overflow: 'hidden',
   fontFamily: theme.typography.fontFamily,
   fontSize: theme.typography.body2.fontSize,
   color: (theme.vars || theme).palette.text.primary,
@@ -29,6 +38,9 @@ const ChatBoxStyled = styled('div', {
   '*, *::before, *::after': {
     boxSizing: 'inherit',
   },
+  ...(ownerState.variant === 'compact' && {
+    '--ChatBox-conversationListWidth': '220px',
+  }),
 }));
 
 type ChatBoxComponent = (<Cursor = string>(
@@ -51,6 +63,9 @@ const ChatBox = React.forwardRef(function ChatBox<Cursor = string>(
     members,
     currentUser,
     roleDisplayNames,
+    getMessageAuthorId,
+    getMessageAuthorDisplayName,
+    getMessageAuthorAvatarUrl,
     messages,
     initialMessages,
     onMessagesChange,
@@ -83,21 +98,40 @@ const ChatBox = React.forwardRef(function ChatBox<Cursor = string>(
     slots,
     slotProps,
     features,
+    layoutMode,
+    layoutModeBreakpoints,
+    children,
     ...other
   } = props;
 
   const classes = useChatBoxUtilityClasses(classesProp);
-  const [rootEl, setRootEl] = React.useState<HTMLDivElement | null>(null);
+  const [rootElement, setRootElement] = React.useState<HTMLDivElement | null>(null);
   const handleRef = React.useCallback(
     (node: HTMLDivElement | null) => {
-      setRootEl(node);
+      setRootElement(node);
       if (typeof ref === 'function') {
-        ref(node);
+        // Legacy callback-ref forwarding; a React 19 cleanup return is not propagated here.
+        void ref(node);
       } else if (ref) {
         (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
       }
     },
     [ref],
+  );
+  const ownerState = React.useMemo(() => ({ variant }), [variant]);
+  const RootComponent = (slots?.root ?? ChatBoxStyled) as React.ElementType;
+  const rootSlotProps = resolveComponentProps(
+    mergeSlotProps(
+      {
+        ref: handleRef,
+        ...(typeof RootComponent === 'string' ? {} : { ownerState }),
+        className: clsx(classes.root, className),
+        sx,
+        ...other,
+      },
+      slotProps?.root,
+    ),
+    ownerState,
   );
 
   return (
@@ -106,6 +140,9 @@ const ChatBox = React.forwardRef(function ChatBox<Cursor = string>(
       members={members}
       currentUser={currentUser}
       roleDisplayNames={roleDisplayNames}
+      getMessageAuthorId={getMessageAuthorId}
+      getMessageAuthorDisplayName={getMessageAuthorDisplayName}
+      getMessageAuthorAvatarUrl={getMessageAuthorAvatarUrl}
       messages={messages}
       initialMessages={initialMessages}
       onMessagesChange={onMessagesChange}
@@ -126,41 +163,47 @@ const ChatBox = React.forwardRef(function ChatBox<Cursor = string>(
       partRenderers={partRenderers}
       storeClass={storeClass}
       localeText={localeText}
+      features={features}
       slotProps={{ root: { style: { display: 'contents' } } }}
     >
       <ChatVariantProvider variant={variant}>
         <ChatDensityProvider density={density}>
-          <ChatBoxStyled
-            ref={handleRef}
-            className={clsx(classes.root, className)}
-            sx={sx}
-            {...other}
-          >
-            <ChatBoxContent
-              variant={variant}
-              slots={slots}
-              slotProps={slotProps}
-              features={features}
-              rootEl={rootEl}
-              suggestions={suggestions}
-              suggestionsAutoSubmit={suggestionsAutoSubmit}
-              layoutClassName={classes.layout}
-              conversationsPaneClassName={classes.conversationsPane}
-              threadPaneClassName={classes.threadPane}
-            />
-          </ChatBoxStyled>
+          <RootComponent {...rootSlotProps}>
+            <ChatSlotsProvider slots={slots} slotProps={slotProps}>
+              <ChatBoxContent
+                variant={variant}
+                features={features}
+                layoutMode={layoutMode}
+                layoutModeBreakpoints={layoutModeBreakpoints}
+                rootElement={rootElement}
+                suggestions={suggestions}
+                suggestionsAutoSubmit={suggestionsAutoSubmit}
+                layoutClassName={classes.layout}
+                conversationsPaneClassName={classes.conversationsPane}
+                threadPaneClassName={classes.threadPane}
+              />
+              {children}
+            </ChatSlotsProvider>
+          </RootComponent>
         </ChatDensityProvider>
       </ChatVariantProvider>
     </ChatRoot>
   );
 }) as ChatBoxComponent;
 
-ChatBox.propTypes = {
+ChatBox.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * The id of the active conversation.
+   * Use with `onActiveConversationChange` to control it.
+   */
   activeConversationId: PropTypes.string,
+  /**
+   * The adapter that connects the chat to your backend.
+   */
   adapter: PropTypes.shape({
     addToolApprovalResponse: PropTypes.func,
     listConversations: PropTypes.func,
@@ -168,18 +211,30 @@ ChatBox.propTypes = {
     loadMore: PropTypes.func,
     markRead: PropTypes.func,
     reconnectToStream: PropTypes.func,
+    regenerate: PropTypes.func,
     sendMessage: PropTypes.func.isRequired,
     setTyping: PropTypes.func,
     stop: PropTypes.func,
     subscribe: PropTypes.func,
   }).isRequired,
+  /**
+   * The content of the component.
+   */
   children: PropTypes.node,
   /**
    * Override or extend the styles applied to the component.
    */
   classes: PropTypes.object,
   className: PropTypes.string,
+  /**
+   * The value of the composer.
+   * Use with `onComposerValueChange` to control it.
+   */
   composerValue: PropTypes.string,
+  /**
+   * The conversations.
+   * Use with `onConversationsChange` to control them.
+   */
   conversations: PropTypes.arrayOf(
     PropTypes.shape({
       avatarUrl: PropTypes.string,
@@ -243,9 +298,14 @@ ChatBox.propTypes = {
       PropTypes.bool,
     ]),
     conversationHeader: PropTypes.bool,
+    conversationList: PropTypes.bool,
+    dateDivider: PropTypes.bool,
     helperText: PropTypes.bool,
     scrollToBottom: PropTypes.bool,
+    streamingIndicator: PropTypes.oneOfType([PropTypes.oneOf(['auto']), PropTypes.bool]),
     suggestions: PropTypes.bool,
+    typingSignal: PropTypes.bool,
+    unreadMarker: PropTypes.bool,
   }),
   /**
    * Used to determine the avatar URL for a given message author.
@@ -356,6 +416,7 @@ ChatBox.propTypes = {
           PropTypes.shape({
             toolInvocation: PropTypes.shape({
               approval: PropTypes.object,
+              approvalId: PropTypes.string,
               callProviderMetadata: PropTypes.object,
               errorText: PropTypes.string,
               input: PropTypes.any,
@@ -380,6 +441,7 @@ ChatBox.propTypes = {
           PropTypes.shape({
             toolInvocation: PropTypes.shape({
               approval: PropTypes.object,
+              approvalId: PropTypes.string,
               callProviderMetadata: PropTypes.object,
               errorText: PropTypes.string,
               input: PropTypes.any,
@@ -419,6 +481,21 @@ ChatBox.propTypes = {
       updatedAt: PropTypes.string,
     }),
   ),
+  /**
+   * Forces the responsive layout mode instead of deriving it from the container width.
+   * When omitted, ChatBox chooses the mode automatically using `layoutModeBreakpoints`.
+   */
+  layoutMode: PropTypes.oneOf(['overlay', 'split', 'standard']),
+  /**
+   * Container-width breakpoints used when `layoutMode` is not provided.
+   */
+  layoutModeBreakpoints: PropTypes.shape({
+    overlay: PropTypes.number,
+    split: PropTypes.number,
+  }),
+  /**
+   * The props used for the locale text slot.
+   */
   localeText: PropTypes.object,
   /**
    * Known chat participants.
@@ -435,6 +512,10 @@ ChatBox.propTypes = {
       role: PropTypes.oneOf(['assistant', 'system', 'user']),
     }),
   ),
+  /**
+   * The messages of the active conversation.
+   * Use with `onMessagesChange` to control them.
+   */
   messages: PropTypes.arrayOf(
     PropTypes.shape({
       author: PropTypes.shape({
@@ -489,6 +570,7 @@ ChatBox.propTypes = {
           PropTypes.shape({
             toolInvocation: PropTypes.shape({
               approval: PropTypes.object,
+              approvalId: PropTypes.string,
               callProviderMetadata: PropTypes.object,
               errorText: PropTypes.string,
               input: PropTypes.any,
@@ -513,6 +595,7 @@ ChatBox.propTypes = {
           PropTypes.shape({
             toolInvocation: PropTypes.shape({
               approval: PropTypes.object,
+              approvalId: PropTypes.string,
               callProviderMetadata: PropTypes.object,
               errorText: PropTypes.string,
               input: PropTypes.any,
@@ -552,14 +635,49 @@ ChatBox.propTypes = {
       updatedAt: PropTypes.string,
     }),
   ),
+  /**
+   * Callback fired when the active conversation changes.
+   * @param {string | undefined} conversationId The id of the new active conversation.
+   */
   onActiveConversationChange: PropTypes.func,
+  /**
+   * Callback fired when the composer value changes.
+   * @param {string} value The new composer value.
+   */
   onComposerValueChange: PropTypes.func,
+  /**
+   * Callback fired when the conversations change.
+   * @param {ChatConversation[]} conversations The new conversations.
+   */
   onConversationsChange: PropTypes.func,
+  /**
+   * Callback fired when a data part is received.
+   * @param {ChatDataMessagePart} part The data part.
+   */
   onData: PropTypes.func,
+  /**
+   * Callback fired when an error occurs.
+   * @param {ChatError} error The error.
+   */
   onError: PropTypes.func,
+  /**
+   * Callback fired when the assistant finishes a response, including when it is aborted, disconnected, or fails.
+   * @param {ChatOnFinishPayload} payload The final message and how the response ended.
+   */
   onFinish: PropTypes.func,
+  /**
+   * Callback fired when the messages change.
+   * @param {ChatMessage[]} messages The new messages.
+   */
   onMessagesChange: PropTypes.func,
+  /**
+   * Callback fired when the assistant calls a tool.
+   * @param {ChatOnToolCallPayload} payload The tool call.
+   */
   onToolCall: PropTypes.func,
+  /**
+   * Custom renderers for message parts, by part type.
+   */
   partRenderers: PropTypes.shape({
     'dynamic-tool': PropTypes.func,
     file: PropTypes.func,
@@ -579,11 +697,36 @@ ChatBox.propTypes = {
     user: PropTypes.string,
   }),
   /**
-   * The extra props for the slot components.
+   * Props forwarded to each slot. Mirrors the flat keys of `slots`.
    */
   slotProps: PropTypes.object,
   /**
-   * The components used for each slot inside the ChatBox.
+   * The components used for each slot inside the ChatBox. Keys are flat and
+   * prefixed by area:
+   *
+   * - Layout — `root`, `layout`, `conversationsPane`, `threadPane`.
+   * - Conversation — `conversationRoot`, `conversationList`, `conversationHeader`,
+   *   `conversationHeaderInfo`, `conversationTitle`, `conversationSubtitle`,
+   *   `conversationHeaderActions`.
+   * - Message list — `messageList`, `messageGroup`, `dateDivider`, `unreadMarker`,
+   *   `streamingIndicator`. The divider slots render only when the matching
+   *   `features.dateDivider` / `features.unreadMarker` flag is enabled; the
+   *   streaming indicator renders by default (`features.streamingIndicator: 'auto'`)
+   *   and accepts `null` to hide it.
+   * - Message — `messageRoot`, `messageAvatar`, `messageContent`, `messageMeta`,
+   *   `messageInlineMeta`, `messageError`, `messageActions`, `messageAuthorName`.
+   *   Pass `null` to a presentational slot (`messageAvatar`, `messageMeta`,
+   *   `messageInlineMeta`, `messageActions`, `messageAuthorName`) to hide it and
+   *   collapse the surrounding layout.
+   * - Composer — `composerRoot`, `composerInput`, `composerSendButton`,
+   *   `composerAttachButton`, `composerAttachmentList`, `composerToolbar`,
+   *   `composerHelperText`. Pass `null` to `composerSendButton` /
+   *   `composerAttachButton` to hide the button.
+   * - Widgets — `typingIndicator`, `scrollToBottom`, `suggestions`, `emptyState`.
+   *
+   * `*Root` slots (`conversationRoot`, `messageRoot`, `composerRoot`) are
+   * wrapper-only: they swap the styled element while the default children still
+   * render inside.
    */
   slots: PropTypes.object,
   /**
@@ -614,6 +757,9 @@ ChatBox.propTypes = {
    * @default false
    */
   suggestionsAutoSubmit: PropTypes.bool,
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx: PropTypes.oneOfType([
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
     PropTypes.func,

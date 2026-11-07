@@ -1,18 +1,26 @@
 'use client';
 import * as React from 'react';
+import { useStableCallback } from '@base-ui/utils/useStableCallback';
+import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
 import { styled } from '@mui/material/styles';
+import { useRtl } from '@mui/system/RtlProvider';
 import Popover from '@mui/material/Popover';
 import Typography from '@mui/material/Typography';
-import { SchedulerEventOccurrence } from '@mui/x-scheduler-internals/models';
-import { useAdapterContext } from '@mui/x-scheduler-internals/use-adapter-context';
-import { useEventOccurrencesWithDayGridPosition } from '@mui/x-scheduler-internals/use-event-occurrences-with-day-grid-position';
-import { MoreEventsPopoverProps, MoreEventsPopoverProviderProps } from './MoreEventsPopover.types';
+import { useStore } from '@base-ui/utils/store';
+import type { SchedulerEventOccurrence } from '@mui/x-scheduler-internals/models';
+import type { useEventOccurrencesWithDayGridPosition } from '@mui/x-scheduler-internals/use-event-occurrences-with-day-grid-position';
+import { useSchedulerStoreContext } from '@mui/x-scheduler-internals/use-scheduler-store-context';
+import { schedulerOtherSelectors } from '@mui/x-scheduler-internals/scheduler-selectors';
+import { formatWeekdayShortMonthShortAndDayOfMonth } from '@mui/x-scheduler-internals/internals';
+import type {
+  MoreEventsPopoverProps,
+  MoreEventsPopoverProviderProps,
+} from './MoreEventsPopover.types';
 import { EventItem } from '../event/event-item/EventItem';
-import { createModal } from '../create-modal';
 import { isOccurrenceAllDayOrMultipleDay } from '../../utils/event-utils';
-import { formatWeekDayMonthAndDayOfMonth } from '../../utils/date-utils';
-import { EventDialogTrigger, useEventDialogContext } from '../event-dialog';
+import { EventContextMenuTrigger } from '../event-context-menu';
 import { useEventCalendarStyledContext } from '../../../event-calendar/EventCalendarStyledContext';
+import { isFocusLostWith, isFocusOnDocument } from '../../utils/focus-utils';
 
 const MoreEventsPopoverHeader = styled('div', {
   name: 'MuiEventCalendar',
@@ -50,94 +58,272 @@ const MoreEventsPopoverBody = styled('div', {
 
 interface MoreEventsData {
   occurrences: SchedulerEventOccurrence[];
-  count: number;
   day: useEventOccurrencesWithDayGridPosition.DayData;
 }
 
-const MoreEventsPopover = createModal<MoreEventsData>({
-  contextName: 'MoreEventsPopoverContext',
-});
+interface MoreEventsPopoverContextValue {
+  openPopover: (anchorEl: HTMLElement, data: MoreEventsData) => void;
+  updatePopover: (data: MoreEventsData) => void;
+  closePopoverForDay: (dayKey: string) => void;
+}
 
-export const MoreEventsPopoverContext = MoreEventsPopover.Context;
-export const useMoreEventsPopoverContext = MoreEventsPopover.useContext;
+export const MoreEventsPopoverContext = React.createContext<
+  MoreEventsPopoverContextValue | undefined
+>(undefined);
+
+export function useMoreEventsPopoverContext(): MoreEventsPopoverContextValue {
+  const context = React.useContext(MoreEventsPopoverContext);
+  if (!context) {
+    throw new Error(
+      'MUI X Scheduler: `MoreEventsPopoverContext` is missing. Hook must be placed within its Provider.',
+    );
+  }
+  return context;
+}
 
 export default function MoreEventsPopoverContent(props: MoreEventsPopoverProps) {
-  const { open, anchor, occurrences, day, onClose } = props;
+  const { open, anchor, cell, occurrences, day, onClose } = props;
 
   // Context hooks
-  const adapter = useAdapterContext();
-  const { schedulerId, classes } = useEventCalendarStyledContext();
-  const { subscribeCloseHandler } = useEventDialogContext();
+  const store = useSchedulerStoreContext();
+  const locale = useStore(store, schedulerOtherSelectors.dateLocale);
+  const { classes } = useEventCalendarStyledContext();
+  const isRtl = useRtl();
 
+  // The popover stays open behind the editing surface, so close it when that surface closes.
   React.useEffect(() => {
-    subscribeCloseHandler(() => {
-      onClose();
-    });
-  }, [subscribeCloseHandler, onClose]);
+    return store.registerStoreEffect(
+      (state) => state.editingOccurrence != null,
+      (wasEditing, isEditing) => {
+        if (wasEditing && !isEditing) {
+          onClose();
+        }
+      },
+    );
+  }, [store, onClose]);
+
+  // Where focus goes when it would be lost: the item replacing a removed one, else the "+N more"
+  // button, else the cell.
+  const bodyRef = React.useRef<HTMLDivElement>(null);
+  const replacementRef = React.useRef<HTMLElement | null>(null);
+  const getFocusFallback = useStableCallback((): HTMLElement | null => {
+    if (replacementRef.current?.isConnected) {
+      return replacementRef.current;
+    }
+    return anchor.isConnected ? anchor : cell;
+  });
+
+  // The item last focused or right-clicked, which is the one an open context menu belongs to.
+  const lastItemKeyRef = React.useRef<string | null>(null);
+  const handleItemInteraction = (event: React.SyntheticEvent<HTMLDivElement>) => {
+    const index = Array.from(event.currentTarget.children).findIndex((child) =>
+      child.contains(event.target as Node),
+    );
+    lastItemKeyRef.current = occurrences[index]?.key ?? null;
+  };
+
+  // Remember which item replaces a removed one. Focus left on the document moves there now; focus
+  // in the item's context menu moves there when the menu closes.
+  const previousRef = React.useRef({ open, occurrences });
+  useIsoLayoutEffect(() => {
+    const previous = previousRef.current;
+    previousRef.current = { open, occurrences };
+    // Only an update of the list on screen removes items, not a reopen.
+    if (!open || !previous.open) {
+      replacementRef.current = null;
+      return;
+    }
+    const listedKeys = new Set(occurrences.map((occurrence) => occurrence.key));
+    const isListed = (key: string) => listedKeys.has(key);
+    const lastItemIndex = previous.occurrences.findIndex(
+      (occurrence) => occurrence.key === lastItemKeyRef.current,
+    );
+    const isLastItemRemoved =
+      lastItemIndex !== -1 && !isListed(previous.occurrences[lastItemIndex].key);
+    // Keep the replacement of an earlier removal when an unrelated item goes.
+    if (!isLastItemRemoved && replacementRef.current?.isConnected) {
+      return;
+    }
+    // Prefer the item the user was on, else the first removed one.
+    const removedIndex = isLastItemRemoved
+      ? lastItemIndex
+      : previous.occurrences.findIndex((occurrence) => !isListed(occurrence.key));
+    const body = bodyRef.current;
+    if (removedIndex === -1 || !body) {
+      return;
+    }
+    // The next item still listed, else the previous one.
+    const replacement =
+      previous.occurrences.slice(removedIndex).find((occurrence) => isListed(occurrence.key)) ??
+      previous.occurrences
+        .slice(0, removedIndex)
+        .findLast((occurrence) => isListed(occurrence.key));
+    const replacementIndex = occurrences.findIndex(
+      (occurrence) => occurrence.key === replacement?.key,
+    );
+    replacementRef.current = (body.children[replacementIndex] as HTMLElement | undefined) ?? null;
+    if (isFocusOnDocument(body.ownerDocument)) {
+      getFocusFallback()?.focus({ preventScroll: true });
+    }
+  }, [open, occurrences, getFocusFallback]);
+
+  // Keeps the closing popover where the "+N more" button was, not in the top-left corner, once the
+  // button unmounts.
+  const anchorRectRef = React.useRef<DOMRect | null>(null);
+  const anchorEl = React.useMemo(
+    () => ({
+      // Popover reads these to treat it as an element and to portal into the right document.
+      nodeType: 1 as const,
+      ownerDocument: anchor.ownerDocument,
+      getBoundingClientRect: () => {
+        if (anchor.isConnected || anchorRectRef.current === null) {
+          anchorRectRef.current = anchor.getBoundingClientRect();
+        }
+        return anchorRectRef.current;
+      },
+    }),
+    [anchor],
+  );
+
+  const restoreFocusOnExit = useStableCallback((paper: HTMLElement) => {
+    if (isFocusLostWith(paper)) {
+      getFocusFallback()?.focus({ preventScroll: true });
+    }
+  });
 
   return (
-    <Popover className={classes.moreEventsPopover} open={open} anchorEl={anchor} onClose={onClose}>
-      <MoreEventsPopoverHeader
-        className={classes.moreEventsPopoverHeader}
-        id={`${schedulerId}-PopoverHeader-${day.key}`}
-        aria-label={`${formatWeekDayMonthAndDayOfMonth(day.value, adapter)}`}
-      >
+    <Popover
+      className={classes.moreEventsPopover}
+      open={open}
+      anchorEl={anchorEl}
+      // Aligned with the inline start of the button.
+      anchorOrigin={{ vertical: 'top', horizontal: isRtl ? 'right' : 'left' }}
+      transformOrigin={{ vertical: 'top', horizontal: isRtl ? 'right' : 'left' }}
+      onClose={onClose}
+      slotProps={{ transition: { onExited: restoreFocusOnExit } }}
+    >
+      <MoreEventsPopoverHeader className={classes.moreEventsPopoverHeader}>
         <MoreEventsPopoverTitle className={classes.moreEventsPopoverTitle}>
-          {formatWeekDayMonthAndDayOfMonth(day.value, adapter)}
+          {formatWeekdayShortMonthShortAndDayOfMonth(locale, day.plainDate)}
         </MoreEventsPopoverTitle>
       </MoreEventsPopoverHeader>
-      <MoreEventsPopoverBody className={classes.moreEventsPopoverBody}>
+      <MoreEventsPopoverBody
+        ref={bodyRef}
+        className={classes.moreEventsPopoverBody}
+        onFocus={handleItemInteraction}
+        onContextMenu={handleItemInteraction}
+      >
         {occurrences.map((occurrence) => (
-          <EventDialogTrigger occurrence={occurrence} key={occurrence.key}>
+          <EventContextMenuTrigger
+            occurrence={occurrence}
+            key={occurrence.key}
+            onEditingCanceled={onClose}
+            // A cancellation closes this popover and unmounts the clicked item.
+            stableAnchor={anchor}
+            getFocusFallback={getFocusFallback}
+          >
             <EventItem
-              variant={isOccurrenceAllDayOrMultipleDay(occurrence, adapter) ? 'filled' : 'compact'}
+              variant={isOccurrenceAllDayOrMultipleDay(occurrence) ? 'filled' : 'compact'}
               occurrence={occurrence}
               date={day}
-              ariaLabelledBy={`PopoverHeader-${day.key}`}
             />
-          </EventDialogTrigger>
+          </EventContextMenuTrigger>
         ))}
       </MoreEventsPopoverBody>
     </Popover>
   );
 }
 
+interface MoreEventsPopoverState {
+  open: boolean;
+  anchorEl: HTMLElement | null;
+  cell: HTMLElement | null;
+  data: MoreEventsData | null;
+}
+
 export function MoreEventsPopoverProvider(props: MoreEventsPopoverProviderProps) {
   const { children } = props;
+  const [state, setState] = React.useState<MoreEventsPopoverState>({
+    open: false,
+    anchorEl: null,
+    cell: null,
+    data: null,
+  });
+
+  const openPopover = useStableCallback((anchorEl: HTMLElement, data: MoreEventsData) => {
+    setState({
+      open: true,
+      anchorEl,
+      cell: anchorEl.closest<HTMLElement>('[role="gridcell"]'),
+      data,
+    });
+  });
+
+  // Keep the anchor and data, else the popover unmounts before its exit transition can play.
+  const closePopover = useStableCallback(() => {
+    setState((prev) => (prev.open ? { ...prev, open: false } : prev));
+  });
+
+  // The day's occurrences are laid out by the view, not stored, so the trigger pushes them.
+  const updatePopover = useStableCallback((data: MoreEventsData) => {
+    if (state.open && state.data?.day.key === data.day.key) {
+      setState((prev) => ({ ...prev, data }));
+    }
+  });
+
+  // The trigger unmounts once every event fits in the cell, taking the popover's anchor with it.
+  const closePopoverForDay = useStableCallback((dayKey: string) => {
+    if (state.open && state.data?.day.key === dayKey) {
+      closePopover();
+    }
+  });
+
+  const contextValue = React.useMemo<MoreEventsPopoverContextValue>(
+    () => ({ openPopover, updatePopover, closePopoverForDay }),
+    [openPopover, updatePopover, closePopoverForDay],
+  );
 
   return (
-    <MoreEventsPopover.Provider
-      render={({ isOpen, anchorRef, data, onClose }) => (
+    <MoreEventsPopoverContext.Provider value={contextValue}>
+      {children}
+      {state.data && state.anchorEl && (
         <MoreEventsPopoverContent
-          open={isOpen}
-          anchor={anchorRef.current!}
-          occurrences={data.occurrences}
-          count={data.count}
-          day={data.day}
-          onClose={onClose}
+          open={state.open}
+          anchor={state.anchorEl}
+          cell={state.cell}
+          occurrences={state.data.occurrences}
+          day={state.data.day}
+          onClose={closePopover}
         />
       )}
-    >
-      {children}
-    </MoreEventsPopover.Provider>
+    </MoreEventsPopoverContext.Provider>
   );
 }
 
-interface MoreEventsPopoverTriggerProps extends React.HTMLAttributes<HTMLElement> {
+interface MoreEventsPopoverTriggerProps {
   occurrences: SchedulerEventOccurrence[];
   day: useEventOccurrencesWithDayGridPosition.DayData;
+  /** A single element. The trigger clones it to attach its own `onClick`. */
   children: React.ReactNode;
+  onClick?: React.MouseEventHandler<HTMLElement>;
 }
 
 export function MoreEventsPopoverTrigger(props: MoreEventsPopoverTriggerProps) {
-  const { occurrences, day, ...other } = props;
-  const ref = React.useRef<HTMLElement | null>(null);
+  const { occurrences, day, onClick, children } = props;
+  const { openPopover, updatePopover, closePopoverForDay } = useMoreEventsPopoverContext();
 
-  return (
-    <MoreEventsPopover.Trigger
-      ref={ref}
-      data={{ occurrences, count: occurrences.length, day }}
-      {...other}
-    />
-  );
+  useIsoLayoutEffect(() => {
+    updatePopover({ occurrences, day });
+  }, [occurrences, day, updatePopover]);
+
+  useIsoLayoutEffect(() => {
+    return () => closePopoverForDay(day.key);
+  }, [day.key, closePopoverForDay]);
+
+  return React.cloneElement(children as React.ReactElement<any>, {
+    onClick: (event: React.MouseEvent<HTMLElement>) => {
+      onClick?.(event);
+      openPopover(event.currentTarget, { occurrences, day });
+    },
+  });
 }

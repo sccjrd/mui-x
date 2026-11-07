@@ -1,21 +1,17 @@
 import type { RefObject } from '@mui/x-internals/types';
-import {
-  GRID_STRING_COL_DEF,
-  type GridColDef,
-  type GridComparatorFn,
-  type GridRenderCellParams,
-  type GridGroupingColDefOverride,
-  type GridGroupNode,
-  type GridTreeNodeWithRender,
-  type GridValueFormatter,
-  gridRowIdSelector,
-  gridRowNodeSelector,
+import { GRID_STRING_COL_DEF, gridRowIdSelector, gridRowNodeSelector } from '@mui/x-data-grid-pro';
+import type {
+  GridColDef,
+  GridComparatorFn,
+  GridRenderCellParams,
+  GridGroupingColDefOverride,
+  GridGroupNode,
+  GridSortDirection,
+  GridTreeNodeWithRender,
+  GridValueFormatter,
 } from '@mui/x-data-grid-pro';
-import {
-  type GridColumnRawLookup,
-  isSingleSelectColDef,
-  RowGroupingStrategy,
-} from '@mui/x-data-grid-pro/internals';
+import { isSingleSelectColDef, RowGroupingStrategy } from '@mui/x-data-grid-pro/internals';
+import type { GridColumnRawLookup } from '@mui/x-data-grid-pro/internals';
 import type { GridApiPremium } from '../../../models/gridApiPremium';
 import { GridGroupingColumnFooterCell } from '../../../components/GridGroupingColumnFooterCell';
 import { GridGroupingCriteriaCell } from '../../../components/GridGroupingCriteriaCell';
@@ -33,6 +29,7 @@ const GROUPING_COL_DEF_DEFAULT_PROPERTIES: Omit<GridColDef, 'field'> = {
   ...GRID_STRING_COL_DEF,
   type: 'custom',
   disableReorder: true,
+  rowHeader: true,
   chartable: false,
   aggregable: false,
 };
@@ -85,21 +82,66 @@ const groupingFieldIndexComparator: GridComparatorFn = (v1, v2, cellParams1, cel
   return 1;
 };
 
-const getLeafProperties = (leafColDef: GridColDef): Partial<GridColDef> => ({
-  headerName: leafColDef.headerName ?? leafColDef.field,
-  sortable: leafColDef.sortable,
-  filterable: leafColDef.filterable,
-  valueOptions: isSingleSelectColDef(leafColDef) ? leafColDef.valueOptions : undefined,
-  filterOperators: leafColDef.filterOperators,
-  sortComparator: (v1, v2, cellParams1, cellParams2) => {
-    // We only want to sort the leaves
-    if (cellParams1.rowNode.type === 'leaf' && cellParams2.rowNode.type === 'leaf') {
-      return leafColDef.sortComparator!(v1, v2, cellParams1, cellParams2);
-    }
+/**
+ * Only the computed columns sort their groups and leaves with their `getSortComparator`, which keeps their errors last in both directions.
+ * Their grouping value is their cell value, while the `getSortComparator` of another column may not expect the value of its `groupingValueGetter`.
+ */
+const sortsWithGetSortComparator = (colDef: GridColDef | undefined): boolean =>
+  colDef?.computed === true && !!colDef.getSortComparator;
 
-    return groupingFieldIndexComparator(v1, v2, cellParams1, cellParams2);
-  },
-});
+/**
+ * Returns the comparator of a column for a sort direction: the `getSortComparator` of a computed column, or else its `sortComparator`, negated for the "desc" direction like the grid does.
+ */
+const getColDefSortComparator = (
+  colDef: GridColDef,
+  sortDirection: GridSortDirection,
+): GridComparatorFn | undefined => {
+  if (sortsWithGetSortComparator(colDef)) {
+    return colDef.getSortComparator!(sortDirection);
+  }
+
+  const modifier = sortDirection === 'desc' ? -1 : 1;
+  return (v1, v2, cellParams1, cellParams2) =>
+    modifier * colDef.sortComparator!(v1, v2, cellParams1, cellParams2);
+};
+
+const getLeafProperties = (leafColDef: GridColDef): Partial<GridColDef> => {
+  const properties: Partial<GridColDef> = {
+    headerName: leafColDef.headerName ?? leafColDef.field,
+    sortable: leafColDef.sortable,
+    filterable: leafColDef.filterable,
+    valueOptions: isSingleSelectColDef(leafColDef) ? leafColDef.valueOptions : undefined,
+    filterOperators: leafColDef.filterOperators,
+    sortComparator: (v1, v2, cellParams1, cellParams2) => {
+      // We only want to sort the leaves
+      if (cellParams1.rowNode.type === 'leaf' && cellParams2.rowNode.type === 'leaf') {
+        return leafColDef.sortComparator!(v1, v2, cellParams1, cellParams2);
+      }
+
+      return groupingFieldIndexComparator(v1, v2, cellParams1, cellParams2);
+    },
+  };
+
+  // The grid uses `getSortComparator` before `sortComparator`,
+  // so the leaves of a computed column are sorted with the one of the leaf column
+  if (sortsWithGetSortComparator(leafColDef)) {
+    properties.getSortComparator = (sortDirection) => {
+      const modifier = sortDirection === 'desc' ? -1 : 1;
+      const leafComparator = leafColDef.getSortComparator!(sortDirection);
+
+      return (v1, v2, cellParams1, cellParams2) => {
+        // We only want to sort the leaves
+        if (cellParams1.rowNode.type === 'leaf' && cellParams2.rowNode.type === 'leaf') {
+          return leafComparator ? leafComparator(v1, v2, cellParams1, cellParams2) : 0;
+        }
+
+        return modifier * groupingFieldIndexComparator(v1, v2, cellParams1, cellParams2);
+      };
+    };
+  }
+
+  return properties;
+};
 
 const groupedByColValueFormatter: (
   groupedByColDef: GridColDef,
@@ -139,8 +181,8 @@ function getGroupingCriteriaProperties(
       const rowNode = gridRowNodeSelector(apiRef, rowId);
       if (rowNode?.type === 'group') {
         const originalColDef = rowNode.groupingField ? columnsLookup[rowNode.groupingField] : null;
-        if (originalColDef?.type === 'singleSelect') {
-          // the default valueFormatter of a singleSelect colDef won't work with the grouping column values
+        if (originalColDef?.type === 'singleSelect' || originalColDef?.type === 'multiSelect') {
+          // the default valueFormatter of singleSelect/multiSelect colDef won't work with the grouping column values
           return value;
         }
         const columnValueFormatter = originalColDef?.valueFormatter;
@@ -150,6 +192,9 @@ function getGroupingCriteriaProperties(
       }
       return value;
     };
+  } else if (groupedByColDef.type === 'multiSelect') {
+    // The default valueFormatter of multiSelect expects an array; the grouping key is a string.
+    valueFormatter = undefined;
   } else {
     valueFormatter = groupedByColDef.valueFormatter
       ? groupedByColValueFormatter(groupedByColDef)
@@ -176,6 +221,45 @@ function getGroupingCriteriaProperties(
     },
     filterOperators: groupedByColDef.filterOperators,
   };
+
+  // The grid uses `getSortComparator` before `sortComparator`,
+  // so the groups of a computed grouping criteria are sorted with the one of its column
+  const hasGetSortComparator =
+    rowGroupingColumnMode === 'single'
+      ? rowGroupingModel.some((field) => sortsWithGetSortComparator(columnsLookup[field]))
+      : sortsWithGetSortComparator(groupedByColDef);
+  if (hasGetSortComparator) {
+    properties.getSortComparator = (sortDirection) => {
+      const modifier = sortDirection === 'desc' ? -1 : 1;
+      // The comparators of the grouping criteria, created once per sort
+      const comparators = new Map<string, GridComparatorFn | undefined>();
+
+      return (v1, v2, cellParams1, cellParams2) => {
+        // We only want to sort the groups of the current grouping criteria
+        if (
+          cellParams1.rowNode.type === 'group' &&
+          cellParams2.rowNode.type === 'group' &&
+          cellParams1.rowNode.groupingField === cellParams2.rowNode.groupingField
+        ) {
+          const groupingField = cellParams1.rowNode.groupingField!;
+          // In the "multiple" mode, the groups of the other grouping criteria have no value in this column
+          if (rowGroupingColumnMode === 'multiple' && groupingField !== groupedByColDef.field) {
+            return 0;
+          }
+          if (!comparators.has(groupingField)) {
+            comparators.set(
+              groupingField,
+              getColDefSortComparator(cellParams1.api.getColumn(groupingField), sortDirection),
+            );
+          }
+          const comparator = comparators.get(groupingField);
+          return comparator ? comparator(v1, v2, cellParams1, cellParams2) : 0;
+        }
+
+        return modifier * groupingFieldIndexComparator(v1, v2, cellParams1, cellParams2);
+      };
+    };
+  }
 
   const applyHeaderName = !(rowGroupingColumnMode === 'single' && rowGroupingModel.length > 1);
   if (applyHeaderName) {
@@ -242,8 +326,10 @@ export const createGroupingColDefForOneGroupingCriteria = ({
             api: params.api,
             hasFocus: params.hasFocus,
           };
-          if (leafColDef.renderCell) {
-            return leafColDef.renderCell(leafParams);
+          // Like in a regular cell, a `renderCell` returning `undefined` renders the formatted value.
+          const renderedLeaf = leafColDef.renderCell?.(leafParams);
+          if (renderedLeaf !== undefined) {
+            return renderedLeaf;
           }
 
           return <GridGroupingColumnLeafCell {...leafParams} />;
@@ -302,6 +388,11 @@ export const createGroupingColDefForOneGroupingCriteria = ({
     sourceProperties = getLeafProperties(leafColDef);
   } else {
     sourceProperties = getGroupingCriteriaProperties(groupedByColDef, 'multiple');
+  }
+
+  // A `sortComparator` override would be ignored by the grid next to the generated `getSortComparator`
+  if (colDefOverrideProperties.sortComparator && !colDefOverrideProperties.getSortComparator) {
+    delete sourceProperties.getSortComparator;
   }
 
   // The properties that can't be overridden with `colDefOverride`
@@ -376,8 +467,10 @@ export const createGroupingColDefForAllGroupingCriteria = ({
             api: params.api,
             hasFocus: params.hasFocus,
           };
-          if (leafColDef.renderCell) {
-            return leafColDef.renderCell(leafParams);
+          // Like in a regular cell, a `renderCell` returning `undefined` renders the formatted value.
+          const renderedLeaf = leafColDef.renderCell?.(leafParams);
+          if (renderedLeaf !== undefined) {
+            return renderedLeaf;
           }
 
           return <GridGroupingColumnLeafCell {...leafParams} />;
@@ -438,6 +531,11 @@ export const createGroupingColDefForAllGroupingCriteria = ({
       rowGroupingModel,
       columnsLookup,
     );
+  }
+
+  // A `sortComparator` override would be ignored by the grid next to the generated `getSortComparator`
+  if (colDefOverrideProperties.sortComparator && !colDefOverrideProperties.getSortComparator) {
+    delete sourceProperties.getSortComparator;
   }
 
   // The properties that can't be overridden with `colDefOverride`

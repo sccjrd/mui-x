@@ -9,16 +9,17 @@ import useForkRef from '@mui/utils/useForkRef';
 import composeClasses from '@mui/utils/composeClasses';
 import useControlled from '@mui/utils/useControlled';
 import useEventCallback from '@mui/utils/useEventCallback';
-import { DefaultizedProps } from '@mui/x-internals/types';
+import type { DefaultizedProps } from '@mui/x-internals/types';
 import { YearCalendarButton } from './YearCalendarButton';
 import { useNow } from '../internals/hooks/useUtils';
-import { getYearCalendarUtilityClass, YearCalendarClasses } from './yearCalendarClasses';
-import { YearCalendarProps } from './YearCalendar.types';
+import type { YearCalendarClasses } from './yearCalendarClasses';
+import { getYearCalendarUtilityClass } from './yearCalendarClasses';
+import type { YearCalendarProps } from './YearCalendar.types';
 import { singleItemValueManager } from '../internals/utils/valueManagers';
 import { SECTION_TYPE_GRANULARITY } from '../internals/utils/getDefaultReferenceDate';
 import { useControlledValue } from '../internals/hooks/useControlledValue';
 import { DIALOG_WIDTH, MAX_CALENDAR_HEIGHT } from '../internals/constants/dimensions';
-import { PickerOwnerState, PickerValidDate } from '../models';
+import type { PickerOwnerState, PickerValidDate } from '../models';
 import { usePickerPrivateContext } from '../internals/hooks/usePickerPrivateContext';
 import { useApplyDefaultValuesToDateValidationProps } from '../managers/useDateManager';
 import { usePickerAdapter } from '../hooks/usePickerAdapter';
@@ -307,12 +308,20 @@ export const YearCalendar = React.forwardRef(function YearCalendar(
     scrollerRef.current.scrollTop = elementBottom - clientHeight / 2 - offsetHeight / 2;
   }, [autoFocus]);
 
-  const yearRange = adapter.getYearRange([minDate, maxDate]);
-  if (yearsOrder === 'desc') {
-    yearRange.reverse();
-  }
+  const years = React.useMemo(() => {
+    const yearRange = adapter.getYearRange([minDate, maxDate]);
+    if (yearsOrder === 'desc') {
+      yearRange.reverse();
+    }
 
-  let fillerAmount = yearsPerRow - (yearRange.length % yearsPerRow);
+    return yearRange.map((year) => ({
+      date: year,
+      yearNumber: adapter.getYear(year),
+      label: adapter.format(year, 'year'),
+    }));
+  }, [adapter, minDate, maxDate, yearsOrder]);
+
+  let fillerAmount = yearsPerRow - (years.length % yearsPerRow);
   if (fillerAmount === yearsPerRow) {
     fillerAmount = 0;
   }
@@ -327,14 +336,13 @@ export const YearCalendar = React.forwardRef(function YearCalendar(
       yearsPerRow={yearsPerRow}
       {...other}
     >
-      {yearRange.map((year) => {
-        const yearNumber = adapter.getYear(year);
+      {years.map(({ date, yearNumber, label }) => {
         const isSelected = yearNumber === selectedYear;
-        const isDisabled = disabled || isYearDisabled(year);
+        const isDisabled = disabled || isYearDisabled(date);
 
         return (
           <YearCalendarButton
-            key={adapter.format(year, 'year')}
+            key={label}
             selected={isSelected}
             value={yearNumber}
             onClick={handleYearSelection}
@@ -349,7 +357,7 @@ export const YearCalendar = React.forwardRef(function YearCalendar(
             slotProps={slotProps}
             classes={classesProp}
           >
-            {adapter.format(year, 'year')}
+            {label}
           </YearCalendarButton>
         );
       })}
@@ -360,16 +368,22 @@ export const YearCalendar = React.forwardRef(function YearCalendar(
   );
 }) as YearCalendarComponent;
 
-YearCalendar.propTypes = {
+YearCalendar.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * If `true`, the component is focused when it mounts.
+   */
   autoFocus: PropTypes.bool,
   /**
    * Override or extend the styles applied to the component.
    */
   classes: PropTypes.object,
+  /**
+   * A CSS class name applied to the root element.
+   */
   className: PropTypes.string,
   /**
    * The default selected value.
@@ -397,7 +411,13 @@ YearCalendar.propTypes = {
    * @default false
    */
   disablePast: PropTypes.bool,
+  /**
+   * @ignore
+   */
   gridLabelId: PropTypes.string,
+  /**
+   * @ignore
+   */
   hasFocus: PropTypes.bool,
   /**
    * Maximal selectable date.
@@ -414,7 +434,13 @@ YearCalendar.propTypes = {
    * @param {PickerValidDate} value The new value.
    */
   onChange: PropTypes.func,
+  /**
+   * @ignore
+   */
   onFocusedViewChange: PropTypes.func,
+  /**
+   * @ignore
+   */
   onYearFocus: PropTypes.func,
   /**
    * If `true`, the component is read-only.

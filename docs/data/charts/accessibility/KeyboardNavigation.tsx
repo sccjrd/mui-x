@@ -1,10 +1,13 @@
 import * as React from 'react';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
+import type { SelectChangeEvent } from '@mui/material/Select';
+import Select from '@mui/material/Select';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 import MenuItem from '@mui/material/MenuItem';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Switch from '@mui/material/Switch';
 import { ScatterChart } from '@mui/x-charts/ScatterChart';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { LineChart } from '@mui/x-charts/LineChart';
@@ -34,6 +37,7 @@ type ChartType = 'scatter' | 'line' | 'bar' | 'pie';
 
 export default function KeyboardNavigation() {
   const [chartType, setChartType] = React.useState<ChartType>('line');
+  const [focusItemOnClick, setFocusItemOnClick] = React.useState(false);
   const chartRef = React.useRef<HTMLDivElement>(null);
 
   const handleChange = (event: SelectChangeEvent) =>
@@ -71,8 +75,22 @@ export default function KeyboardNavigation() {
         >
           Focus chart
         </Button>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={focusItemOnClick}
+              onChange={(event) => setFocusItemOnClick(event.target.checked)}
+            />
+          }
+          label="focusItemOnClick"
+        />
       </Stack>
-      <Chart key={chartType} chartRef={chartRef} type={chartType} />
+      <Chart
+        key={chartType}
+        chartRef={chartRef}
+        type={chartType}
+        focusItemOnClick={focusItemOnClick}
+      />
     </Stack>
   );
 }
@@ -80,13 +98,22 @@ export default function KeyboardNavigation() {
 function Chart<T extends ChartType = ChartType>({
   chartRef,
   type,
+  focusItemOnClick,
 }: {
   chartRef: React.RefObject<HTMLDivElement | null>;
   type: T;
+  focusItemOnClick: boolean;
 }) {
   switch (type) {
     case 'scatter':
-      return <ScatterChart ref={chartRef} height={300} series={scatterSeries} />;
+      return (
+        <ScatterChart
+          ref={chartRef}
+          height={300}
+          series={scatterSeries}
+          focusItemOnClick={focusItemOnClick}
+        />
+      );
     case 'line':
       return (
         <LineChart
@@ -95,6 +122,7 @@ function Chart<T extends ChartType = ChartType>({
           xAxis={[{ data: data.map((p) => p.x1).toSorted((a, b) => a - b) }]}
           series={series}
           slotProps={{ tooltip: { trigger: 'item' } }}
+          focusItemOnClick={focusItemOnClick}
         />
       );
     case 'bar':
@@ -107,6 +135,7 @@ function Chart<T extends ChartType = ChartType>({
           ]}
           slotProps={{ tooltip: { trigger: 'item' } }}
           series={series}
+          focusItemOnClick={focusItemOnClick}
         />
       );
     case 'pie':
@@ -126,6 +155,7 @@ function Chart<T extends ChartType = ChartType>({
           ]}
           height={300}
           hideLegend={false}
+          focusItemOnClick={focusItemOnClick}
         />
       );
 

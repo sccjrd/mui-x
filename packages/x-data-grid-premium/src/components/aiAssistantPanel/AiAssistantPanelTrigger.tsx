@@ -2,14 +2,15 @@ import * as React from 'react';
 import PropTypes from 'prop-types';
 import useId from '@mui/utils/useId';
 import { forwardRef } from '@mui/x-internals/forwardRef';
-import { useComponentRenderer, type RenderProp } from '@mui/x-internals/useComponentRenderer';
+import { useComponentRenderer } from '@mui/x-internals/useComponentRenderer';
+import type { RenderProp } from '@mui/x-internals/useComponentRenderer';
 import { useGridPanelContext } from '@mui/x-data-grid-pro/internals';
 import {
   gridPreferencePanelStateSelector,
   GridPreferencePanelsValue,
-  type GridSlotProps,
   useGridSelector,
 } from '@mui/x-data-grid-pro';
+import type { GridSlotProps } from '@mui/x-data-grid-pro';
 import { useForkRef } from '@mui/material/utils';
 import { useGridApiContext } from '../../hooks/utils/useGridApiContext';
 import { useGridRootProps } from '../../hooks/utils/useGridRootProps';
@@ -56,8 +57,8 @@ const AiAssistantPanelTrigger = forwardRef<HTMLButtonElement, AiAssistantPanelTr
       panelState.open && panelState.openedPanelValue === GridPreferencePanelsValue.aiAssistant;
     const state = { open };
     const resolvedClassName = typeof className === 'function' ? className(state) : className;
-    const { aiAssistantPanelTriggerRef } = useGridPanelContext();
-    const handleRef = useForkRef(ref, aiAssistantPanelTriggerRef);
+    const { triggers } = useGridPanelContext();
+    const handleRef = useForkRef(ref, triggers.aiAssistantPanel.setRef);
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
       if (open) {
@@ -81,7 +82,7 @@ const AiAssistantPanelTrigger = forwardRef<HTMLButtonElement, AiAssistantPanelTr
       {
         ...rootProps.slotProps?.baseButton,
         id: buttonId,
-        'aria-haspopup': 'true',
+        'aria-haspopup': 'dialog',
         'aria-expanded': open ? 'true' : undefined,
         'aria-controls': open ? panelId : undefined,
         className: resolvedClassName,
@@ -97,7 +98,7 @@ const AiAssistantPanelTrigger = forwardRef<HTMLButtonElement, AiAssistantPanelTr
   },
 );
 
-AiAssistantPanelTrigger.propTypes = {
+AiAssistantPanelTrigger.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -106,18 +107,42 @@ AiAssistantPanelTrigger.propTypes = {
    * A function to customize rendering of the component.
    */
   className: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
+  /**
+   * If `true`, the button is disabled.
+   */
   disabled: PropTypes.bool,
+  /**
+   * The id of the button element.
+   */
   id: PropTypes.string,
   /**
    * A function to customize rendering of the component.
    */
   render: PropTypes.oneOfType([PropTypes.element, PropTypes.func]),
+  /**
+   * The ARIA role of the button element.
+   */
   role: PropTypes.string,
+  /**
+   * The size of the button.
+   */
   size: PropTypes.oneOf(['large', 'medium', 'small']),
+  /**
+   * Element placed before the children.
+   */
   startIcon: PropTypes.node,
   style: PropTypes.object,
+  /**
+   * The `tabIndex` of the button element.
+   */
   tabIndex: PropTypes.number,
+  /**
+   * The title of the button element.
+   */
   title: PropTypes.string,
+  /**
+   * @ignore
+   */
   touchRippleRef: PropTypes.any,
 } as any;
 

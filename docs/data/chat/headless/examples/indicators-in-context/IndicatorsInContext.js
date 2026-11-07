@@ -1,5 +1,4 @@
 import * as React from 'react';
-
 import {
   Chat,
   Conversation,
@@ -219,12 +218,12 @@ export default function IndicatorsInContext() {
                 <Message.Root
                   messageId={id}
                   slotProps={{
-                    root: demoSlotProps.messageRoot,
+                    root: demoSlotProps.message,
                   }}
                 >
                   <Message.Avatar
                     slotProps={{
-                      avatar: demoSlotProps.messageAvatar,
+                      avatar: demoSlotProps.avatar,
                       image: demoSlotProps.messageAvatarImage,
                     }}
                   />
@@ -235,7 +234,7 @@ export default function IndicatorsInContext() {
                   />
                   <Message.Meta
                     slotProps={{
-                      meta: demoSlotProps.messageMeta,
+                      meta: demoSlotProps.meta,
                     }}
                   />
                 </Message.Root>
@@ -249,7 +248,7 @@ export default function IndicatorsInContext() {
         />
         <Composer.Root
           slotProps={{
-            root: demoSlotProps.composerRoot,
+            root: demoSlotProps.composer,
           }}
         >
           <Composer.TextArea
@@ -263,7 +262,7 @@ export default function IndicatorsInContext() {
             <Composer.SendButton
               data-variant="primary"
               slotProps={{
-                sendButton: demoSlotProps.composerSendButton,
+                sendButton: demoSlotProps.send,
               }}
             >
               Send

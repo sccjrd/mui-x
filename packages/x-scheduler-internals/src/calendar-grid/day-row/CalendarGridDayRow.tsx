@@ -1,10 +1,14 @@
 'use client';
 import * as React from 'react';
-import { useRenderElement } from '../../base-ui-copy/utils/useRenderElement';
-import { CompositeList } from '../../base-ui-copy/composite/list/CompositeList';
-import { BaseUIComponentProps } from '../../base-ui-copy/utils/types';
+import { useStore } from '@base-ui/utils/store';
+import { useRenderElement } from '@base-ui/react/internals/useRenderElement';
+import { CompositeList } from '@base-ui/react/internals/composite';
+import type { BaseUIComponentProps } from '@base-ui/react/internals/types';
 import { CalendarGridDayRowContext } from './CalendarGridDayRowContext';
-import { TemporalSupportedObject } from '../../models';
+import { CalendarGridCellsRefsContext } from '../../internals/utils/CalendarGridCellsRefsContext';
+import { useEventCalendarStoreContext } from '../../use-event-calendar-store-context';
+import { schedulerOtherSelectors } from '../../scheduler-selectors';
+import { FULL_DAY_MINUTES } from '../../internals/utils/timeline-axis';
 
 export const CalendarGridDayRow = React.forwardRef(function CalendarGridDayRow(
   componentProps: CalendarGridDayRow.Props,
@@ -23,15 +27,23 @@ export const CalendarGridDayRow = React.forwardRef(function CalendarGridDayRow(
     ...elementProps
   } = componentProps;
 
+  const store = useEventCalendarStoreContext();
+  const displayTimezone = useStore(store, schedulerOtherSelectors.displayTimezone);
   const cellsRefs = React.useRef<(HTMLDivElement | null)[]>([]);
 
   const contextValue: CalendarGridDayRowContext = React.useMemo(
     () => ({
-      start,
-      end,
+      // The row spans whole days, so its window is never trimmed.
+      axis: {
+        start,
+        end,
+        timezone: displayTimezone,
+        dayStartMinute: 0,
+        dayEndMinute: FULL_DAY_MINUTES,
+      },
       rowIndex,
     }),
-    [start, end, rowIndex],
+    [start, end, displayTimezone, rowIndex],
   );
 
   const element = useRenderElement('div', componentProps, {
@@ -41,9 +53,11 @@ export const CalendarGridDayRow = React.forwardRef(function CalendarGridDayRow(
 
   return (
     <CompositeList elementsRef={cellsRefs}>
-      <CalendarGridDayRowContext.Provider value={contextValue}>
-        {element}
-      </CalendarGridDayRowContext.Provider>
+      <CalendarGridCellsRefsContext.Provider value={cellsRefs}>
+        <CalendarGridDayRowContext.Provider value={contextValue}>
+          {element}
+        </CalendarGridDayRowContext.Provider>
+      </CalendarGridCellsRefsContext.Provider>
     </CompositeList>
   );
 });
@@ -53,13 +67,13 @@ export namespace CalendarGridDayRow {
 
   export interface Props extends BaseUIComponentProps<'div', State> {
     /**
-     * The data and time at which the row starts.
+     * The first instant of the row, as a timestamp read in the display timezone.
      */
-    start: TemporalSupportedObject;
+    start: number;
     /**
-     * The data and time at which the row ends.
+     * The last instant of the row, as a timestamp read in the display timezone.
      */
-    end: TemporalSupportedObject;
+    end: number;
     /**
      * The index of this row within its row type.
      * Used to uniquely identify the row for keyboard navigation when there are

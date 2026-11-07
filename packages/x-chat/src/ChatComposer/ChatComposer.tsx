@@ -2,27 +2,19 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { SxProps, Theme } from '@mui/system';
-import {
-  ComposerRoot,
-  useChatVariant,
-  type ComposerRootProps,
-  type ChatAttachmentsConfig,
-  type ChatVariant,
-} from '@mui/x-chat-headless';
+import type { SxProps, Theme } from '@mui/system';
+import { ComposerRoot, useChatVariant } from '@mui/x-chat-headless';
+import type { ComposerRootProps, ChatAttachmentsConfig, ChatVariant } from '@mui/x-chat-headless';
 import { styled, createUseThemeProps } from '../internals/zero-styled';
-import {
-  chatComposerClasses,
-  useChatComposerUtilityClasses,
-  type ChatComposerClasses,
-} from './chatComposerClasses';
+import { mergeSlotProps } from '../internals/mergeSlotProps';
+import { chatComposerClasses, useChatComposerUtilityClasses } from './chatComposerClasses';
+import type { ChatComposerClasses } from './chatComposerClasses';
 import { ChatComposerTextArea } from './ChatComposerTextArea';
 import { ChatComposerToolbar } from './ChatComposerToolbar';
 import { ChatComposerSendButton } from './ChatComposerSendButton';
 import { ChatComposerAttachButton } from './ChatComposerAttachButton';
 import { ChatComposerAttachmentList } from './ChatComposerAttachmentList';
-import DefaultSendIcon from '../icons/DefaultSendIcon';
-import DefaultAttachIcon from '../icons/DefaultAttachIcon';
+import { DefaultSendIcon, DefaultAttachIcon } from '../icons/icons';
 
 const useThemeProps = createUseThemeProps('MuiChatComposer');
 
@@ -40,9 +32,15 @@ export interface ChatComposerFeatures {
   attachments?: boolean | ChatAttachmentsConfig;
 }
 
-export interface ChatComposerProps extends ComposerRootProps {
+export interface ChatComposerProps extends Omit<ComposerRootProps, 'attachmentConfig'> {
   className?: string;
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx?: SxProps<Theme>;
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes?: Partial<ChatComposerClasses>;
   /**
    * Feature flags to control composer capabilities.
@@ -70,7 +68,6 @@ const ChatComposerStyled = styled('form', {
   display: 'flex',
   flexDirection: 'column',
   position: 'relative',
-  zIndex: 1,
   gap: theme.spacing(0.5),
   padding: theme.spacing(1, 1.5),
   border: '1px solid',
@@ -151,11 +148,11 @@ const DefaultComposerContent = React.memo(function DefaultComposerContent({
       <ChatComposerToolbar>
         {showAttachments && (
           <ChatComposerAttachButton>
-            <DefaultAttachIcon />
+            <DefaultAttachIcon fontSize="inherit" />
           </ChatComposerAttachButton>
         )}
         <ChatComposerSendButton>
-          <DefaultSendIcon />
+          <DefaultSendIcon fontSize="inherit" />
         </ChatComposerSendButton>
       </ChatComposerToolbar>
     </React.Fragment>
@@ -164,7 +161,7 @@ const DefaultComposerContent = React.memo(function DefaultComposerContent({
 
 // @ts-expect-error React.memo typing doesn't include propTypes
 
-DefaultComposerContent.propTypes = {
+DefaultComposerContent.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -194,12 +191,12 @@ const CompactComposerContent = React.memo(function CompactComposerContent({
       {showAttachments && <ChatComposerAttachmentList />}
       {showAttachments && (
         <ChatComposerAttachButton>
-          <DefaultAttachIcon />
+          <DefaultAttachIcon fontSize="inherit" />
         </ChatComposerAttachButton>
       )}
       <ChatComposerTextArea maxRows={5} />
       <ChatComposerSendButton>
-        <DefaultSendIcon />
+        <DefaultSendIcon fontSize="inherit" />
       </ChatComposerSendButton>
     </React.Fragment>
   );
@@ -207,7 +204,7 @@ const CompactComposerContent = React.memo(function CompactComposerContent({
 
 // @ts-expect-error React.memo typing doesn't include propTypes
 
-CompactComposerContent.propTypes = {
+CompactComposerContent.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -260,21 +257,23 @@ const ChatComposer = React.forwardRef<HTMLFormElement, ChatComposerProps>(
         {...other}
         attachmentConfig={attachmentConfig}
         slots={{
-          root: slots?.root ?? ChatComposerStyled,
           ...slots,
+          root: slots?.root ?? ChatComposerStyled,
         }}
         slotProps={{
           ...slotProps,
-          root: {
-            className: clsx(
-              classes.root,
-              isCompact && classes.variantCompact,
-              disabled && classes.disabled,
-              className,
-            ),
-            sx,
-            ...slotProps?.root,
-          } as any,
+          root: mergeSlotProps(
+            {
+              className: clsx(
+                classes.root,
+                isCompact && classes.variantCompact,
+                disabled && classes.disabled,
+                className,
+              ),
+              sx,
+            },
+            slotProps?.root,
+          ) as any,
         }}
       >
         {children ?? defaultContent}
@@ -283,23 +282,20 @@ const ChatComposer = React.forwardRef<HTMLFormElement, ChatComposerProps>(
   },
 );
 
-ChatComposer.propTypes = {
+ChatComposer.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
   /**
-   * Configuration for attachment validation constraints.
-   * When provided, file attachments are validated against these rules.
+   * Override or extend the styles applied to the component.
    */
-  attachmentConfig: PropTypes.shape({
-    acceptedMimeTypes: PropTypes.arrayOf(PropTypes.string),
-    maxFileCount: PropTypes.number,
-    maxFileSize: PropTypes.number,
-    onAttachmentReject: PropTypes.func,
-  }),
   classes: PropTypes.object,
   className: PropTypes.string,
+  /**
+   * If `true`, the composer is disabled.
+   * @default false
+   */
   disabled: PropTypes.bool,
   /**
    * Feature flags to control composer capabilities.
@@ -324,8 +320,19 @@ ChatComposer.propTypes = {
    * after the handler returns.
    */
   onSubmit: PropTypes.func,
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
   slotProps: PropTypes.object,
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
   slots: PropTypes.object,
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx: PropTypes.oneOfType([
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
     PropTypes.func,

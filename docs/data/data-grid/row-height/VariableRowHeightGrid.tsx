@@ -1,9 +1,7 @@
 import * as React from 'react';
+import type { GridRowHeightParams, GridColDef, GridDensity } from '@mui/x-data-grid';
 import {
   DataGrid,
-  GridRowHeightParams,
-  GridColDef,
-  GridDensity,
   Toolbar,
   ToolbarButton,
   useGridApiContext,
@@ -83,7 +81,7 @@ const createRandomRow = () => {
 
 const columns: GridColDef[] = [
   { field: 'id' },
-  { field: 'username', width: 150 },
+  { field: 'username', width: 150, rowHeader: true },
   { field: 'age', width: 80, type: 'number' },
 ];
 

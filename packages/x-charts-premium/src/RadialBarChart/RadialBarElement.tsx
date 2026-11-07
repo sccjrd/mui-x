@@ -3,9 +3,10 @@ import * as React from 'react';
 import clsx from 'clsx';
 import { arc as d3Arc } from '@mui/x-charts-vendor/d3-shape';
 import { styled } from '@mui/material/styles';
-import { type SeriesId } from '@mui/x-charts/internals';
+import type { SeriesId } from '@mui/x-charts/internals';
 import { useItemHighlightState } from '../hooks';
-import { type RadialBarClasses, useUtilityClasses } from './radialBarClasses';
+import { useUtilityClasses } from './radialBarClasses';
+import type { RadialBarClasses } from './radialBarClasses';
 
 type RadialBarElementProps = Omit<React.SVGProps<SVGPathElement>, 'ref'> & {
   seriesId: SeriesId;
@@ -15,6 +16,9 @@ type RadialBarElementProps = Omit<React.SVGProps<SVGPathElement>, 'ref'> & {
   endAngle: number;
   innerRadius: number;
   outerRadius: number;
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes?: Partial<RadialBarClasses>;
   onClick?: (event: React.MouseEvent<SVGPathElement, MouseEvent>) => void;
 };

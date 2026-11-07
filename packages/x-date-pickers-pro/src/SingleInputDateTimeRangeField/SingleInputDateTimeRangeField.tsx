@@ -9,9 +9,9 @@ import {
 } from '@mui/x-date-pickers/internals';
 import { useThemeProps } from '@mui/material/styles';
 import refType from '@mui/utils/refType';
-import { SingleInputDateTimeRangeFieldProps } from './SingleInputDateTimeRangeField.types';
+import type { SingleInputDateTimeRangeFieldProps } from './SingleInputDateTimeRangeField.types';
 import { useSingleInputDateTimeRangeField } from './useSingleInputDateTimeRangeField';
-import { FieldType } from '../models';
+import type { FieldType } from '../models';
 
 type DateRangeFieldComponent = ((
   props: SingleInputDateTimeRangeFieldProps & React.RefAttributes<HTMLDivElement>,
@@ -55,7 +55,7 @@ const SingleInputDateTimeRangeField = React.forwardRef(function SingleInputDateT
 
 SingleInputDateTimeRangeField.fieldType = 'single-input';
 
-SingleInputDateTimeRangeField.propTypes = {
+SingleInputDateTimeRangeField.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -223,6 +223,9 @@ SingleInputDateTimeRangeField.propTypes = {
    * Name attribute of the `input` element.
    */
   name: PropTypes.string,
+  /**
+   * @ignore
+   */
   onBlur: PropTypes.func,
   /**
    * Callback fired when the value changes.
@@ -236,6 +239,9 @@ SingleInputDateTimeRangeField.propTypes = {
    * Callback fired when the clear button is clicked.
    */
   onClear: PropTypes.func,
+  /**
+   * @ignore
+   */
   onClick: PropTypes.func,
   /**
    * Callback fired when the error associated with the current value changes.
@@ -247,9 +253,25 @@ SingleInputDateTimeRangeField.propTypes = {
    * @param {TValue} value The value associated with the error.
    */
   onError: PropTypes.func,
+  /**
+   * @ignore
+   */
   onFocus: PropTypes.func,
+  /**
+   * @ignore
+   */
   onInput: PropTypes.func,
+  /**
+   * @ignore
+   */
   onKeyDown: PropTypes.func,
+  /**
+   * @ignore
+   */
+  onMouseDown: PropTypes.func,
+  /**
+   * @ignore
+   */
   onPaste: PropTypes.func,
   /**
    * Callback fired when the selected sections change.

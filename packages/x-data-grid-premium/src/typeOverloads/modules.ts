@@ -1,4 +1,5 @@
 import type {
+  GridCellCoordinates,
   GridEventLookup,
   GridExportDisplayOptions,
   GridRowId,
@@ -25,12 +26,17 @@ import type {
 } from '../hooks';
 import type { GridRowGroupingInternalCache } from '../hooks/features/rowGrouping/gridRowGroupingInterfaces';
 import type { GridAggregationInternalCache } from '../hooks/features/aggregation/gridAggregationInterfaces';
+import type { GridFormulaInternalCache } from '../hooks/features/formula/gridFormulaInterfaces';
 import type { GridExcelExportOptions } from '../hooks/features/export/gridExcelExportInterface';
 import type {
   GridPivotingInternalCache,
   GridPivotModel,
 } from '../hooks/features/pivoting/gridPivotingInterfaces';
 import type { GridSidebarValue } from '../hooks/features/sidebar/gridSidebarInterfaces';
+import type {
+  GridComputedColumnsInternalCache,
+  GridComputedColumnsModel,
+} from '../hooks/features/computedColumns/gridComputedColumnsInterfaces';
 
 export interface GridControlledStateEventLookupPremium {
   /**
@@ -70,6 +76,10 @@ export interface GridControlledStateEventLookupPremium {
    * Fired when the active chart id changes.
    */
   activeChartIdChange: { params: string };
+  /**
+   * Fired when the computed columns model changes.
+   */
+  computedColumnsChange: { params: GridComputedColumnsModel };
 }
 
 interface GridEventLookupPremium extends GridEventLookupPro {
@@ -106,6 +116,10 @@ interface GridEventLookupPremium extends GridEventLookupPro {
    * Fired when a redo operation is executed.
    */
   redo: { params: { eventName: keyof GridEventLookup; data: any } };
+  /**
+   * Fired when a formula evaluation pass completes.
+   */
+  formulaEvaluated: { params: { changedCells: GridCellCoordinates[] } };
 }
 
 export interface GridColDefPremium<R extends GridValidRowModel = any, V = any, F = V> {
@@ -146,6 +160,19 @@ export interface GridColDefPremium<R extends GridValidRowModel = any, V = any, F
    * @default true
    */
   chartable?: boolean;
+  /**
+   * If `true`, cell values that are strings starting with `=` are parsed and evaluated as formulas.
+   * The evaluated value flows through rendering, sorting, filtering and export, while the formula
+   * source remains the stored row-data value.
+   * @default false
+   */
+  allowFormulas?: boolean;
+  /**
+   * If `true`, the column was generated from the `computedColumns` model.
+   * Set by the grid, do not set it on your own columns.
+   * @ignore - do not document.
+   */
+  computed?: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -162,6 +189,8 @@ export interface GridApiCachesPremium extends GridApiCachesPro {
   pivoting: GridPivotingInternalCache;
   rowGrouping: GridRowGroupingInternalCache;
   aggregation: GridAggregationInternalCache;
+  formula?: GridFormulaInternalCache;
+  computedColumns: GridComputedColumnsInternalCache;
 }
 
 export interface GridPipeProcessingLookupPremium {
@@ -192,6 +221,22 @@ declare module '@mui/x-data-grid-pro' {
 
   interface GridToolbarProps {
     excelOptions?: GridExcelExportOptions & GridExportDisplayOptions;
+  }
+}
+
+declare module '@mui/x-data-grid' {
+  interface GridToolbarProps {
+    /**
+     * Show the formula bar below the toolbar row.
+     * @default false
+     */
+    formulaBar?: boolean;
+    /**
+     * Show the computed columns button.
+     * The panel stays reachable from the column menu and the cells.
+     * @default true
+     */
+    showComputedColumnsButton?: boolean;
   }
 }
 

@@ -1,5 +1,22 @@
 {
-  "props": { "label": { "type": { "name": "string" }, "default": "'Sources'" } },
+  "props": {
+    "children": { "type": { "name": "node" } },
+    "classes": { "type": { "name": "object" }, "additionalInfo": { "cssApi": true } },
+    "label": { "type": { "name": "string" }, "default": "'Sources'" },
+    "slotProps": { "type": { "name": "object" }, "default": "{}" },
+    "slots": {
+      "type": { "name": "object" },
+      "default": "{}",
+      "additionalInfo": { "slotsApi": true }
+    },
+    "sx": {
+      "type": {
+        "name": "union",
+        "description": "Array&lt;func<br>&#124;&nbsp;object<br>&#124;&nbsp;bool&gt;<br>&#124;&nbsp;func<br>&#124;&nbsp;object"
+      },
+      "additionalInfo": { "sx": true }
+    }
+  },
   "name": "ChatMessageSources",
   "imports": [
     "import { ChatMessageSources } from '@mui/x-chat/ChatMessageSources';",
@@ -31,6 +48,5 @@
   "muiName": "MuiChatMessageSources",
   "filename": "/packages/x-chat/src/ChatMessageSources/ChatMessageSources.tsx",
   "inheritance": null,
-  "demos": "<ul><li><a href=\"/x/react-chat/display/message-parts/sources-and-citations/\">Chat - Sources &amp; Citations</a></li></ul>",
-  "cssComponent": false
+  "demos": "<ul><li><a href=\"/x/react-chat/display/message-parts/sources-and-citations/\">Chat - Sources and citations</a></li></ul>"
 }

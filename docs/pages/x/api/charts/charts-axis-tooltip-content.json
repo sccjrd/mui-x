@@ -4,9 +4,16 @@
     "sort": {
       "type": {
         "name": "enum",
-        "description": "'none'<br>&#124;&nbsp;'asc'<br>&#124;&nbsp;'desc'"
+        "description": "'asc'<br>&#124;&nbsp;'desc'<br>&#124;&nbsp;'none'"
       },
       "default": "'none'"
+    },
+    "sx": {
+      "type": {
+        "name": "union",
+        "description": "Array&lt;func<br>&#124;&nbsp;object<br>&#124;&nbsp;bool&gt;<br>&#124;&nbsp;func<br>&#124;&nbsp;object"
+      },
+      "additionalInfo": { "sx": true }
     }
   },
   "name": "ChartsAxisTooltipContent",
@@ -81,6 +88,5 @@
   "muiName": "MuiChartsAxisTooltipContent",
   "filename": "/packages/x-charts/src/ChartsTooltip/ChartsAxisTooltipContent.tsx",
   "inheritance": null,
-  "demos": "<ul><li><a href=\"/x/react-charts/tooltip/\">Charts - Tooltip</a></li></ul>",
-  "cssComponent": false
+  "demos": "<ul><li><a href=\"/x/react-charts/tooltip/\">Charts - Tooltip</a></li></ul>"
 }

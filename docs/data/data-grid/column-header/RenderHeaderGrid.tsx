@@ -1,8 +1,10 @@
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import type { GridColDef } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
 
 const columns: GridColDef[] = [
   {
     field: 'date',
+    rowHeader: true,
     width: 150,
     type: 'date',
     renderHeader: () => (

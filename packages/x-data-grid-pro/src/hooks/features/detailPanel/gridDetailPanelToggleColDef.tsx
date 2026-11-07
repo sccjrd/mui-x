@@ -1,7 +1,8 @@
 import * as React from 'react';
 import visuallyHidden from '@mui/utils/visuallyHidden';
 import type { RefObject } from '@mui/x-internals/types';
-import { GRID_STRING_COL_DEF, type GridColDef, gridRowIdSelector } from '@mui/x-data-grid';
+import { GRID_STRING_COL_DEF, gridRowIdSelector } from '@mui/x-data-grid';
+import type { GridColDef } from '@mui/x-data-grid';
 import { GRID_DETAIL_PANEL_TOGGLE_FIELD } from '@mui/x-data-grid/internals';
 import type { GridApiPro } from '../../../models/gridApiPro';
 import { GridDetailPanelToggleCell } from '../../../components/GridDetailPanelToggleCell';
@@ -17,7 +18,8 @@ export const GRID_DETAIL_PANEL_TOGGLE_COL_DEF: GridColDef = {
   sortable: false,
   filterable: false,
   resizable: false,
-  // @ts-ignore
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- Premium augmentation adds aggregable only when the Premium package is included.
+  // @ts-ignore Premium augmentation adds aggregable only when the Premium package is included.
   aggregable: false,
   chartable: false,
   disableColumnMenu: true,

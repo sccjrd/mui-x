@@ -1,0 +1,434 @@
+import {
+  EventBuilder,
+  getEventTimelinePremiumStateFromParameters,
+  ResourceBuilder,
+} from 'test/utils/scheduler';
+import type { SchedulerDependency } from '@mui/x-scheduler-internals-premium/models';
+import { describe, it, expect } from 'vitest';
+import { eventTimelinePremiumDependencySelectors } from './eventTimelinePremiumDependencySelectors';
+
+const TEST_RESOURCES = [ResourceBuilder.new().build()];
+
+const eventA = EventBuilder.new().id('event-a').build();
+const eventB = EventBuilder.new().id('event-b').build();
+const eventR = EventBuilder.new().id('event-r').recurrent('DAILY').build();
+
+const DEP_1: SchedulerDependency = {
+  id: 'dep-1',
+  source: 'event-a',
+  target: 'event-b',
+  type: 'FinishToStart',
+};
+
+const DEP_2: SchedulerDependency = {
+  id: 'dep-2',
+  source: 'event-a',
+  target: 'event-r',
+  type: 'FinishToStart',
+};
+
+const DEP_3: SchedulerDependency = {
+  id: 'dep-3',
+  source: 'event-a',
+  target: 'unknown-x',
+  type: 'FinishToStart',
+};
+
+const DEP_4: SchedulerDependency = {
+  id: 'dep-4',
+  source: 'unknown-y',
+  target: 'event-b',
+  type: 'FinishToStart',
+};
+
+const DEP_5: SchedulerDependency = {
+  id: 'dep-5',
+  source: 'event-r',
+  target: 'event-b',
+  type: 'FinishToStart',
+};
+
+// `DEP_2` and `DEP_3` reference a recurring/unknown event on purpose (to exercise the
+// selector's filtering below), which the scheduling plugin flags with a dev warning.
+// `DEP_4` does the same but on the `source` side, unlike `DEP_2`/`DEP_3`.
+// `DEP_5` also references the recurring event on the `source` side, unlike `DEP_2`.
+const getState = () => {
+  let state!: ReturnType<typeof getEventTimelinePremiumStateFromParameters>;
+  expect(() => {
+    state = getEventTimelinePremiumStateFromParameters({
+      resources: TEST_RESOURCES,
+      events: [eventA, eventB, eventR],
+      dependencies: [DEP_1, DEP_2, DEP_3, DEP_4, DEP_5],
+    });
+  }).toWarnDev([
+    'MUI X Scheduler: The dependency "dep-2" references the recurring event "event-r".',
+    'MUI X Scheduler: The dependency "dep-3" references the unknown event "unknown-x".',
+    'MUI X Scheduler: The dependency "dep-4" references the unknown event "unknown-y".',
+    'MUI X Scheduler: The dependency "dep-5" references the recurring event "event-r".',
+  ]);
+  return state;
+};
+
+describe('eventTimelinePremiumDependencySelectors', () => {
+  it('should return the dependencyModelList from the state', () => {
+    const state = getState();
+
+    expect(eventTimelinePremiumDependencySelectors.modelList(state)).to.equal(
+      state.dependencyModelList,
+    );
+  });
+
+  it('should return the dependencyModelLookup from the state', () => {
+    const state = getState();
+
+    expect(eventTimelinePremiumDependencySelectors.modelLookup(state)).to.equal(
+      state.dependencyModelLookup,
+    );
+  });
+
+  it('should return the dependency by id', () => {
+    const state = getState();
+
+    expect(eventTimelinePremiumDependencySelectors.model(state, 'dep-1')).to.deep.equal(DEP_1);
+    expect(eventTimelinePremiumDependencySelectors.model(state, 'nope')).to.equal(null);
+  });
+
+  it('should keep unknown and recurring references out of the active list', () => {
+    const state = getState();
+
+    expect(eventTimelinePremiumDependencySelectors.activeModelList(state)).to.deep.equal([DEP_1]);
+  });
+
+  it('should group active dependencies by source event id', () => {
+    const state = getState();
+
+    const bySource = eventTimelinePremiumDependencySelectors.activeModelListBySource(state);
+
+    expect(bySource.get('event-a')).to.deep.equal([DEP_1]);
+    expect(bySource.get('event-r')).to.equal(undefined);
+  });
+
+  it('should group active dependencies by target event id', () => {
+    const state = getState();
+
+    const byTarget = eventTimelinePremiumDependencySelectors.activeModelListByTarget(state);
+
+    expect(byTarget.get('event-b')).to.deep.equal([DEP_1]);
+    expect(byTarget.get('unknown-x')).to.equal(undefined);
+  });
+
+  it('should return the same instance while the inputs are unchanged', () => {
+    const state = getState();
+
+    const first = eventTimelinePremiumDependencySelectors.activeModelListBySource(state);
+    const second = eventTimelinePremiumDependencySelectors.activeModelListBySource(state);
+
+    expect(first).to.equal(second);
+  });
+
+  it('should exclude a dependency with an unknown type', () => {
+    let state: ReturnType<typeof getEventTimelinePremiumStateFromParameters>;
+    expect(() => {
+      state = getEventTimelinePremiumStateFromParameters({
+        resources: TEST_RESOURCES,
+        events: [eventA, eventB],
+        dependencies: [
+          DEP_1,
+          { id: 'dep-x', source: 'event-b', target: 'event-a', type: 'FS' as any },
+        ],
+      });
+    }).toWarnDev(['MUI X Scheduler: The dependency "dep-x" has the unknown type "FS".']);
+
+    expect(eventTimelinePremiumDependencySelectors.activeModelList(state!)).to.deep.equal([DEP_1]);
+  });
+
+  it('should keep a dependency with a negative lag active, with a dev warning', () => {
+    let state: ReturnType<typeof getEventTimelinePremiumStateFromParameters>;
+    const lagged: SchedulerDependency = { ...DEP_1, id: 'dep-lag', lag: -2 };
+    expect(() => {
+      state = getEventTimelinePremiumStateFromParameters({
+        resources: TEST_RESOURCES,
+        events: [eventA, eventB],
+        dependencies: [lagged],
+      });
+    }).toWarnDev(['MUI X Scheduler: The dependency "dep-lag" has a negative lag (-2).']);
+
+    expect(eventTimelinePremiumDependencySelectors.activeModelList(state!)).to.deep.equal([lagged]);
+  });
+
+  it('should not warn about a valid lag', () => {
+    const lagged: SchedulerDependency = { ...DEP_1, id: 'dep-lag', lag: 2, lagUnit: 'hour' };
+    expect(() => {
+      getEventTimelinePremiumStateFromParameters({
+        resources: TEST_RESOURCES,
+        events: [eventA, eventB],
+        dependencies: [lagged],
+      });
+    }).not.toWarnDev();
+  });
+
+  it('should keep a dependency with a fractional lag active, with a dev warning', () => {
+    let state: ReturnType<typeof getEventTimelinePremiumStateFromParameters>;
+    const lagged: SchedulerDependency = { ...DEP_1, id: 'dep-lag', lag: 0.5 };
+    expect(() => {
+      state = getEventTimelinePremiumStateFromParameters({
+        resources: TEST_RESOURCES,
+        events: [eventA, eventB],
+        dependencies: [lagged],
+      });
+    }).toWarnDev([
+      'MUI X Scheduler: The dependency "dep-lag" has a lag that is not a whole number (0.5).',
+    ]);
+
+    expect(eventTimelinePremiumDependencySelectors.activeModelList(state!)).to.deep.equal([lagged]);
+  });
+
+  it('should keep a dependency with an unknown lag unit active, with a dev warning', () => {
+    let state: ReturnType<typeof getEventTimelinePremiumStateFromParameters>;
+    const lagged: SchedulerDependency = {
+      ...DEP_1,
+      id: 'dep-lag',
+      lag: 2,
+      lagUnit: 'fortnight' as any,
+    };
+    expect(() => {
+      state = getEventTimelinePremiumStateFromParameters({
+        resources: TEST_RESOURCES,
+        events: [eventA, eventB],
+        dependencies: [lagged],
+      });
+    }).toWarnDev([
+      'MUI X Scheduler: The dependency "dep-lag" has the unknown lag unit "fortnight".',
+    ]);
+
+    expect(eventTimelinePremiumDependencySelectors.activeModelList(state!)).to.deep.equal([lagged]);
+  });
+
+  it('should group the source event titles and dependency types by target event id', () => {
+    const state = getState();
+
+    const sourcesByTarget = eventTimelinePremiumDependencySelectors.activeSourcesByTarget(state);
+
+    expect(sourcesByTarget.get('event-b')).to.deep.equal([
+      { title: eventA.title, type: 'FinishToStart', lag: null },
+    ]);
+    expect(sourcesByTarget.get('event-a')).to.equal(undefined);
+  });
+
+  it('should return the sources of all the active dependencies targeting the event', () => {
+    const eventC = EventBuilder.new().id('event-c').title('Event C').build();
+    const state = getEventTimelinePremiumStateFromParameters({
+      resources: TEST_RESOURCES,
+      events: [eventA, eventB, eventC],
+      dependencies: [
+        DEP_1,
+        { id: 'dep-c', source: 'event-c', target: 'event-b', type: 'FinishToFinish' },
+      ],
+    });
+
+    expect(
+      eventTimelinePremiumDependencySelectors.activeSourcesForTarget(state, 'event-b'),
+    ).to.deep.equal([
+      { title: eventA.title, type: 'FinishToStart', lag: null },
+      { title: 'Event C', type: 'FinishToFinish', lag: null },
+    ]);
+  });
+
+  it('should describe the sources with their effective lag', () => {
+    const eventC = EventBuilder.new().id('event-c').title('Event C').build();
+    const state = getEventTimelinePremiumStateFromParameters({
+      resources: TEST_RESOURCES,
+      events: [eventA, eventB, eventC],
+      dependencies: [
+        { ...DEP_1, lag: 30, lagUnit: 'minute' },
+        { id: 'dep-c', source: 'event-c', target: 'event-b', type: 'FinishToFinish', lag: 2 },
+      ],
+    });
+
+    expect(
+      eventTimelinePremiumDependencySelectors.activeSourcesForTarget(state, 'event-b'),
+    ).to.deep.equal([
+      { title: eventA.title, type: 'FinishToStart', lag: { amount: 30, unit: 'minute' } },
+      { title: 'Event C', type: 'FinishToFinish', lag: { amount: 2, unit: 'day' } },
+    ]);
+  });
+
+  it('should describe an all-day successor with the lag it can actually carry', () => {
+    const allDayTarget = EventBuilder.new().id('event-all-day').allDay().build();
+    const state = getEventTimelinePremiumStateFromParameters({
+      resources: TEST_RESOURCES,
+      events: [eventA, allDayTarget],
+      dependencies: [
+        {
+          id: 'dep-short',
+          source: 'event-a',
+          target: 'event-all-day',
+          type: 'FinishToStart',
+          lag: 2,
+          lagUnit: 'hour',
+        },
+        {
+          id: 'dep-long',
+          source: 'event-a',
+          target: 'event-all-day',
+          type: 'FinishToFinish',
+          lag: 36,
+          lagUnit: 'hour',
+        },
+      ],
+    });
+
+    expect(
+      eventTimelinePremiumDependencySelectors.activeSourcesForTarget(state, 'event-all-day'),
+    ).to.deep.equal([
+      { title: eventA.title, type: 'FinishToStart', lag: null },
+      { title: eventA.title, type: 'FinishToFinish', lag: { amount: 1, unit: 'day' } },
+    ]);
+  });
+
+  it('should return the same empty instance for every event without predecessors', () => {
+    const state = getState();
+
+    const first = eventTimelinePremiumDependencySelectors.activeSourcesForTarget(state, 'event-a');
+    const second = eventTimelinePremiumDependencySelectors.activeSourcesForTarget(state, 'event-r');
+
+    expect(first).to.deep.equal([]);
+    expect(first).to.equal(second);
+  });
+
+  it('should report the feature as enabled only when a dependencies parameter is provided', () => {
+    const stateWithDependencies = getState();
+    const stateWithoutDependencies = getEventTimelinePremiumStateFromParameters({
+      resources: TEST_RESOURCES,
+      events: [eventA, eventB],
+    });
+    let stateWithHandlerOnly!: ReturnType<typeof getEventTimelinePremiumStateFromParameters>;
+    expect(() => {
+      stateWithHandlerOnly = getEventTimelinePremiumStateFromParameters({
+        resources: TEST_RESOURCES,
+        events: [eventA, eventB],
+        onDependenciesChange: () => {},
+      });
+    }).toWarnDev([
+      'MUI X Scheduler: An `onDependenciesChange` handler was provided without a `dependencies` value.',
+    ]);
+
+    expect(eventTimelinePremiumDependencySelectors.enabled(stateWithDependencies)).to.equal(true);
+    expect(eventTimelinePremiumDependencySelectors.enabled(stateWithoutDependencies)).to.equal(
+      false,
+    );
+    expect(eventTimelinePremiumDependencySelectors.enabled(stateWithHandlerOnly)).to.equal(false);
+  });
+
+  it('should return the creation gesture target flag', () => {
+    const state = {
+      ...getState(),
+      dependencyCreation: {
+        sourceEventId: 'event-a',
+        sourceOccurrenceKey: 'event-a-0',
+        sourceResourceId: 'r1',
+        sourceSide: 'end' as const,
+        targetEventId: 'event-b',
+        targetOccurrenceKey: 'event-b-0',
+        targetResourceId: 'r1',
+        targetSide: 'start' as const,
+      },
+    };
+
+    expect(
+      eventTimelinePremiumDependencySelectors.isCreationTarget(state, 'event-b-0', 'r1'),
+    ).to.equal(true);
+    // A multi-resource event repeats the same occurrence key on another row: that
+    // appearance is not the gesture's appearance.
+    expect(
+      eventTimelinePremiumDependencySelectors.isCreationTarget(state, 'event-b-0', 'r2'),
+    ).to.equal(false);
+    expect(
+      eventTimelinePremiumDependencySelectors.isCreationTarget(state, 'event-a-0', 'r1'),
+    ).to.equal(false);
+  });
+
+  it('should not flag any occurrence when no creation gesture is in progress', () => {
+    const state = getState();
+
+    expect(
+      eventTimelinePremiumDependencySelectors.isCreationTarget(state, 'event-b-0', 'r1'),
+    ).to.equal(false);
+  });
+
+  it('should resolve the selected id to null when the dependency no longer exists', () => {
+    const state = getState();
+
+    expect(
+      eventTimelinePremiumDependencySelectors.selectedId({
+        ...state,
+        selection: { type: 'dependency' as const, id: 'dep-1' },
+      }),
+    ).to.equal('dep-1');
+    expect(
+      eventTimelinePremiumDependencySelectors.selectedId({
+        ...state,
+        selection: { type: 'dependency' as const, id: 'removed-dep' },
+      }),
+    ).to.equal(null);
+    expect(eventTimelinePremiumDependencySelectors.selectedId(state)).to.equal(null);
+  });
+
+  it('should report a dependency as read-only only when the scheduler is read-only', () => {
+    const readOnlyEvent = EventBuilder.new().id('event-ro').readOnly().build();
+    const depSourceReadOnly: SchedulerDependency = {
+      id: 'dep-source-ro',
+      source: 'event-ro',
+      target: 'event-b',
+      type: 'FinishToStart',
+    };
+    const depTargetReadOnly: SchedulerDependency = {
+      id: 'dep-target-ro',
+      source: 'event-a',
+      target: 'event-ro',
+      type: 'FinishToStart',
+    };
+    const parameters = {
+      resources: TEST_RESOURCES,
+      events: [eventA, eventB, readOnlyEvent],
+      dependencies: [DEP_1, depSourceReadOnly, depTargetReadOnly],
+    };
+    const state = getEventTimelinePremiumStateFromParameters(parameters);
+    const readOnlyState = getEventTimelinePremiumStateFromParameters({
+      ...parameters,
+      readOnly: true,
+    });
+
+    // A read-only event is protected by the cascade veto, not by the dependency.
+    expect(eventTimelinePremiumDependencySelectors.isReadOnly(state)).to.equal(false);
+    expect(eventTimelinePremiumDependencySelectors.isReadOnly(readOnlyState)).to.equal(true);
+  });
+
+  it('should keep only the last dependency when two of them share the same id', () => {
+    const firstDependency: SchedulerDependency = {
+      id: 'dup-1',
+      source: 'event-a',
+      target: 'event-b',
+      type: 'FinishToStart',
+    };
+    const lastDependency: SchedulerDependency = {
+      id: 'dup-1',
+      source: 'event-b',
+      target: 'event-a',
+      type: 'FinishToStart',
+    };
+
+    let state!: ReturnType<typeof getEventTimelinePremiumStateFromParameters>;
+    expect(() => {
+      state = getEventTimelinePremiumStateFromParameters({
+        resources: TEST_RESOURCES,
+        events: [eventA, eventB],
+        dependencies: [firstDependency, lastDependency],
+      });
+    }).toWarnDev(['MUI X Scheduler: Two or more dependencies share the same id "dup-1".']);
+
+    expect(eventTimelinePremiumDependencySelectors.activeModelList(state)).to.deep.equal([
+      lastDependency,
+    ]);
+  });
+});

@@ -1,10 +1,12 @@
 import Box from '@mui/material/Box';
 import clsx from 'clsx';
-import { GridColDef, DataGrid, GridCellParams } from '@mui/x-data-grid';
+import type { GridColDef, GridCellParams } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
 
 const columns: GridColDef[] = [
   {
     field: 'name',
+    rowHeader: true,
     cellClassName: 'super-app-theme--cell',
   },
   {

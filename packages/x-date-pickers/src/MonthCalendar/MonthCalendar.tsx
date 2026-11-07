@@ -8,17 +8,18 @@ import { styled, useThemeProps } from '@mui/material/styles';
 import useControlled from '@mui/utils/useControlled';
 import composeClasses from '@mui/utils/composeClasses';
 import useEventCallback from '@mui/utils/useEventCallback';
-import { DefaultizedProps } from '@mui/x-internals/types';
+import type { DefaultizedProps } from '@mui/x-internals/types';
 import { MonthCalendarButton } from './MonthCalendarButton';
 import { useNow } from '../internals/hooks/useUtils';
-import { getMonthCalendarUtilityClass, MonthCalendarClasses } from './monthCalendarClasses';
+import type { MonthCalendarClasses } from './monthCalendarClasses';
+import { getMonthCalendarUtilityClass } from './monthCalendarClasses';
 import { getMonthsInYear } from '../internals/utils/date-utils';
-import { MonthCalendarProps } from './MonthCalendar.types';
+import type { MonthCalendarProps } from './MonthCalendar.types';
 import { singleItemValueManager } from '../internals/utils/valueManagers';
 import { SECTION_TYPE_GRANULARITY } from '../internals/utils/getDefaultReferenceDate';
 import { useControlledValue } from '../internals/hooks/useControlledValue';
 import { DIALOG_WIDTH } from '../internals/constants/dimensions';
-import { MuiPickersAdapter, PickerOwnerState, PickerValidDate } from '../models';
+import type { MuiPickersAdapter, PickerOwnerState, PickerValidDate } from '../models';
 import { usePickerPrivateContext } from '../internals/hooks/usePickerPrivateContext';
 import { useApplyDefaultValuesToDateValidationProps } from '../managers/useDateManager';
 import { usePickerAdapter } from '../hooks/usePickerAdapter';
@@ -251,15 +252,14 @@ export const MonthCalendar = React.forwardRef(function MonthCalendar(
 
   const handleKeyDown = useEventCallback((event: React.KeyboardEvent, month: number) => {
     const monthsInYear = 12;
-    const monthsInRow = 3;
 
     switch (event.key) {
       case 'ArrowUp':
-        focusMonth((monthsInYear + month - monthsInRow) % monthsInYear);
+        focusMonth((monthsInYear + month - monthsPerRow) % monthsInYear);
         event.preventDefault();
         break;
       case 'ArrowDown':
-        focusMonth((monthsInYear + month + monthsInRow) % monthsInYear);
+        focusMonth((monthsInYear + month + monthsPerRow) % monthsInYear);
         event.preventDefault();
         break;
       case 'ArrowLeft':
@@ -336,17 +336,26 @@ export const MonthCalendar = React.forwardRef(function MonthCalendar(
   );
 }) as MonthCalendarComponent;
 
-MonthCalendar.propTypes = {
+MonthCalendar.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * If `true`, the component is focused when it mounts.
+   */
   autoFocus: PropTypes.bool,
   /**
    * Override or extend the styles applied to the component.
    */
   classes: PropTypes.object,
+  /**
+   * A CSS class name applied to the root element.
+   */
   className: PropTypes.string,
+  /**
+   * @ignore
+   */
   currentMonth: PropTypes.object,
   /**
    * The default selected value.
@@ -374,7 +383,13 @@ MonthCalendar.propTypes = {
    * @default false
    */
   disablePast: PropTypes.bool,
+  /**
+   * @ignore
+   */
   gridLabelId: PropTypes.string,
+  /**
+   * @ignore
+   */
   hasFocus: PropTypes.bool,
   /**
    * Maximal selectable date.
@@ -396,7 +411,13 @@ MonthCalendar.propTypes = {
    * @param {PickerValidDate} value The new value.
    */
   onChange: PropTypes.func,
+  /**
+   * @ignore
+   */
   onFocusedViewChange: PropTypes.func,
+  /**
+   * @ignore
+   */
   onMonthFocus: PropTypes.func,
   /**
    * If `true`, the component is read-only.

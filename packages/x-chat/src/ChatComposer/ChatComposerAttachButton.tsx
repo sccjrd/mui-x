@@ -2,16 +2,27 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { SxProps, Theme } from '@mui/system';
-import { ComposerAttachButton, type ComposerAttachButtonProps } from '@mui/x-chat-headless';
+import type { SxProps, Theme } from '@mui/system';
+import { ComposerAttachButton } from '@mui/x-chat-headless';
+import type { ComposerAttachButtonProps, ComposerAttachButtonSlots } from '@mui/x-chat-headless';
 import { styled, createUseThemeProps } from '../internals/zero-styled';
-import { useChatComposerUtilityClasses, type ChatComposerClasses } from './chatComposerClasses';
+import { useChatComposerUtilityClasses } from './chatComposerClasses';
+import type { ChatComposerClasses } from './chatComposerClasses';
+import { mergeSlotProps } from '../internals/mergeSlotProps';
 
 const useThemeProps = createUseThemeProps('MuiChatComposerAttachButton');
 
+export interface ChatComposerAttachButtonSlots extends ComposerAttachButtonSlots {}
+
 export interface ChatComposerAttachButtonProps extends ComposerAttachButtonProps {
   className?: string;
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx?: SxProps<Theme>;
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes?: Partial<ChatComposerClasses>;
 }
 
@@ -69,31 +80,47 @@ const ChatComposerAttachButton = React.forwardRef<HTMLButtonElement, ChatCompose
         ref={ref}
         {...other}
         slots={{
-          attachButton: slots?.attachButton ?? ChatComposerAttachButtonStyled,
           ...slots,
+          attachButton: slots?.attachButton ?? ChatComposerAttachButtonStyled,
         }}
         slotProps={{
           ...slotProps,
-          attachButton: {
-            className: clsx(classes.attachButton, className),
-            sx,
-            ...(slotProps?.attachButton as object),
-          } as any,
+          attachButton: mergeSlotProps(
+            {
+              className: clsx(classes.attachButton, className),
+              sx,
+            },
+            slotProps?.attachButton,
+          ) as any,
         }}
       />
     );
   },
 );
 
-ChatComposerAttachButton.propTypes = {
+ChatComposerAttachButton.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes: PropTypes.object,
   className: PropTypes.string,
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
   slotProps: PropTypes.object,
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
   slots: PropTypes.object,
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx: PropTypes.oneOfType([
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
     PropTypes.func,

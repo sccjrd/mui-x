@@ -6,17 +6,14 @@ import {
   randomArrayItem,
   random,
 } from '@mui/x-data-grid-generator';
-import {
-  DataGrid,
-  GridColDef,
-  gridStringOrNumberComparator,
-} from '@mui/x-data-grid';
+import type { GridColDef } from '@mui/x-data-grid';
+import { DataGrid, gridStringOrNumberComparator } from '@mui/x-data-grid';
 import { renderAvatar } from './cell-renderers/avatar';
 import { renderEmail } from './cell-renderers/email';
 import { renderEditRating, renderRating } from './cell-renderers/rating';
+import type { CountryIsoOption } from './cell-renderers/country';
 import {
   COUNTRY_ISO_OPTIONS,
-  CountryIsoOption,
   renderCountry,
   renderEditCountry,
 } from './cell-renderers/country';
@@ -37,6 +34,7 @@ const columns: GridColDef<(typeof rows)[number]>[] = [
   {
     field: 'name',
     headerName: 'Name',
+    rowHeader: true,
     width: 120,
     editable: true,
   },

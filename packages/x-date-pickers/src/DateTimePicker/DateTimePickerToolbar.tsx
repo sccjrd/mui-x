@@ -9,25 +9,23 @@ import { PickersToolbarText } from '../internals/components/PickersToolbarText';
 import { PickersToolbar } from '../internals/components/PickersToolbar';
 import { PickersToolbarButton } from '../internals/components/PickersToolbarButton';
 import { usePickerAdapter, usePickerTranslations } from '../hooks';
-import { BaseToolbarProps, ExportedBaseToolbarProps } from '../internals/models/props/toolbar';
+import type { BaseToolbarProps, ExportedBaseToolbarProps } from '../internals/models/props/toolbar';
+import type { DateTimePickerToolbarClasses } from './dateTimePickerToolbarClasses';
 import {
   dateTimePickerToolbarClasses,
-  DateTimePickerToolbarClasses,
   getDateTimePickerToolbarUtilityClass,
 } from './dateTimePickerToolbarClasses';
-import { DateOrTimeViewWithMeridiem, PickerValue, PickerVariant } from '../internals/models';
+import type { DateOrTimeViewWithMeridiem, PickerValue, PickerVariant } from '../internals/models';
 import { useMeridiemMode } from '../internals/hooks/date-helpers-hooks';
 import { MULTI_SECTION_CLOCK_SECTION_WIDTH } from '../internals/constants/dimensions';
 import { formatMeridiem } from '../internals/utils/date-utils';
 import { pickersToolbarTextClasses } from '../internals/components/pickersToolbarTextClasses';
 import { pickersToolbarClasses } from '../internals/components/pickersToolbarClasses';
-import { AdapterFormats, DateTimeValidationError } from '../models';
+import type { AdapterFormats, DateTimeValidationError } from '../models';
 import { usePickerContext } from '../hooks/usePickerContext';
-import {
-  PickerToolbarOwnerState,
-  useToolbarOwnerState,
-} from '../internals/hooks/useToolbarOwnerState';
-import { SetValueActionOptions } from '../internals/components/PickerProvider';
+import type { PickerToolbarOwnerState } from '../internals/hooks/useToolbarOwnerState';
+import { useToolbarOwnerState } from '../internals/hooks/useToolbarOwnerState';
+import type { SetValueActionOptions } from '../internals/components/PickerProvider';
 
 export interface ExportedDateTimePickerToolbarProps extends ExportedBaseToolbarProps {
   /**
@@ -42,7 +40,13 @@ export interface DateTimePickerToolbarProps
    * If provided, it will be used instead of `dateTimePickerToolbarTitle` from localization.
    */
   toolbarTitle?: React.ReactNode;
+  /**
+   * 12h/24h view for hour selection clock.
+   */
   ampm?: boolean;
+  /**
+   * Display ampm controls under the clock (instead of in the toolbar).
+   */
   ampmInClock?: boolean;
 }
 
@@ -449,17 +453,26 @@ function DateTimePickerToolbar(inProps: DateTimePickerToolbarProps) {
   );
 }
 
-DateTimePickerToolbar.propTypes = {
+DateTimePickerToolbar.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * 12h/24h view for hour selection clock.
+   */
   ampm: PropTypes.bool,
+  /**
+   * Display ampm controls under the clock (instead of in the toolbar).
+   */
   ampmInClock: PropTypes.bool,
   /**
    * Override or extend the styles applied to the component.
    */
   classes: PropTypes.object,
+  /**
+   * A CSS class name applied to the root element.
+   */
   className: PropTypes.string,
   /**
    * If `true`, show the toolbar even in desktop mode.
@@ -474,6 +487,10 @@ DateTimePickerToolbar.propTypes = {
     PropTypes.func,
     PropTypes.object,
   ]),
+  /**
+   * The id of the toolbar title element.
+   * The picker uses it to label its popup.
+   */
   titleId: PropTypes.string,
   /**
    * Toolbar date format.

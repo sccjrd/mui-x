@@ -1,13 +1,20 @@
-import * as React from 'react';
-import { SxProps, Theme } from '@mui/material/styles';
-import { MuiEvent } from '@mui/x-internals/types';
-import { PickersSectionListProps, PickersSectionListSlotProps } from '../../PickersSectionList';
-import { PickerTextFieldOwnerState } from '../../models/fields';
+import type * as React from 'react';
+import type { SxProps, Theme } from '@mui/material/styles';
+import type { MuiEvent } from '@mui/x-internals/types';
+import type {
+  PickersSectionListProps,
+  PickersSectionListSlotProps,
+} from '../../PickersSectionList';
+import type { PickerTextFieldOwnerState } from '../../models/fields';
 
 export interface PickersInputPropsUsedByField extends Pick<
   PickersSectionListProps,
-  'elements' | 'sectionListRef' | 'contentEditable' | 'tabIndex'
+  'elements' | 'contentEditable' | 'tabIndex'
 > {
+  /**
+   * @ignore
+   */
+  sectionListRef: PickersSectionListProps['sectionListRef'];
   /**
    * Is `true` if the current values equals the empty value.
    * For a single item value, it means that `value === null`
@@ -15,9 +22,25 @@ export interface PickersInputPropsUsedByField extends Pick<
    */
   areAllSectionsEmpty: boolean;
 
+  /**
+   * @ignore
+   */
   onClick: React.MouseEventHandler<HTMLDivElement>;
+  /**
+   * @ignore
+   */
+  onMouseDown: React.MouseEventHandler<HTMLDivElement>;
+  /**
+   * @ignore
+   */
   onKeyDown: React.EventHandler<MuiEvent<React.KeyboardEvent<HTMLDivElement>>>;
+  /**
+   * @ignore
+   */
   onInput: React.FormEventHandler<HTMLDivElement>;
+  /**
+   * @ignore
+   */
   onPaste: React.ClipboardEventHandler<HTMLDivElement>;
 
   /**
@@ -29,7 +52,13 @@ export interface PickersInputPropsUsedByField extends Pick<
    */
   startAdornment?: React.ReactNode;
 
+  /**
+   * The value of the hidden `input` element.
+   */
   value: string;
+  /**
+   * @ignore
+   */
   onChange: React.ChangeEventHandler<HTMLInputElement>;
 
   /**
@@ -45,6 +74,9 @@ export interface PickersInputPropsUsedByField extends Pick<
    * @default false
    */
   fullWidth?: boolean;
+  /**
+   * If `true`, the component is read-only.
+   */
   readOnly?: boolean;
   /**
    * Name attribute of the `input` element.
@@ -95,6 +127,9 @@ export interface PickersInputBaseProps
     Omit<React.HTMLAttributes<HTMLDivElement>, keyof PickersInputPropsUsedByField>,
     PickersInputPropsUsedByField {
   ownerState?: PickerTextFieldOwnerState;
+  /**
+   * A CSS class name applied to the root element.
+   */
   className?: string;
   classes?: Record<string, string>;
   /**

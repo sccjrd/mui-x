@@ -2,23 +2,38 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import useSlotProps from '@mui/utils/useSlotProps';
-import { type SlotComponentPropsFromProps } from '@mui/x-internals/types';
+import type { SlotComponentPropsFromProps } from '@mui/x-internals/types';
 import { useInteractionItemProps } from '../hooks/useInteractionItemProps';
 import { useItemHighlightState } from '../hooks/useItemHighlightState';
 import { selectorChartExperimentalFeaturesState } from '../internals/plugins/corePlugins/useChartExperimentalFeature';
 import { useStore } from '../internals/store/useStore';
-import { AnimatedArea, type AnimatedAreaProps } from './AnimatedArea';
-import { type SeriesId } from '../models/seriesType/common';
-import { type LineClasses, useUtilityClasses as useLineUtilityClasses } from './lineClasses';
+import { AnimatedArea } from './AnimatedArea';
+import type { AnimatedAreaProps } from './AnimatedArea';
+import type { SeriesId } from '../models/seriesType/common';
+import { useUtilityClasses as useLineUtilityClasses } from './lineClasses';
+import type { LineClasses } from './lineClasses';
 import type { AreaPropsOverrides } from '../models/chartsSlotsComponentsProps';
 
 export interface AreaElementOwnerState {
+  /**
+   * The id of the series the element belongs to.
+   */
   seriesId: SeriesId;
+  /**
+   * The color of the area.
+   */
   color: string;
+  /**
+   * The id of the gradient used to color the element.
+   * The `gradientId` is used as `url(#gradientId)`.
+   */
   gradientId?: string;
   isFaded: boolean;
   isHighlighted: boolean;
-  classes?: Partial<LineClasses>;
+  /**
+   * Override or extend the styles applied to the component.
+   */
+  classes?: Partial<Pick<LineClasses, 'area'>>;
 }
 
 export interface AreaElementSlots {
@@ -38,6 +53,9 @@ export interface AreaElementProps
     Omit<AreaElementOwnerState, 'isFaded' | 'isHighlighted'>,
     Pick<AnimatedAreaProps, 'skipAnimation'>,
     Omit<React.SVGProps<SVGPathElement>, 'ref' | 'color'> {
+  /**
+   * The SVG path of the element.
+   */
   d: string;
   /**
    * The props used for each component slot.
@@ -76,7 +94,8 @@ function AreaElement(props: AreaElementProps) {
   const store = useStore();
   const enablePositionBasedPointerInteraction = store.use(
     selectorChartExperimentalFeaturesState,
-  )?.enablePositionBasedPointerInteraction;
+    'enablePositionBasedPointerInteraction',
+  );
   const identifier = React.useMemo(() => ({ type: 'line' as const, seriesId }), [seriesId]);
   const interactionProps = useInteractionItemProps(identifier);
   const highlightState = useItemHighlightState(identifier);
@@ -91,7 +110,7 @@ function AreaElement(props: AreaElementProps) {
     isFaded,
     isHighlighted,
   };
-  const classes = useLineUtilityClasses();
+  const classes = useLineUtilityClasses(ownerState);
 
   const Area = slots?.area ?? AnimatedArea;
   const areaProps = useSlotProps({
@@ -113,15 +132,31 @@ function AreaElement(props: AreaElementProps) {
   return <Area {...other} {...areaProps} />;
 }
 
-AreaElement.propTypes = {
+AreaElement.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes: PropTypes.object,
+  /**
+   * The color of the area.
+   */
   color: PropTypes.string.isRequired,
+  /**
+   * The SVG path of the element.
+   */
   d: PropTypes.string.isRequired,
+  /**
+   * The id of the gradient used to color the element.
+   * The `gradientId` is used as `url(#gradientId)`.
+   */
   gradientId: PropTypes.string,
+  /**
+   * The id of the series the element belongs to.
+   */
   seriesId: PropTypes.string.isRequired,
   /**
    * If `true`, animations are skipped.

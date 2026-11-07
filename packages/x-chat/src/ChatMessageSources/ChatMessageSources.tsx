@@ -2,13 +2,12 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
+import type { SxProps, Theme } from '@mui/system';
 import useSlotProps from '@mui/utils/useSlotProps';
 import type { SlotComponentProps } from '@mui/utils/types';
 import { styled, createUseThemeProps } from '../internals/zero-styled';
-import {
-  useChatMessageSourcesUtilityClasses,
-  type ChatMessageSourcesClasses,
-} from './chatMessageSourcesClasses';
+import { useChatMessageSourcesUtilityClasses } from './chatMessageSourcesClasses';
+import type { ChatMessageSourcesClasses } from './chatMessageSourcesClasses';
 
 const useThemeProps = createUseThemeProps('MuiChatMessageSources');
 
@@ -69,10 +68,28 @@ export interface ChatMessageSourcesProps {
    * @default 'Sources'
    */
   label?: string;
+  /**
+   * The content of the component.
+   */
   children?: React.ReactNode;
   className?: string;
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
+  sx?: SxProps<Theme>;
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes?: Partial<ChatMessageSourcesClasses>;
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
   slots?: ChatMessageSourcesSlots;
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
   slotProps?: ChatMessageSourcesSlotProps;
 }
 
@@ -92,6 +109,7 @@ const ChatMessageSources = React.forwardRef(function ChatMessageSources(
     classes: classesProp,
     slots,
     slotProps,
+    sx,
     ...other
   } = props;
   const classes = useChatMessageSourcesUtilityClasses(classesProp);
@@ -108,6 +126,7 @@ const ChatMessageSources = React.forwardRef(function ChatMessageSources(
     additionalProps: {
       ref,
       className: clsx(classes.root, className),
+      sx,
     },
   });
 
@@ -137,12 +156,18 @@ const ChatMessageSources = React.forwardRef(function ChatMessageSources(
   );
 }) as ChatMessageSourcesComponent;
 
-ChatMessageSources.propTypes = {
+ChatMessageSources.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * The content of the component.
+   */
   children: PropTypes.node,
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes: PropTypes.object,
   className: PropTypes.string,
   /**
@@ -150,8 +175,24 @@ ChatMessageSources.propTypes = {
    * @default 'Sources'
    */
   label: PropTypes.string,
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
   slotProps: PropTypes.object,
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
   slots: PropTypes.object,
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
+  sx: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
+    PropTypes.func,
+    PropTypes.object,
+  ]),
 } as any;
 
 export { ChatMessageSources };

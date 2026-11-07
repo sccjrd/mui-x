@@ -1,21 +1,24 @@
 'use client';
 import * as React from 'react';
+import { useOnFirstRender } from '@base-ui/utils/useOnFirstRender';
+import { useValueAsRef } from '@base-ui/utils/useValueAsRef';
 import type { RefObject } from '@mui/x-internals/types';
-import {
-  gridRowTreeSelector,
-  useFirstRender,
-  type GridColDef,
-  type GridRenderCellParams,
-  type GridDataSourceGroupNode,
-  type GridRowId,
+import { gridRowTreeSelector } from '@mui/x-data-grid';
+import type {
+  GridColDef,
+  GridRenderCellParams,
+  GridDataSourceGroupNode,
+  GridRowId,
 } from '@mui/x-data-grid';
 import {
-  type GridPipeProcessor,
-  type GridRowsPartialUpdates,
   GridStrategyGroup,
-  type GridStrategyProcessor,
   useGridRegisterPipeProcessor,
   useGridRegisterStrategyProcessor,
+} from '@mui/x-data-grid/internals';
+import type {
+  GridPipeProcessor,
+  GridRowsPartialUpdates,
+  GridStrategyProcessor,
 } from '@mui/x-data-grid/internals';
 import {
   GRID_TREE_DATA_GROUPING_COL_DEF,
@@ -51,13 +54,16 @@ export const useGridDataSourceTreeDataPreProcessors = (
     | 'dataSource'
   >,
 ) => {
+  // Read lazily so processor re-registrations in the same commit see the new mode (#10251).
+  const isTreeDataActiveRef = useValueAsRef(!!props.treeData && !!props.dataSource);
+
   const setStrategyAvailability = React.useCallback(() => {
     privateApiRef.current.setStrategyAvailability(
       GridStrategyGroup.RowTree,
       TreeDataStrategy.DataSource,
-      props.treeData && props.dataSource ? () => true : () => false,
+      () => isTreeDataActiveRef.current,
     );
-  }, [privateApiRef, props.treeData, props.dataSource]);
+  }, [privateApiRef, isTreeDataActiveRef]);
 
   const getGroupingColDef = React.useCallback(() => {
     const groupingColDefProp = props.groupingColDef;
@@ -190,6 +196,7 @@ export const useGridDataSourceTreeDataPreProcessors = (
         defaultGroupingExpansionDepth: props.defaultGroupingExpansionDepth,
         isGroupExpandedByDefault: props.isGroupExpandedByDefault,
         groupingName: TreeDataStrategy.DataSource,
+        childrenOrder: params.updates.childrenOrder,
       });
     },
     [props.dataSource, props.defaultGroupingExpansionDepth, props.isGroupExpandedByDefault],
@@ -231,7 +238,7 @@ export const useGridDataSourceTreeDataPreProcessors = (
   /**
    * 1ST RENDER
    */
-  useFirstRender(() => {
+  useOnFirstRender(() => {
     setStrategyAvailability();
   });
 
@@ -245,5 +252,6 @@ export const useGridDataSourceTreeDataPreProcessors = (
     } else {
       isFirstRender.current = false;
     }
-  }, [setStrategyAvailability]);
+    // `setStrategyAvailability` is stable. These props trigger the `strategyAvailabilityChange` event.
+  }, [setStrategyAvailability, props.treeData, props.dataSource]);
 };

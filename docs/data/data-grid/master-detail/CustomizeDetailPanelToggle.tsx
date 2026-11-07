@@ -2,12 +2,14 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import {
-  DataGridPro,
+import type {
   GridColDef,
   GridRowsProp,
   GridRenderCellParams,
   GridRowParams,
+} from '@mui/x-data-grid-pro';
+import {
+  DataGridPro,
   useGridSelector,
   useGridApiContext,
   gridDetailPanelExpandedRowsContentCacheSelector,
@@ -85,7 +87,7 @@ function CustomDetailPanelToggle(props: Pick<GridRenderCellParams, 'id' | 'value
 
 const columns: GridColDef[] = [
   { field: 'id', headerName: 'Order ID' },
-  { field: 'customer', headerName: 'Customer', width: 200 },
+  { field: 'customer', headerName: 'Customer', width: 200, rowHeader: true },
   { field: 'date', type: 'date', headerName: 'Placed at' },
   { field: 'currency', headerName: 'Currency' },
   { field: 'total', type: 'number', headerName: 'Total' },

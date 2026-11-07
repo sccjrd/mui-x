@@ -111,6 +111,7 @@ const GridPanel = forwardRef<HTMLDivElement, GridPanelProps>((props, ref) => {
       clickAwayMouseEvent="onPointerUp"
       clickAwayTouchEvent={false}
       focusTrap
+      role="dialog"
       {...other}
       {...rootProps.slotProps?.basePopper}
       target={props.target ?? fallbackTarget}
@@ -123,7 +124,7 @@ const GridPanel = forwardRef<HTMLDivElement, GridPanelProps>((props, ref) => {
   );
 });
 
-GridPanel.propTypes = {
+GridPanel.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |

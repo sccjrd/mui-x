@@ -1,5 +1,5 @@
 'use client';
-import * as React from 'react';
+import type * as React from 'react';
 
 export interface MessageListRootOwnerState {
   messageCount: number;
@@ -7,6 +7,9 @@ export interface MessageListRootOwnerState {
 }
 
 export interface MessageListDateDividerOwnerState {
+  /**
+   * The id of the message.
+   */
   messageId: string;
   hasBoundary: boolean;
   label: React.ReactNode;

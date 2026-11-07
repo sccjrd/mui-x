@@ -1,12 +1,12 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import {
-  DataGridPro,
+import type {
   DataGridProProps,
   GridRowsProp,
   GridRowId,
   GridColDef,
 } from '@mui/x-data-grid-pro';
+import { DataGridPro } from '@mui/x-data-grid-pro';
 import {
   randomCreatedDate,
   randomCurrency,
@@ -53,7 +53,7 @@ export default function DetailPanelOneExpandedRow() {
 
 const columns: GridColDef[] = [
   { field: 'id', headerName: 'Order ID' },
-  { field: 'customer', headerName: 'Customer', width: 200 },
+  { field: 'customer', headerName: 'Customer', width: 200, rowHeader: true },
   { field: 'date', type: 'date', headerName: 'Placed at' },
   { field: 'currency', headerName: 'Currency' },
   { field: 'total', type: 'number', headerName: 'Total' },

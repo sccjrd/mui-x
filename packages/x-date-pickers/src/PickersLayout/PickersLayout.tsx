@@ -4,14 +4,11 @@ import PropTypes from 'prop-types';
 import clsx from 'clsx';
 import { styled, useThemeProps } from '@mui/material/styles';
 import composeClasses from '@mui/utils/composeClasses';
-import { PickerLayoutOwnerState, PickersLayoutProps } from './PickersLayout.types';
-import {
-  pickersLayoutClasses,
-  getPickersLayoutUtilityClass,
-  PickersLayoutClasses,
-} from './pickersLayoutClasses';
+import type { PickerLayoutOwnerState, PickersLayoutProps } from './PickersLayout.types';
+import type { PickersLayoutClasses } from './pickersLayoutClasses';
+import { pickersLayoutClasses, getPickersLayoutUtilityClass } from './pickersLayoutClasses';
 import usePickerLayout from './usePickerLayout';
-import { PickerValidValue } from '../internals/models';
+import type { PickerValidValue } from '../internals/models';
 import { usePickerContext } from '../hooks/usePickerContext';
 
 const useUtilityClasses = (
@@ -70,6 +67,20 @@ export const PickersLayoutRoot = styled('div', {
           gridColumn: 1,
           gridRow: '2 / 3',
         },
+      },
+    },
+    {
+      // Column 1 is empty, so a wide action bar must not grow it.
+      props: { pickerOrientation: 'portrait', hasShortcuts: false },
+      style: {
+        [`& .${pickersLayoutClasses.actionBar}`]: { gridColumn: '2 / 4' },
+      },
+    },
+    {
+      // In landscape, column 1 is empty when the toolbar is hidden (the default on desktop).
+      props: { pickerOrientation: 'landscape', hasShortcuts: false, hasToolbar: false },
+      style: {
+        [`& .${pickersLayoutClasses.actionBar}`]: { gridColumn: '2 / 4' },
       },
     },
     {
@@ -146,16 +157,22 @@ const PickersLayout = React.forwardRef(function PickersLayout<TValue extends Pic
   );
 }) as PickersLayoutComponent;
 
-PickersLayout.propTypes = {
+PickersLayout.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * The content rendered in the content area of the layout.
+   */
   children: PropTypes.node,
   /**
    * Override or extend the styles applied to the component.
    */
   classes: PropTypes.object,
+  /**
+   * A CSS class name applied to the root element.
+   */
   className: PropTypes.string,
   /**
    * The props used for each component slot.

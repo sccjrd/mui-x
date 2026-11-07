@@ -1,7 +1,8 @@
 import { useThemeProps } from '@mui/material/styles';
 import { useXAxes, useYAxes } from './useAxis';
-import { type TickItem, useTicks } from './useTicks';
-import { type AxisId } from '../models/axis';
+import { useTicks } from './useTicks';
+import type { TickItem } from './useTicks';
+import type { AxisId } from '../models/axis';
 import { defaultProps } from '../ChartsXAxis/utilities';
 
 /**
@@ -63,7 +64,7 @@ export function useYAxisTicks(axisId: AxisId): TickItem[] {
     tickLabelPlacement: defaultizedProps.tickLabelPlacement,
     tickSpacing: defaultizedProps.tickSpacing,
     direction: 'y',
-    // @ts-expect-error
+    // @ts-expect-error The base axis props omit ordinalTimeTicks, which is added by the Pro axis types.
     ordinalTimeTicks: defaultizedProps.ordinalTimeTicks,
   });
 }

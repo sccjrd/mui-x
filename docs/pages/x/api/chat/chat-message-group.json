@@ -1,8 +1,25 @@
 {
   "props": {
+    "messageId": { "type": { "name": "string" }, "required": true },
+    "children": { "type": { "name": "node" } },
     "groupKey": {
       "type": { "name": "func" },
       "default": "(message) => message.author?.id ?? message.role ?? ''"
+    },
+    "index": { "type": { "name": "number" } },
+    "items": { "type": { "name": "arrayOf", "description": "Array&lt;string&gt;" } },
+    "slotProps": { "type": { "name": "object" }, "default": "{}" },
+    "slots": {
+      "type": { "name": "object" },
+      "default": "{}",
+      "additionalInfo": { "slotsApi": true }
+    },
+    "sx": {
+      "type": {
+        "name": "union",
+        "description": "Array&lt;func<br>&#124;&nbsp;object<br>&#124;&nbsp;bool&gt;<br>&#124;&nbsp;func<br>&#124;&nbsp;object"
+      },
+      "additionalInfo": { "sx": true }
     }
   },
   "name": "ChatMessageGroup",
@@ -10,115 +27,59 @@
     "import { ChatMessageGroup } from '@mui/x-chat/ChatMessage';",
     "import { ChatMessageGroup } from '@mui/x-chat';"
   ],
-  "classes": [
+  "slots": [
     {
-      "key": "actions",
-      "className": "MuiChatMessageGroup-actions",
-      "description": "Styles applied to the message actions element.",
-      "isGlobal": false
+      "name": "messageGroup",
+      "description": "The per-author group wrapper around consecutive messages.",
+      "class": null
     },
     {
-      "key": "authorLabel",
-      "className": "MuiChatMessageGroup-authorLabel",
-      "description": "Styles applied to the message author label element.",
-      "isGlobal": false
+      "name": "streamingIndicator",
+      "description": "The animated dots shown while an assistant response is in flight: as a\ntrailing row while waiting for the response to start, then inside the\nassistant bubble while it streams. Controlled by\n`features.streamingIndicator` (`'auto'` by default). Pass `null` to hide it.",
+      "class": null
     },
     {
-      "key": "avatar",
-      "className": "MuiChatMessageGroup-avatar",
-      "description": "Styles applied to the message avatar element.",
-      "isGlobal": false
+      "name": "messageRoot",
+      "description": "Styled root of `<ChatMessage>` (wrapper-only); the default avatar/content/meta\ntree still renders inside it.",
+      "class": null
     },
     {
-      "key": "bubble",
-      "className": "MuiChatMessageGroup-bubble",
-      "description": "Styles applied to the message bubble element inside content.",
-      "isGlobal": false
+      "name": "messageAvatar",
+      "description": "Avatar component. Pass `null` to hide the avatar entirely and drop the\nreserved avatar grid track.",
+      "class": null
+    },
+    { "name": "messageContent", "description": "The message bubble component.", "class": null },
+    {
+      "name": "messageMeta",
+      "description": "External meta (compact variant). Pass `null` to hide.",
+      "class": null
     },
     {
-      "key": "content",
-      "className": "MuiChatMessageGroup-content",
-      "description": "Styles applied to the message content element.",
-      "isGlobal": false
+      "name": "messageInlineMeta",
+      "description": "Inline meta rendered inside the bubble (default variant). Pass `null` to hide.",
+      "class": null
     },
     {
-      "key": "dateDivider",
-      "className": "MuiChatMessageGroup-dateDivider",
-      "description": "Styles applied to the date divider element.",
-      "isGlobal": false
+      "name": "messageError",
+      "description": "Error card shown under the bubble when the message status is `error`.\nPass `null` to hide the error surface entirely (no component is mounted).",
+      "class": null
     },
     {
-      "key": "error",
-      "className": "Mui-error",
-      "description": "Applied when the message has an error status",
-      "isGlobal": true
+      "name": "messageActions",
+      "description": "Actions row component (receives `{ messageId }`). Pass `null` to hide\nactions entirely; omit to render only the declarative `extraActions` from\n`slotProps.messageActions` if provided.",
+      "class": null
     },
     {
-      "key": "group",
-      "className": "MuiChatMessageGroup-group",
-      "description": "Styles applied to the message group element.",
-      "isGlobal": false
-    },
-    {
-      "key": "groupAuthorName",
-      "className": "MuiChatMessageGroup-groupAuthorName",
-      "description": "Class applied to the group author name element.",
-      "isGlobal": false
-    },
-    {
-      "key": "groupTimestamp",
-      "className": "MuiChatMessageGroup-groupTimestamp",
-      "description": "Class applied to the group timestamp element (compact variant only).",
-      "isGlobal": false
-    },
-    {
-      "key": "inlineMeta",
-      "className": "MuiChatMessageGroup-inlineMeta",
-      "description": "Styles applied to the inline meta container element (default variant).",
-      "isGlobal": false
-    },
-    {
-      "key": "inlineMetaSpacer",
-      "className": "MuiChatMessageGroup-inlineMetaSpacer",
-      "description": "Styles applied to the inline meta spacer element (default variant).",
-      "isGlobal": false
-    },
-    {
-      "key": "meta",
-      "className": "MuiChatMessageGroup-meta",
-      "description": "Styles applied to the message meta element.",
-      "isGlobal": false
-    },
-    {
-      "key": "roleAssistant",
-      "className": "MuiChatMessageGroup-roleAssistant",
-      "description": "Applied when the message role is 'assistant'",
-      "isGlobal": false
-    },
-    {
-      "key": "roleUser",
-      "className": "MuiChatMessageGroup-roleUser",
-      "description": "Applied when the message role is 'user'",
-      "isGlobal": false
-    },
-    {
-      "key": "root",
-      "className": "MuiChatMessageGroup-root",
-      "description": "Styles applied to the message root element.",
-      "isGlobal": false
-    },
-    {
-      "key": "streaming",
-      "className": "MuiChatMessageGroup-streaming",
-      "description": "Applied while the message is streaming",
-      "isGlobal": false
+      "name": "messageAuthorName",
+      "description": "Author name label rendered by the group wrapper (default variant: above the\nbubble; compact variant: inside the message grid). Pass `null` to hide.",
+      "class": null
     }
   ],
+  "classes": [],
   "spread": true,
   "themeDefaultProps": null,
   "muiName": "MuiChatMessageGroup",
   "filename": "/packages/x-chat/src/ChatMessage/ChatMessageGroup.tsx",
   "inheritance": null,
-  "demos": "<ul><li><a href=\"/x/react-chat/basics/messages/\">Chat - Messages</a></li>\n<li><a href=\"/x/react-chat/display/message-appearance/\">Chat - Message Appearance</a></li></ul>",
-  "cssComponent": false
+  "demos": "<ul><li><a href=\"/x/react-chat/basics/messages/\">Chat - Messages</a></li>\n<li><a href=\"/x/react-chat/display/message-appearance/\">Chat - Message appearance</a></li></ul>"
 }

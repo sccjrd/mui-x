@@ -1,11 +1,17 @@
-import { type SeriesId } from '../../models/seriesType/common';
-import { type BarLabelFunction } from './BarLabel.types';
-import { type BarValueType } from '../../models/seriesType/bar';
+import type { SeriesId } from '../../models/seriesType/common';
+import type { BarLabelFunction } from './BarLabel.types';
+import type { BarValueType } from '../../models/seriesType/bar';
 
 export function getBarLabel(options: {
   barLabel: 'value' | BarLabelFunction;
   value: BarValueType | null;
+  /**
+   * The index of the data point in the series.
+   */
   dataIndex: number;
+  /**
+   * The id of the series the element belongs to.
+   */
   seriesId: SeriesId;
   height: number;
   width: number;

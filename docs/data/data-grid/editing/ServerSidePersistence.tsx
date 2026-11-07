@@ -1,18 +1,19 @@
 import * as React from 'react';
-import {
-  DataGrid,
+import type {
   GridRowModel,
   GridColDef,
   GridRowId,
   GridRowsProp,
 } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
 import {
   randomCreatedDate,
   randomTraderName,
   randomUpdatedDate,
 } from '@mui/x-data-grid-generator';
 import Snackbar from '@mui/material/Snackbar';
-import Alert, { AlertProps } from '@mui/material/Alert';
+import type { AlertProps } from '@mui/material/Alert';
+import Alert from '@mui/material/Alert';
 
 interface User {
   name: string;
@@ -85,7 +86,7 @@ export default function ServerSidePersistence() {
 }
 
 const columns: GridColDef[] = [
-  { field: 'name', headerName: 'Name', width: 180, editable: true },
+  { field: 'name', headerName: 'Name', width: 180, editable: true, rowHeader: true },
   {
     field: 'age',
     headerName: 'Age',

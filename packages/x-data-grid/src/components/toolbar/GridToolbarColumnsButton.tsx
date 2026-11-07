@@ -36,9 +36,9 @@ const GridToolbarColumnsButton = forwardRef<HTMLButtonElement, GridToolbarColumn
 
     const apiRef = useGridApiContext();
     const rootProps = useGridRootProps();
-    const { columnsPanelTriggerRef } = useGridPanelContext();
+    const { triggers } = useGridPanelContext();
     const preferencePanel = useGridSelector(apiRef, gridPreferencePanelStateSelector);
-    const handleRef = useForkRef(ref, columnsPanelTriggerRef);
+    const handleRef = useForkRef(ref, triggers.columnsPanel.setRef);
 
     const showColumns = (event: React.MouseEvent<HTMLButtonElement>) => {
       if (
@@ -75,7 +75,7 @@ const GridToolbarColumnsButton = forwardRef<HTMLButtonElement, GridToolbarColumn
           id={columnButtonId}
           size="small"
           aria-label={apiRef.current.getLocaleText('toolbarColumnsLabel')}
-          aria-haspopup="menu"
+          aria-haspopup="dialog"
           aria-expanded={isOpen}
           aria-controls={isOpen ? columnPanelId : undefined}
           startIcon={<rootProps.slots.columnSelectorIcon />}
@@ -97,7 +97,7 @@ const GridToolbarColumnsButton = forwardRef<HTMLButtonElement, GridToolbarColumn
   },
 );
 
-GridToolbarColumnsButton.propTypes = {
+GridToolbarColumnsButton.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |

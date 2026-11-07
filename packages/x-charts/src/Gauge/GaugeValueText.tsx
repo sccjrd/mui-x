@@ -2,7 +2,8 @@
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
 import { useGaugeState } from './GaugeProvider';
-import { ChartsText, type ChartsTextProps } from '../ChartsText';
+import { ChartsText } from '../ChartsText';
+import type { ChartsTextProps } from '../ChartsText';
 import { gaugeClasses } from './gaugeClasses';
 
 export interface GaugeFormatterParams {
@@ -12,6 +13,10 @@ export interface GaugeFormatterParams {
 }
 
 export interface GaugeValueTextProps extends Omit<ChartsTextProps, 'text'> {
+  /**
+   * The text displayed in the gauge.
+   * A function receives the gauge value and its limits, and returns the text.
+   */
   text?: string | ((params: GaugeFormatterParams) => string | null);
 }
 
@@ -42,7 +47,7 @@ function GaugeValueText(props: GaugeValueTextProps) {
   );
 }
 
-GaugeValueText.propTypes = {
+GaugeValueText.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -56,11 +61,18 @@ GaugeValueText.propTypes = {
    * @default false
    */
   needsComputation: PropTypes.bool,
+  /**
+   * @ignore
+   */
   ownerState: PropTypes.any,
   /**
    * Style applied to text elements.
    */
   style: PropTypes.object,
+  /**
+   * The text displayed in the gauge.
+   * A function receives the gauge value and its limits, and returns the text.
+   */
   text: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
 } as any;
 

@@ -1,11 +1,8 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
-import {
-  DataGridPremium,
-  GridColDef,
-  DataGridPremiumProps,
-} from '@mui/x-data-grid-premium';
+import type { GridColDef, DataGridPremiumProps } from '@mui/x-data-grid-premium';
+import { DataGridPremium } from '@mui/x-data-grid-premium';
 
 interface Row {
   id: number;
@@ -61,7 +58,13 @@ const rows: Row[] = [
 
 const columns: GridColDef<Row>[] = [
   { field: 'id', headerName: 'ID', width: 70 },
-  { field: 'product', headerName: 'Product', width: 150, editable: true },
+  {
+    field: 'product',
+    headerName: 'Product',
+    width: 150,
+    editable: true,
+    rowHeader: true,
+  },
   { field: 'quantity', headerName: 'Quantity', width: 120, editable: true },
   { field: 'price', headerName: 'Price', width: 120, editable: true },
   {

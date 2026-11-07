@@ -2,18 +2,31 @@ import * as React from 'react';
 import { area as d3Area } from '@mui/x-charts-vendor/d3-shape';
 import { useChartGradientIdBuilder } from '../hooks/useChartGradientId';
 import { isOrdinalScale } from '../internals/scaleGuards';
-import { type ComputedAxisConfig } from '../internals/plugins/featurePlugins/useChartCartesianAxis';
+import type { ComputedAxisConfig } from '../internals/plugins/featurePlugins/useChartCartesianAxis';
 import { getCurveFactory } from '../internals/getCurve';
-import { type ChartsXAxisProps, type ChartsYAxisProps } from '../models';
+import type { ChartsXAxisProps, ChartsYAxisProps } from '../models';
 import { getValueToPositionMapper, useLineSeriesContext, useXAxes, useYAxes } from '../hooks';
 import { DEFAULT_X_AXIS_KEY } from '../constants';
-import { type SeriesId } from '../models/seriesType/common';
+import type { SeriesId } from '../models/seriesType/common';
 
 interface AreaPlotDataPoint {
+  /**
+   * The SVG path of the element.
+   */
   d: string;
+  /**
+   * The id of the series the element belongs to.
+   */
   seriesId: SeriesId;
+  /**
+   * The color of the element.
+   */
   color: string;
   area?: boolean;
+  /**
+   * The id of the gradient used to color the element.
+   * The `gradientId` is used as `url(#gradientId)`.
+   */
   gradientId?: string;
 }
 

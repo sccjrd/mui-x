@@ -1,11 +1,17 @@
 # The best pattern to follow is ignoring editor files in a global .gitignore configuration file.
 # However, in order to prevent issues, editor files are ignored here.
 .idea
-.vscode
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 .cursor
 .claude/settings.local.json
 .claude/worktrees/
+.claude/agents/
+.claude/helpers/
+.claude/commands/
 .claude/scheduled_tasks.lock
+.claude-flow
 .junie
 
 __diff_output__
@@ -19,7 +25,8 @@ __diff_output__
 !/docs/pages/playground/tsconfig.json
 /docs/.env.local
 /docs/export/
-/docs/public/x/
+/docs/public/x/*
+!/docs/public/x/sw.js
 /docs/public/chat/
 /test/regressions/screenshots/
 /test/performance-charts/benchmarks/

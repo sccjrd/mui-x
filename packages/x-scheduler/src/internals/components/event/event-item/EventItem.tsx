@@ -2,22 +2,24 @@
 import * as React from 'react';
 import clsx from 'clsx';
 import { styled } from '@mui/material/styles';
-import { useId } from '@base-ui/utils/useId';
 import { useStore } from '@base-ui/utils/store';
 import RepeatRounded from '@mui/icons-material/RepeatRounded';
 import {
   schedulerEventSelectors,
   schedulerOtherSelectors,
-  schedulerResourceSelectors,
 } from '@mui/x-scheduler-internals/scheduler-selectors';
 import { Button } from '@base-ui/react/button';
-import { useAdapterContext } from '@mui/x-scheduler-internals/use-adapter-context';
 import { useEventCalendarStoreContext } from '@mui/x-scheduler-internals/use-event-calendar-store-context';
-import { SchedulerEventOccurrence } from '@mui/x-scheduler-internals/models';
-import { EventItemProps } from './EventItem.types';
+import type { SchedulerEventOccurrence } from '@mui/x-scheduler-internals/models';
+import { formatMonthShortAndDayOfMonth, toPlainDate } from '@mui/x-scheduler-internals/internals';
+import { useEventAccessibleName } from '../../../hooks/useEventAccessibleName';
+import type { EventItemProps } from './EventItem.types';
 import { useFormatTime } from '../../../hooks/useFormatTime';
 import { useEventCalendarStyledContext } from '../../../../event-calendar/EventCalendarStyledContext';
-import { getPaletteVariants, PaletteName } from '../../../utils/tokens';
+import type { PaletteName } from '../../../utils/tokens';
+import { getPaletteVariants } from '../../../utils/tokens';
+import { getArrowEdgeStyles, getArrowFocusVisibleStyles } from '../arrowClips';
+import { isOccurrenceMultiDay } from '../../../utils/event-utils';
 
 const EventItemCard = styled('div', {
   name: 'MuiEventCalendar',
@@ -25,6 +27,7 @@ const EventItemCard = styled('div', {
 })<{ 'data-variant'?: 'compact' | 'filled' | 'regular'; palette?: PaletteName }>(({ theme }) => ({
   padding: 0,
   borderRadius: theme.shape.borderRadius,
+  cursor: 'pointer',
   '&:hover': {
     backgroundColor: (theme.vars || theme).palette.action.hover,
   },
@@ -34,7 +37,6 @@ const EventItemCard = styled('div', {
   },
   '&[data-variant="compact"], &[data-variant="regular"]': {
     containerType: 'inline-size',
-    cursor: 'pointer',
     height: 'fit-content',
   },
   '&[data-variant="filled"]': {
@@ -50,9 +52,8 @@ const EventItemCard = styled('div', {
         backgroundColor: 'var(--event-surface-selected-hover)',
       },
     },
-  },
-  '&[data-variant="regular"]': {
-    cursor: 'pointer',
+    ...getArrowEdgeStyles(theme),
+    ...getArrowFocusVisibleStyles(theme.shape.borderRadius),
   },
   '&[data-editing]': {
     backgroundColor: 'var(--event-surface-selected)',
@@ -83,7 +84,7 @@ const EventItemTitle = styled('span', {
   margin: 0,
   color: (theme.vars || theme).palette.text.primary,
   fontWeight: theme.typography.fontWeightMedium,
-  fontSize: theme.typography.caption.fontSize,
+  fontSize: 'var(--EventCalendar-fontSize-eventTitle, 0.75rem)',
   lineHeight: 1.43,
   '[data-editing] &': {
     color: 'var(--event-on-surface-selected)',
@@ -164,102 +165,64 @@ export const EventItem = React.forwardRef(function EventItem(
   props: EventItemProps,
   forwardedRef: React.ForwardedRef<HTMLDivElement>,
 ) {
-  const {
-    occurrence,
-    ariaLabelledBy,
-    id: idProp,
-    variant = 'regular',
-    className,
-    onClick,
-    ...other
-  } = props;
+  const { occurrence, date, variant = 'regular', className, onClick, ...other } = props;
 
   // Context hooks
   const { classes, localeText } = useEventCalendarStyledContext();
   const store = useEventCalendarStoreContext();
-  const isEditing = useStore(store, schedulerOtherSelectors.isEditedEvent, occurrence.id);
-
-  // State hooks
-  const id = useId(idProp);
+  const isEditing = useStore(store, schedulerOtherSelectors.isEditedOccurrence, occurrence.key);
 
   // Selector hooks
-  const resource = useStore(
-    store,
-    schedulerResourceSelectors.processedResource,
-    occurrence.resource,
-  );
-  const color = useStore(store, schedulerEventSelectors.color, occurrence.id);
+  const color = useStore(store, schedulerEventSelectors.color, occurrence.id, undefined);
   const isRecurring = useStore(store, schedulerEventSelectors.isRecurring, occurrence.id);
 
   const formatTime = useFormatTime();
+  const accessibleName = useEventAccessibleName({
+    occurrence,
+    isRecurring,
+    localeText,
+  });
+
+  // The keys of the processed dates only depend on their day in the display timezone.
+  const { start, end } = occurrence.displayTimezone;
+  const startsBeforeDay = start.key !== date.key && start.timestamp < date.timestamp;
+  const endsAfterDay = end.key !== date.key && end.timestamp > date.timestamp;
 
   const content = React.useMemo(() => {
     switch (variant) {
       case 'compact':
         return (
           <React.Fragment>
-            <ResourceLegendColor
-              className={classes.resourceLegendColor}
-              role="img"
-              aria-label={
-                resource?.title
-                  ? localeText.resourceAriaLabel(resource.title)
-                  : localeText.noResourceAriaLabel
-              }
-            />
+            <ResourceLegendColor className={classes.resourceLegendColor} aria-hidden="true" />
             <EventItemLinesClamp
               className={classes.eventItemLinesClamp}
               style={{ '--number-of-lines': 1 } as React.CSSProperties}
             >
               <EventItemCardContent className={classes.eventItemCardContent}>
                 <EventItemTime className={classes.eventItemTime} data-compact>
-                  <span>{formatTime(occurrence.displayTimezone.start.value)}</span>
+                  <span>{formatTime(occurrence.displayTimezone.start)}</span>
                 </EventItemTime>
                 <EventItemTitle className={classes.eventItemTitle}>
                   {occurrence.title}
                 </EventItemTitle>
               </EventItemCardContent>
             </EventItemLinesClamp>
-            {isRecurring && (
-              <EventItemRecurringIcon
-                className={classes.eventItemRecurringIcon}
-                aria-hidden="true"
-                fontSize="small"
-              />
-            )}
           </React.Fragment>
         );
 
       case 'filled':
         return (
-          <React.Fragment>
-            <EventItemLinesClamp
-              className={classes.eventItemLinesClamp}
-              style={{ '--number-of-lines': 1 } as React.CSSProperties}
-            >
-              <EventItemTitle className={classes.eventItemTitle}>{occurrence.title}</EventItemTitle>
-            </EventItemLinesClamp>
-            {isRecurring && (
-              <EventItemRecurringIcon
-                className={classes.eventItemRecurringIcon}
-                aria-hidden="true"
-                fontSize="small"
-              />
-            )}
-          </React.Fragment>
+          <EventItemLinesClamp
+            className={classes.eventItemLinesClamp}
+            style={{ '--number-of-lines': 1 } as React.CSSProperties}
+          >
+            <EventItemTitle className={classes.eventItemTitle}>{occurrence.title}</EventItemTitle>
+          </EventItemLinesClamp>
         );
       case 'regular':
         return (
           <React.Fragment>
-            <ResourceLegendColor
-              className={classes.resourceLegendColor}
-              role="img"
-              aria-label={
-                resource?.title
-                  ? localeText.resourceAriaLabel(resource.title)
-                  : localeText.noResourceAriaLabel
-              }
-            />
+            <ResourceLegendColor className={classes.resourceLegendColor} aria-hidden="true" />
             <EventItemLinesClamp
               className={classes.eventItemLinesClamp}
               style={{ '--number-of-lines': 1 } as React.CSSProperties}
@@ -271,13 +234,6 @@ export const EventItem = React.forwardRef(function EventItem(
                 </EventItemTitle>
               </EventItemCardContent>
             </EventItemLinesClamp>
-            {isRecurring && (
-              <EventItemRecurringIcon
-                className={classes.eventItemRecurringIcon}
-                aria-hidden="true"
-                fontSize="small"
-              />
-            )}
           </React.Fragment>
         );
       default:
@@ -287,7 +243,7 @@ export const EventItem = React.forwardRef(function EventItem(
             'Check the component documentation for supported variants.',
         );
     }
-  }, [variant, resource?.title, localeText, formatTime, occurrence, isRecurring, classes]);
+  }, [variant, formatTime, occurrence, classes]);
 
   return (
     <Button
@@ -296,11 +252,16 @@ export const EventItem = React.forwardRef(function EventItem(
       render={
         <EventItemCard
           ref={forwardedRef}
-          id={id}
           data-variant={variant}
           data-palette={color}
           data-editing={isEditing || undefined}
-          aria-labelledby={`${ariaLabelledBy} ${id}`}
+          // Read by the agenda's delete-focus fallback (`captureFocusFallback`).
+          data-event-id={occurrence.id}
+          // Read by the agenda's delete-focus fallback (`captureFocusFallback`).
+          data-occurrence-timestamp={occurrence.dataTimezone.start.timestamp}
+          aria-label={accessibleName}
+          {...(startsBeforeDay ? { 'data-starting-before-edge': '' } : {})}
+          {...(endsAfterDay ? { 'data-ending-after-edge': '' } : {})}
           {...other}
           className={clsx(className, classes.eventItemCard, occurrence.className)}
         />
@@ -308,6 +269,13 @@ export const EventItem = React.forwardRef(function EventItem(
     >
       <EventItemCardWrapper className={classes.eventItemCardWrapper} data-variant={variant}>
         {content}
+        {isRecurring && (
+          <EventItemRecurringIcon
+            className={classes.eventItemRecurringIcon}
+            aria-hidden="true"
+            fontSize="small"
+          />
+        )}
       </EventItemCardWrapper>
     </Button>
   );
@@ -319,17 +287,16 @@ function MultiDayDateLabel(props: {
 }) {
   const { occurrence, formatTime } = props;
 
-  const adapter = useAdapterContext();
+  const store = useEventCalendarStoreContext();
+  const locale = useStore(store, schedulerOtherSelectors.dateLocale);
   const { classes, localeText } = useEventCalendarStyledContext();
 
-  if (
-    !adapter.isSameDay(occurrence.displayTimezone.start.value, occurrence.displayTimezone.end.value)
-  ) {
-    const format = `${adapter.formats.dayOfMonth} ${adapter.formats.month3Letters}`;
+  if (isOccurrenceMultiDay(occurrence)) {
+    const { end, timezone } = occurrence.displayTimezone;
     return (
       <EventItemTime className={classes.eventItemTime} as="span">
         {localeText.eventItemMultiDayLabel(
-          adapter.formatByString(occurrence.displayTimezone.end.value, format),
+          formatMonthShortAndDayOfMonth(locale, toPlainDate(end.timestamp, timezone)),
         )}
       </EventItemTime>
     );
@@ -343,8 +310,8 @@ function MultiDayDateLabel(props: {
   }
   return (
     <EventItemTime className={classes.eventItemTime}>
-      <span>{formatTime(occurrence.displayTimezone.start.value)}</span>
-      <span> - {formatTime(occurrence.displayTimezone.end.value)}</span>
+      <span>{formatTime(occurrence.displayTimezone.start)}</span>
+      <span> - {formatTime(occurrence.displayTimezone.end)}</span>
     </EventItemTime>
   );
 }

@@ -1,15 +1,17 @@
 'use client';
 import * as React from 'react';
-import { ErrorContainerClasses } from './error-container/errorContainerClasses';
-import { EventSkeletonClasses } from './event-skeleton/eventSkeletonClasses';
+import type { ErrorContainerClasses } from './error-container/errorContainerClasses';
+import type { EventSkeletonClasses } from './event-skeleton/eventSkeletonClasses';
+import type { SchedulerErrorLocaleText } from '../../models/translations';
 
 /**
- * Styling injected by the consuming product into the shared internal components
- * (e.g. `ErrorContainer`, `EventSkeleton`) so they stay decoupled from any
+ * Styling and translations injected by the consuming product into the shared internal
+ * components (e.g. `ErrorContainer`, `EventSkeleton`) so they stay decoupled from any
  * product-specific styled context.
  */
 export interface SharedComponentsStyledContextValue {
   classes: ErrorContainerClasses & EventSkeletonClasses;
+  localeText: SchedulerErrorLocaleText;
 }
 
 export const SharedComponentsStyledContext =

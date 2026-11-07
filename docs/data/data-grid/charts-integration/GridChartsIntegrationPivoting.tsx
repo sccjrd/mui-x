@@ -1,12 +1,11 @@
 import * as React from 'react';
+import type { GridEventListener, GridPivotModel } from '@mui/x-data-grid-premium';
 import {
   DataGridPremium,
   GridChartsPanel,
   GridChartsIntegrationContextProvider,
   GridChartsRendererProxy,
   gridColumnGroupsUnwrappedModelSelector,
-  GridEventListener,
-  GridPivotModel,
   useGridApiRef,
 } from '@mui/x-data-grid-premium';
 import {
@@ -20,6 +19,7 @@ export default function GridChartsIntegrationPivoting() {
     dataSet: 'Commodity',
     rowLength: 1000,
     editable: true,
+    multiSelect: true,
   });
   const apiRef = useGridApiRef();
 

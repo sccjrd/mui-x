@@ -1,29 +1,31 @@
 import * as React from 'react';
+import type {
+  GridColDef,
+  GridRowModel,
+  GridPivotModel,
+  DataGridPremiumProps,
+  GridChartsPanelProps,
+  GridEventListener,
+} from '@mui/x-data-grid-premium';
 import {
   DataGridPremium,
   GridChartsPanel,
   GridChartsIntegrationContextProvider,
   GridChartsRendererProxy,
   GridSidebarValue,
-  GridColDef,
-  GridRowModel,
-  GridPivotModel,
-  DataGridPremiumProps,
-  GridChartsPanelProps,
   useGridApiRef,
-  GridEventListener,
   gridColumnGroupsUnwrappedModelSelector,
 } from '@mui/x-data-grid-premium';
+import type { GridChartsConfigurationSection } from '@mui/x-charts-premium/ChartsRenderer';
 import {
   ChartsRenderer,
   configurationOptions,
-  GridChartsConfigurationSection,
 } from '@mui/x-charts-premium/ChartsRenderer';
 import { downloads } from './dataset';
 
 const columns: GridColDef[] = [
   { field: 'id', chartable: false },
-  { field: 'timestamp', headerName: 'Timestamp', type: 'date' },
+  { field: 'timestamp', headerName: 'Timestamp', type: 'date', rowHeader: true },
   { field: 'version', headerName: 'Version', width: 100 },
   { field: 'downloads', headerName: 'Downloads', type: 'number' },
 ];

@@ -1,4 +1,4 @@
-import { type RefObject } from '@mui/x-internals/types';
+import type { RefObject } from '@mui/x-internals/types';
 import { createRenderer, fireEvent, screen, act, reactMajor } from '@mui/internal-test-utils';
 import {
   getCell,
@@ -9,19 +9,21 @@ import {
 } from 'test/utils/helperFn';
 import { fireUserEvent } from 'test/utils/fireUserEvent';
 import * as React from 'react';
-import { spy } from 'sinon';
 import {
   DataGridPro,
-  type DataGridProProps,
   GRID_TREE_DATA_GROUPING_FIELD,
-  type GridApi,
-  type GridGroupNode,
   GridLogicOperator,
-  type GridRowsProp,
   useGridApiRef,
-  type GridPaginationModel,
-  type GridColDef,
 } from '@mui/x-data-grid-pro';
+import type {
+  DataGridProProps,
+  GridApi,
+  GridGroupNode,
+  GridRowsProp,
+  GridPaginationModel,
+  GridColDef,
+} from '@mui/x-data-grid-pro';
+import { vi, describe, it, expect } from 'vitest';
 
 const isJSDOM = /jsdom/.test(window.navigator.userAgent);
 
@@ -93,6 +95,28 @@ describe('<DataGridPro /> - Tree data', () => {
       expect(getColumnHeadersTextContent()).to.deep.equal(['Group', 'name']);
       expect(getColumnValues(1)).to.deep.equal(['A', 'B', 'C']);
       setProps({ treeData: false });
+      expect(getColumnHeadersTextContent()).to.deep.equal(['name']);
+      expect(getColumnValues(0)).to.deep.equal([
+        'A',
+        'A.A',
+        'A.B',
+        'B',
+        'B.A',
+        'B.B',
+        'B.B.A',
+        'B.B.A.A',
+        'C',
+      ]);
+    });
+
+    // See https://github.com/mui/mui-x/issues/10251
+    it('should support toggling treeData and getTreeDataPath together', () => {
+      const { setProps } = render(<Test treeData={false} getTreeDataPath={undefined} />);
+      expect(getColumnHeadersTextContent()).to.deep.equal(['name']);
+      setProps({ treeData: true, getTreeDataPath: baselineProps.getTreeDataPath });
+      expect(getColumnHeadersTextContent()).to.deep.equal(['Group', 'name']);
+      expect(getColumnValues(1)).to.deep.equal(['A', 'B', 'C']);
+      setProps({ treeData: false, getTreeDataPath: undefined });
       expect(getColumnHeadersTextContent()).to.deep.equal(['name']);
       expect(getColumnValues(0)).to.deep.equal([
         'A',
@@ -299,16 +323,16 @@ describe('<DataGridPro /> - Tree data', () => {
 
   describe('prop: isGroupExpandedByDefault', () => {
     it('should expand groups according to isGroupExpandedByDefault when defined', () => {
-      const isGroupExpandedByDefault = spy((node: GridGroupNode) => node.id === 'A');
+      const isGroupExpandedByDefault = vi.fn((node: GridGroupNode) => node.id === 'A');
 
       render(<Test isGroupExpandedByDefault={isGroupExpandedByDefault} />);
-      expect(isGroupExpandedByDefault.callCount).to.equal(reactMajor >= 19 ? 4 : 8); // Should not be called on leaves
+      expect(isGroupExpandedByDefault.mock.calls.length).to.equal(reactMajor >= 19 ? 4 : 8); // Should not be called on leaves
       const { childrenExpanded, children, childrenFromPath, ...node } = apiRef.current?.state.rows
         .tree.A as GridGroupNode;
-      const callForNodeA = isGroupExpandedByDefault
-        .getCalls()
-        .find((call) => call.firstArg.id === node.id)!;
-      expect(callForNodeA.firstArg).to.deep.includes(node);
+      const callForNodeA = isGroupExpandedByDefault.mock.calls.find(
+        (call) => call[0].id === node.id,
+      )!;
+      expect(callForNodeA[0]).to.deep.includes(node);
       expect(getColumnValues(1)).to.deep.equal(['A', 'A.A', 'A.B', 'B', 'C']);
     });
 
@@ -421,6 +445,7 @@ describe('<DataGridPro /> - Tree data', () => {
       render(<Test />);
       const columnsHeader = getColumnHeadersTextContent();
       expect(columnsHeader).to.deep.equal(['Group', 'name']);
+      expect(getCell(0, 0)).to.have.attribute('role', 'rowheader');
     });
 
     it('should render a toggling icon only when a row has children', () => {

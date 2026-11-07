@@ -1,21 +1,113 @@
+import type { TemporalSupportedObject } from '@base-ui/react/internals/temporal';
 import type { EventCalendarState } from '../use-event-calendar';
-import type { TemporalSupportedObject } from '../base-ui-copy/types';
-import { SchedulerProcessedDate } from './event';
+import type { SchedulerProcessedDay } from './event';
+import type { BaseTemporal } from '../internals/utils/base-temporal';
 
 export type CalendarView = 'day' | 'week' | 'month' | 'agenda';
 
 /**
- * Configuration defined by each view.
+ * Which timed events are rendered in the time grid of the `day` and `week` views.
+ */
+export type EventCalendarTimeGridEvents = 'shorter-than-one-day' | 'same-day-only';
+
+/**
+ * Definition provided by each view.
  * This is used to determine how the components outside of the view should behave based on the current view.
  */
-export interface EventCalendarViewConfig {
+export interface EventCalendarViewDefinition {
   siblingVisibleDateGetter: (
     parameters: SiblingVisibleDateGetterParameters,
   ) => TemporalSupportedObject;
-  visibleDaysSelector: (state: EventCalendarState) => SchedulerProcessedDate[];
+  visibleDaysSelector: (state: EventCalendarState) => SchedulerProcessedDay[];
+  /**
+   * The range to fetch from the data source.
+   * Defaults to the span of the visible days.
+   */
+  fetchRangeSelector?: (state: EventCalendarState) => EventCalendarFetchRange;
+}
+
+export interface EventCalendarFetchRange {
+  /**
+   * The first day to fetch, read in the display timezone.
+   */
+  start: BaseTemporal.PlainDate;
+  /**
+   * The last day to fetch, read in the display timezone.
+   */
+  end: BaseTemporal.PlainDate;
 }
 
 interface SiblingVisibleDateGetterParameters {
   state: EventCalendarState;
   delta: 1 | -1;
+}
+
+/**
+ * Per-view user configuration for the time-grid based views (`day` and `week`).
+ */
+export interface EventCalendarTimeGridViewConfig {
+  /**
+   * Inclusive start of the displayed hour range.
+   * Must be a whole hour between 0 and 24, lower than `endTime`; otherwise the
+   * full day is displayed and a warning is logged in development.
+   * @default 0
+   */
+  startTime?: number;
+  /**
+   * Exclusive end of the displayed hour range: the last rendered hour cell is
+   * `endTime - 1`, so `{ startTime: 8, endTime: 20 }` renders the cells 8 AM through
+   * 7 PM and displays the 08:00–20:00 window (an event ending exactly at 20:00 is
+   * still fully visible).
+   * Must be a whole hour between 0 and 24, greater than `startTime`; otherwise the
+   * full day is displayed and a warning is logged in development.
+   * @default 24
+   */
+  endTime?: number;
+  /**
+   * Hour the time grid scrolls to when it mounts.
+   * Must be a displayed hour (`startTime` to `endTime - 1`); otherwise the default applies
+   * and a warning is logged in development.
+   * @default 7 when it is a displayed hour, otherwise `startTime`
+   */
+  initialScrollTime?: number;
+  /**
+   * Which timed events are rendered in the time grid, the others go to the day grid above it.
+   * - `'shorter-than-one-day'`: timed events shorter than one day, split across the days they cover.
+   * - `'same-day-only'`: timed events that start and end on the same day.
+   * @default 'shorter-than-one-day'
+   */
+  timeGridEvents?: EventCalendarTimeGridEvents;
+}
+
+/**
+ * Per-view user configuration for the `agenda` view.
+ */
+export interface EventCalendarAgendaViewConfig {
+  /**
+   * How many days the agenda displays, which is also how far the navigation moves.
+   * Use `'month'` to display the month of the visible date and navigate one month at a time;
+   * when the empty days are hidden, only the days of that month are shown.
+   * Must be a positive whole number or `'month'`; otherwise the default applies and a
+   * warning is logged in development.
+   * @default 12
+   */
+  dayCount?: number | 'month';
+}
+
+/**
+ * User configuration applied to each view, keyed by the view name.
+ */
+export interface EventCalendarViewConfig {
+  /**
+   * Configuration applied to the `day` view.
+   */
+  day?: EventCalendarTimeGridViewConfig;
+  /**
+   * Configuration applied to the `week` view.
+   */
+  week?: EventCalendarTimeGridViewConfig;
+  /**
+   * Configuration applied to the `agenda` view.
+   */
+  agenda?: EventCalendarAgendaViewConfig;
 }

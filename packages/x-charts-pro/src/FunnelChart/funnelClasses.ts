@@ -1,7 +1,7 @@
 import generateUtilityClass from '@mui/utils/generateUtilityClass';
 import composeClasses from '@mui/utils/composeClasses';
 import generateUtilityClasses from '@mui/utils/generateUtilityClasses';
-import { type SeriesId } from '@mui/x-charts/internals';
+import type { SeriesId } from '@mui/x-charts/internals';
 
 export interface FunnelClasses {
   /** Styles applied to the funnel plot element. */
@@ -24,6 +24,9 @@ export interface FunnelSectionOwnerState {
   color: string;
   isFaded: boolean;
   isHighlighted: boolean;
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes?: Partial<FunnelClasses>;
 }
 
@@ -43,6 +46,9 @@ export const funnelClasses: FunnelClasses = generateUtilityClasses('MuiFunnelCha
 
 export interface UseUtilityClassesOptions {
   variant?: 'filled' | 'outlined';
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes?: Partial<FunnelClasses>;
 }
 

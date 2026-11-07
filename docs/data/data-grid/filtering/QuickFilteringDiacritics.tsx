@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { DataGrid, GridColDef, GridFilterModel } from '@mui/x-data-grid';
+import type { GridColDef, GridFilterModel } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
 
@@ -13,7 +14,7 @@ const rows = [
   { id: 0, string: 'Café', date: new Date(2023, 1, 1), singleSelect: 'Jalapeño' },
 ];
 const columns: GridColDef[] = [
-  { field: 'string', width: 100 },
+  { field: 'string', width: 100, rowHeader: true },
   {
     field: 'date',
     type: 'date',

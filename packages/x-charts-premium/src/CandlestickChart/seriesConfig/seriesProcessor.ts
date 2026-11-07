@@ -1,7 +1,8 @@
 import { warnOnce } from '@mui/x-internals/warning';
-import { type SeriesId } from '@mui/x-charts/models';
-import { incompleteDatasetKeysError, type SeriesProcessor } from '@mui/x-charts/internals';
-import { type DefaultizedOHLCSeriesType } from '../../models';
+import type { SeriesId } from '@mui/x-charts/models';
+import { incompleteDatasetKeysError } from '@mui/x-charts/internals';
+import type { SeriesProcessor } from '@mui/x-charts/internals';
+import type { DefaultizedOHLCSeriesType } from '../../models';
 
 const candlestickValueFormatter: DefaultizedOHLCSeriesType['valueFormatter'] = (v) =>
   v == null ? '' : v.toLocaleString();
@@ -49,10 +50,12 @@ Either provide a data property to the series or use the dataset prop.`,
           if (process.env.NODE_ENV !== 'production') {
             for (const key of ['open', 'high', 'low', 'close'] as const) {
               if (d[datasetKeys[key]] !== null && typeof d[datasetKeys[key]] !== 'number') {
-                warnOnce([
-                  `MUI X Charts: Your dataset key "${key}" is used for plotting a candlestick, but contains non-numerical elements.`,
-                  'Candlestick charts only support numbers.',
-                ]);
+                warnOnce(
+                  [
+                    `MUI X Charts: Your dataset key "${key}" is used for plotting a candlestick, but contains non-numerical elements.`,
+                    'Candlestick charts only support numbers.',
+                  ].join('\n'),
+                );
               }
             }
           }

@@ -2,30 +2,45 @@
 import * as React from 'react';
 import clsx from 'clsx';
 import { styled } from '@mui/material/styles';
-import { type DefaultizedScatterSeriesType } from '../models/seriesType/scatter';
-import { type D3Scale } from '../models/axis';
+import type { DefaultizedScatterSeriesType } from '../models/seriesType/scatter';
+import type { D3Scale } from '../models/axis';
 import { useUtilityClasses } from './scatterClasses';
 import type { ScatterClasses } from './scatterClasses';
 import { useChartsContext } from '../context/ChartsProvider';
 import { getValueToPositionMapper } from '../hooks/getValueToPositionMapper';
-import { type ColorGetter } from '../internals/plugins/corePlugins/useChartSeriesConfig';
+import type { ColorGetter } from '../internals/plugins/corePlugins/useChartSeriesConfig';
 import type { ScatterSizeGetter } from './seriesConfig/getMarkerSize';
 import {
   selectorChartIsSeriesFaded,
   selectorChartIsSeriesHighlighted,
   selectorChartSeriesUnfadedItem,
   selectorChartSeriesHighlightedItem,
-  type UseChartHighlightSignature,
 } from '../internals/plugins/featurePlugins/useChartHighlight';
+import type { UseChartHighlightSignature } from '../internals/plugins/featurePlugins/useChartHighlight';
 import { appendAtKey } from '../internals/appendAtKey';
 
 export interface BatchScatterProps {
+  /**
+   * The scatter series to render.
+   */
   series: DefaultizedScatterSeriesType;
+  /**
+   * The scale of the x-axis.
+   */
   xScale: D3Scale;
+  /**
+   * The scale of the y-axis.
+   */
   yScale: D3Scale;
+  /**
+   * The color of the element.
+   */
   color: string;
   colorGetter?: ColorGetter<'scatter'>;
   sizeGetter?: ScatterSizeGetter;
+  /**
+   * Override or extend the styles applied to the component.
+   */
   // eslint-disable-next-line react/no-unused-prop-types
   classes?: Partial<ScatterClasses>;
   className?: string;
@@ -88,9 +103,21 @@ function useCreatePaths(
 }
 
 interface BatchScatterPathsProps {
+  /**
+   * The scatter series to render.
+   */
   series: DefaultizedScatterSeriesType;
+  /**
+   * The scale of the x-axis.
+   */
   xScale: D3Scale;
+  /**
+   * The scale of the y-axis.
+   */
   yScale: D3Scale;
+  /**
+   * The color of the element.
+   */
   color: string;
   colorGetter?: ColorGetter<'scatter'>;
   markerSize: number;

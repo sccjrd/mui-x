@@ -2,12 +2,8 @@
 import * as React from 'react';
 import useId from '@mui/utils/useId';
 import { styled } from '@mui/material/styles';
-import {
-  getDataGridUtilityClass,
-  GridMenu,
-  type GridSlotProps,
-  useGridSelector,
-} from '@mui/x-data-grid-pro';
+import { getDataGridUtilityClass, GridMenu, useGridSelector } from '@mui/x-data-grid-pro';
+import type { GridSlotProps } from '@mui/x-data-grid-pro';
 import composeClasses from '@mui/utils/composeClasses';
 import { gridPivotActiveSelector, NotRendered, vars } from '@mui/x-data-grid-pro/internals';
 import { useGridApiContext } from '../../../hooks/utils/useGridApiContext';
@@ -24,8 +20,14 @@ import {
 } from '../../../hooks/features/aggregation/gridAggregationUtils';
 import type { GridChartsIntegrationSection } from '../../../hooks/features/chartsIntegration/gridChartsIntegrationInterfaces';
 import { COLUMN_GROUP_ID_SEPARATOR } from '../../../constants/columnGroups';
+import { getPanelFieldPointerDragStyles } from '../../../hooks/utils/usePanelFieldPointerDrag';
 
 const AGGREGATION_FUNCTION_NONE = 'none';
+
+// The drag preview of a touch or pen drag, a copy of the field that follows the pointer
+export const CHARTS_PANEL_DATA_FIELD_DRAGGING_CLASS = getDataGridUtilityClass(
+  'chartsPanelDataField--dragging',
+);
 
 type GridChartsPanelDataFieldProps = {
   children: React.ReactNode;
@@ -39,6 +41,11 @@ type GridChartsPanelDataFieldProps = {
   onChange?: (field: string, section: GridChartsIntegrationSection) => void;
   onDragStart: (field: string, section: GridChartsIntegrationSection) => void;
   onDragEnd: () => void;
+  /**
+   * The drop indicator of a touch or pen drag, set by the panel body.
+   * Mouse drags set it from the HTML drag and drop events of the field.
+   */
+  pointerDropPosition: DropPosition;
 };
 
 type OwnerState = GridChartsPanelDataFieldProps &
@@ -93,6 +100,7 @@ const GridChartsPanelDataFieldRoot = styled('div', {
   '&:hover': {
     backgroundColor: vars.colors.interactive.hover,
   },
+  ...getPanelFieldPointerDragStyles(CHARTS_PANEL_DATA_FIELD_DRAGGING_CLASS),
 }));
 
 const GridChartsPanelDataFieldName = styled('span', {
@@ -167,17 +175,20 @@ export function AggregationSelect({
     [apiRef, getActualFieldName],
   );
 
-  const availableAggregationFunctions = React.useMemo(
-    () => [
+  const availableAggregationFunctions = React.useMemo(() => {
+    const column = colDef(field);
+
+    return [
       ...(pivotActive ? [] : [AGGREGATION_FUNCTION_NONE]),
-      ...getAvailableAggregationFunctions({
-        aggregationFunctions: rootProps.aggregationFunctions,
-        colDef: colDef(field),
-        isDataSource: !!rootProps.dataSource,
-      }),
-    ],
-    [colDef, field, pivotActive, rootProps.aggregationFunctions, rootProps.dataSource],
-  );
+      ...(column
+        ? getAvailableAggregationFunctions({
+            aggregationFunctions: rootProps.aggregationFunctions,
+            colDef: column,
+            isDataSource: !!rootProps.dataSource,
+          })
+        : []),
+    ];
+  }, [colDef, field, pivotActive, rootProps.aggregationFunctions, rootProps.dataSource]);
 
   const handleClick = React.useCallback(
     (func: string) => {
@@ -271,10 +282,17 @@ function GridChartsPanelDataField(props: GridChartsPanelDataFieldProps) {
     onChange,
     onDragStart,
     onDragEnd,
+    pointerDropPosition,
   } = props;
   const rootProps = useGridRootProps();
   const [dropPosition, setDropPosition] = React.useState<DropPosition>(null);
-  const ownerState = { ...props, classes: rootProps.classes, dropPosition, section };
+  const ownerState = {
+    ...props,
+    classes: rootProps.classes,
+    // A blocked field shows no indicator, like on `dragover`
+    dropPosition: (disabled ? null : pointerDropPosition) ?? dropPosition,
+    section,
+  };
   const classes = useUtilityClasses(ownerState);
   const apiRef = useGridPrivateApiContext();
   const aggregationModel = useGridSelector(apiRef, gridAggregationModelSelector);
@@ -362,6 +380,7 @@ function GridChartsPanelDataField(props: GridChartsPanelDataFieldProps) {
         onDragEnd={onDragEnd}
         draggable={!disabled}
         disabled={!!disabled}
+        data-field={field}
       >
         <GridChartsPanelDataFieldDragIcon ownerState={ownerState} className={classes.dragIcon}>
           <rootProps.slots.columnReorderIcon fontSize="small" />

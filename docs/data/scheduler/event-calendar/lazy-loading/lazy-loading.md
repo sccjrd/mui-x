@@ -6,21 +6,21 @@ githubLabel: 'scope: scheduler'
 components: EventCalendarPremium
 ---
 
-# Event Calendar - Lazy loading events [<span class="plan-premium"></span>](/x/introduction/licensing/#premium-plan 'Premium plan')
+# Event Calendar - Lazy Loading Events [<span class="plan-premium"></span>](/x/introduction/licensing/#premium-plan 'Premium plan')
 
 <p class="description">Fetch events on demand as users navigate dates and views.</p>
 
 {{"component": "@mui/internal-core-docs/ComponentLinkHeader", "design": false}}
 
 Instead of loading all events upfront, you can use the `dataSource` prop to fetch events on demand as the user navigates between dates and views.
-The `dataSource.getEvents(start, end)` method is called whenever the visible date range changes, so only the events needed for the current view are fetched.
+The `dataSource.getEvents(start, end)` method runs whenever the visible date range changes, fetching only the events needed for the current view.
 
 ## Basic usage
 
 To enable lazy loading, pass a `dataSource` object with a `getEvents` method to the Event Calendar.
 The `getEvents` method receives a date range and should return a promise that resolves with the events for that range.
 
-When `dataSource` is provided, the `events` prop is not needed because all events are fetched through the data source.
+When you provide `dataSource`, you don't need the `events` prop—events are fetched through the data source instead.
 
 ```tsx
 <EventCalendarPremium
@@ -34,7 +34,10 @@ When `dataSource` is provided, the `events` prop is not needed because all event
 />
 ```
 
-The `persistEvents` method is called whenever events are created, updated, or deleted, letting you persist the changes back to the server.
+The `persistEvents` method runs whenever events are created, updated, or deleted, letting you persist the changes back to the server.
+
+Fetched ranges are cached, so navigating to a range that is already loaded doesn't call `getEvents` again, and moving to a range that extends a loaded one only requests the new days.
+When `showEmptyDaysInAgenda` is `false`, the agenda view requests the 180 days starting from the visible date instead of only the visible ones, so it can find the next days with events. When `viewConfig.agenda.dayCount` is `'month'`, it requests the visible month instead.
 
 {{"demo": "BasicDataSource.js", "bg": "inline", "defaultCodeOpen": false}}
 
@@ -46,6 +49,8 @@ In a real-world scenario, you would replace it with your own server-side data fe
 ## Error handling
 
 When the `dataSource.getEvents` method rejects, the Event Calendar displays an error state.
+It shows a generic message, which you can translate with the `somethingWentWrongError` key of the `localeText` prop, and logs the original error to the console.
+The same happens when `dataSource.persistEvents` throws or returns `{ success: false }`.
 Use the toggle button to simulate a server error.
 
 {{"demo": "ErrorHandling.js", "bg": "inline", "defaultCodeOpen": false}}

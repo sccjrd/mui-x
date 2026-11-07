@@ -8,10 +8,10 @@ import {
   GridChartsRendererProxy,
   useGridApiRef,
 } from '@mui/x-data-grid-premium';
+import type { ChartsRendererProps } from '@mui/x-charts-premium/ChartsRenderer';
 import {
   ChartsRenderer,
   configurationOptions,
-  ChartsRendererProps,
 } from '@mui/x-charts-premium/ChartsRenderer';
 
 function processPrompt(prompt: string, context: string, conversationId?: string) {
@@ -27,6 +27,7 @@ export default function AssistantWithCharts() {
   const { data } = useDemoData({
     dataSet: 'Commodity',
     rowLength: 10000,
+    multiSelect: true,
   });
 
   const apiRef = useGridApiRef();
@@ -74,6 +75,11 @@ export default function AssistantWithCharts() {
             slots={{
               aiAssistantPanel: GridAiAssistantPanel,
               chartsPanel: GridChartsPanel,
+            }}
+            sx={{
+              '& [aria-label="AI Assistant"] .MuiSvgIcon-root': {
+                color: 'primary.main',
+              },
             }}
             chartsIntegration
             slotProps={{

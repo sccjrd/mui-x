@@ -3,25 +3,32 @@ import * as React from 'react';
 import clsx from 'clsx';
 import { useStore } from '@base-ui/utils/store';
 import { styled } from '@mui/material/styles';
+import { useRtl } from '@mui/system/RtlProvider';
 import ChevronLeft from '@mui/icons-material/ChevronLeft';
 import ChevronRight from '@mui/icons-material/ChevronRight';
 import MenuOpen from '@mui/icons-material/MenuOpen';
 import Menu from '@mui/icons-material/Menu';
+import Today from '@mui/icons-material/Today';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
-import { useAdapterContext } from '@mui/x-scheduler-internals/use-adapter-context';
 import { useEventCalendarStoreContext } from '@mui/x-scheduler-internals/use-event-calendar-store-context';
 import {
   eventCalendarPreferenceSelectors,
   eventCalendarViewSelectors,
 } from '@mui/x-scheduler-internals/event-calendar-selectors';
 import { schedulerOtherSelectors } from '@mui/x-scheduler-internals/scheduler-selectors';
-import { getWeekNumber } from '@mui/x-scheduler-internals/internals';
-import { HeaderToolbarProps } from './HeaderToolbar.types';
+import {
+  formatMonthAndYear,
+  formatWeekNumber,
+  getWeekNumber,
+} from '@mui/x-scheduler-internals/internals';
+import type { HeaderToolbarProps } from './HeaderToolbar.types';
 import { ViewSwitcher } from './view-switcher';
 import { PreferencesMenu } from './preferences-menu';
 import { useEventCalendarStyledContext } from '../EventCalendarStyledContext';
 
+// Both toolbar layouts render for SSR safety; the root container query toggles them
+// via `data-expanded-only` / `data-compact-only` (see `EventCalendarRootStyled`).
 const HeaderToolbarRoot = styled('header', {
   name: 'MuiEventCalendar',
   slot: 'HeaderToolbar',
@@ -50,9 +57,9 @@ const HeaderToolbarDateNavigator = styled('div', {
   gap: theme.spacing(2),
 }));
 
-const HeaderToolbarLeftElement = styled('div', {
+const HeaderToolbarStart = styled('div', {
   name: 'MuiEventCalendar',
-  slot: 'HeaderToolbarLeftElement',
+  slot: 'HeaderToolbarStart',
 })(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
@@ -95,18 +102,23 @@ export const HeaderToolbar = React.forwardRef(function HeaderToolbar(
 ) {
   // Context hooks
   const store = useEventCalendarStoreContext();
-  const { classes, localeText } = useEventCalendarStyledContext();
-  const adapter = useAdapterContext();
+  const { schedulerId, classes, localeText } = useEventCalendarStyledContext();
+  const isRtl = useRtl();
+  const PreviousIcon = isRtl ? ChevronRight : ChevronLeft;
+  const NextIcon = isRtl ? ChevronLeft : ChevronRight;
 
   // Selector hooks
   const views = useStore(store, eventCalendarViewSelectors.views);
   const view = useStore(store, eventCalendarViewSelectors.view);
-  const visibleDate = useStore(store, schedulerOtherSelectors.visibleDate);
+  const visiblePlainDate = useStore(store, schedulerOtherSelectors.visiblePlainDate);
   const isSidePanelOpen = useStore(store, eventCalendarPreferenceSelectors.isSidePanelOpen);
   const showWeekNumber = useStore(store, eventCalendarPreferenceSelectors.showWeekNumber);
-  const weekStartsOn = useStore(store, eventCalendarPreferenceSelectors.weekStartsOn);
+  const weekInfo = useStore(store, eventCalendarPreferenceSelectors.weekInfo);
+  const locale = useStore(store, schedulerOtherSelectors.dateLocale);
 
-  const weekNumber = getWeekNumber(adapter, visibleDate, weekStartsOn);
+  const { onCompactMenuClick, className, ...other } = props;
+
+  const weekNumber = getWeekNumber(visiblePlainDate, weekInfo);
   const showViewSwitcher = views.length > 1;
   const showWeekLabel = showWeekNumber && (view === 'week' || view === 'day');
 
@@ -114,29 +126,50 @@ export const HeaderToolbar = React.forwardRef(function HeaderToolbar(
     <HeaderToolbarRoot
       ref={forwardedRef}
       data-single-primary-action={!showViewSwitcher}
-      {...props}
-      className={clsx(props.className, classes.headerToolbar)}
+      {...other}
+      className={clsx(className, classes.headerToolbar)}
     >
-      <HeaderToolbarLeftElement className={classes.headerToolbarLeftElement}>
+      <HeaderToolbarStart className={classes.headerToolbarStart}>
+        {/* Compact: opens the side panel drawer. */}
         <IconButton
+          data-compact-only
+          className={classes.headerToolbarCompactMenuButton}
+          aria-label={localeText.openMenu}
+          onClick={onCompactMenuClick}
+        >
+          <Menu />
+        </IconButton>
+        {/* Expanded: toggles the inline side panel. */}
+        <IconButton
+          data-expanded-only
           className={classes.headerToolbarSidePanelToggle}
           aria-label={isSidePanelOpen ? localeText.closeSidePanel : localeText.openSidePanel}
+          aria-controls={`${schedulerId}-side-panel`}
+          aria-expanded={isSidePanelOpen}
           onClick={(event) =>
             store.setPreferences({ isSidePanelOpen: !isSidePanelOpen }, event.nativeEvent)
           }
         >
-          {isSidePanelOpen ? <MenuOpen /> : <Menu />}
+          {isSidePanelOpen ? (
+            // Mirrored in RTL so the arrow points toward the side panel, on the inline start.
+            <MenuOpen sx={isRtl ? { transform: 'scaleX(-1)' } : undefined} />
+          ) : (
+            <Menu />
+          )}
         </IconButton>
-        <HeaderToolbarLabel aria-live="polite">
-          {adapter.format(visibleDate, 'monthFullLetter')}{' '}
-          {adapter.format(visibleDate, 'yearPadded')}
+        <HeaderToolbarLabel
+          data-expanded-only
+          aria-live="polite"
+          className={classes.headerToolbarLabel}
+        >
+          {formatMonthAndYear(locale, visiblePlainDate)}
           {showWeekLabel && (
             <HeaderToolbarWeekNumber className={classes.headerToolbarWeekNumber}>
-              {`${localeText.week} ${weekNumber}`}
+              {`${localeText.week} ${formatWeekNumber(locale, weekNumber)}`}
             </HeaderToolbarWeekNumber>
           )}
         </HeaderToolbarLabel>
-      </HeaderToolbarLeftElement>
+      </HeaderToolbarStart>
       <HeaderToolbarActions className={classes.headerToolbarActions}>
         <HeaderToolbarDateNavigator
           role="navigation"
@@ -147,21 +180,36 @@ export const HeaderToolbar = React.forwardRef(function HeaderToolbar(
             onClick={store.goToPreviousVisibleDate}
             aria-label={localeText.previousTimeSpan(view)}
           >
-            <ChevronLeft />
+            <PreviousIcon />
           </IconButton>
           <IconButton
             className={classes.headerToolbarNextButton}
             onClick={store.goToNextVisibleDate}
             aria-label={localeText.nextTimeSpan(view)}
           >
-            <ChevronRight />
+            <NextIcon />
           </IconButton>
         </HeaderToolbarDateNavigator>
-        <Button onClick={store.goToToday}>{localeText.today}</Button>
+        {/* Compact: today as an icon button replacing the expanded text button. */}
+        <IconButton
+          data-compact-only
+          className={classes.headerToolbarCompactTodayButton}
+          onClick={store.goToToday}
+          aria-label={localeText.today}
+        >
+          <Today />
+        </IconButton>
+        <Button
+          data-expanded-only
+          className={classes.headerToolbarTodayButton}
+          onClick={store.goToToday}
+        >
+          {localeText.today}
+        </Button>
         {showViewSwitcher && (
-          <ViewSwitcher views={views} view={view} onViewChange={store.setView} />
+          <ViewSwitcher data-expanded-only views={views} view={view} onViewChange={store.setView} />
         )}
-        <PreferencesMenu />
+        <PreferencesMenu data-expanded-only />
       </HeaderToolbarActions>
     </HeaderToolbarRoot>
   );

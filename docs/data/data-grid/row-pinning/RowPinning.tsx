@@ -1,4 +1,5 @@
-import { DataGridPro, GridPinnedRowsProp, GridColDef } from '@mui/x-data-grid-pro';
+import type { GridPinnedRowsProp, GridColDef } from '@mui/x-data-grid-pro';
+import { DataGridPro } from '@mui/x-data-grid-pro';
 import {
   randomCity,
   randomEmail,
@@ -9,7 +10,7 @@ import {
 } from '@mui/x-data-grid-generator';
 
 const columns: GridColDef[] = [
-  { field: 'name', headerName: 'Name', width: 150 },
+  { field: 'name', headerName: 'Name', width: 150, rowHeader: true },
   { field: 'city', headerName: 'City', width: 150 },
   { field: 'username', headerName: 'Username' },
   { field: 'email', headerName: 'Email', width: 200 },

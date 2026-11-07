@@ -1,7 +1,15 @@
 {
   "props": {
     "href": { "type": { "name": "string" }, "required": true },
+    "children": { "type": { "name": "node" } },
+    "classes": { "type": { "name": "object" }, "additionalInfo": { "cssApi": true } },
     "index": { "type": { "name": "number" } },
+    "slotProps": { "type": { "name": "object" }, "default": "{}" },
+    "slots": {
+      "type": { "name": "object" },
+      "default": "{}",
+      "additionalInfo": { "slotsApi": true }
+    },
     "title": { "type": { "name": "string" } }
   },
   "name": "ChatMessageSource",
@@ -33,6 +41,5 @@
   "muiName": "MuiChatMessageSource",
   "filename": "/packages/x-chat/src/ChatMessageSources/ChatMessageSource.tsx",
   "inheritance": null,
-  "demos": "<ul><li><a href=\"/x/react-chat/display/message-parts/sources-and-citations/\">Chat - Sources &amp; Citations</a></li></ul>",
-  "cssComponent": false
+  "demos": "<ul><li><a href=\"/x/react-chat/display/message-parts/sources-and-citations/\">Chat - Sources and citations</a></li></ul>"
 }

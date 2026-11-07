@@ -1,10 +1,14 @@
 {
   "props": {
+    "apiRef": { "type": { "name": "shape", "description": "{ current?: any }" } },
     "colors": {
       "type": { "name": "union", "description": "Array&lt;string&gt;<br>&#124;&nbsp;func" },
       "default": "rainbowSurgePalette"
     },
     "dataset": { "type": { "name": "arrayOf", "description": "Array&lt;object&gt;" } },
+    "experimentalFeatures": {
+      "type": { "name": "shape", "description": "{ keyboardActivation?: bool }" }
+    },
     "height": { "type": { "name": "number" } },
     "id": { "type": { "name": "string" } },
     "localeText": { "type": { "name": "object" } },
@@ -18,6 +22,7 @@
     "skipAnimation": { "type": { "name": "bool" } },
     "slotProps": { "type": { "name": "object" } },
     "slots": { "type": { "name": "object" }, "additionalInfo": { "slotsApi": true } },
+    "theme": { "type": { "name": "enum", "description": "'dark'<br>&#124;&nbsp;'light'" } },
     "width": { "type": { "name": "number" } }
   },
   "name": "ChartsDataProvider",
@@ -28,19 +33,33 @@
     "import { ChartsDataProvider } from '@mui/x-charts-premium';"
   ],
   "slots": [
-    { "name": "baseButton", "description": "", "class": null },
-    { "name": "baseIconButton", "description": "", "class": null },
+    {
+      "name": "baseButton",
+      "description": "The component used for buttons.",
+      "default": "Button",
+      "class": null
+    },
+    {
+      "name": "baseIconButton",
+      "description": "The component used for icon buttons.",
+      "default": "IconButton",
+      "class": null
+    },
     {
       "name": "baseToggleButton",
       "description": "Note: MUI's `ToggleButton` has an incompatible `href` prop, so it must be cast:\n`ToggleButton as unknown as React.ComponentType<ChartBaseToggleButtonProps & BaseToggleButtonPropsOverrides>`.",
       "class": null
     },
-    { "name": "baseToggleButtonGroup", "description": "", "class": null }
+    {
+      "name": "baseToggleButtonGroup",
+      "description": "The component used for toggle button groups.",
+      "default": "ToggleButtonGroup",
+      "class": null
+    }
   ],
   "classes": [],
   "muiName": "MuiChartsDataProvider",
   "filename": "/packages/x-charts/src/ChartsDataProvider/ChartsDataProvider.tsx",
   "inheritance": null,
-  "demos": "<ul><li><a href=\"/x/react-charts/composition/\">Charts - Composition</a></li>\n<li><a href=\"/x/react-charts/localization/\">Charts - Localization</a></li>\n<li><a href=\"/x/react-charts/plugins/\">Charts - Plugins</a></li></ul>",
-  "cssComponent": false
+  "demos": "<ul><li><a href=\"/x/react-charts/composition/\">Charts - Composition</a></li>\n<li><a href=\"/x/react-charts/localization/\">Charts - Localization</a></li>\n<li><a href=\"/x/react-charts/plugins/\">Charts - Plugins</a></li></ul>"
 }

@@ -9,13 +9,12 @@ import Typography from '@mui/material/Typography';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import useId from '@mui/utils/useId';
 import { ChartsClipPath } from '@mui/x-charts-premium/ChartsClipPath';
-import { Unstable_CandlestickPlot as CandlestickPlot } from '@mui/x-charts-premium/CandlestickChart';
+import { CandlestickPlot } from '@mui/x-charts-premium/CandlestickChart';
 import { LinePlot } from '@mui/x-charts-premium/LineChart';
 import { BarPlot } from '@mui/x-charts-premium/BarChart';
 import { ChartsXAxis } from '@mui/x-charts-premium/ChartsXAxis';
 import { ChartsYAxis } from '@mui/x-charts-premium/ChartsYAxis';
 import { useAxesTooltip } from '@mui/x-charts-premium/ChartsTooltip';
-
 import { ChartsDataProviderPremium } from '@mui/x-charts-premium/ChartsDataProviderPremium';
 import { ChartsWrapper } from '@mui/x-charts-premium/ChartsWrapper';
 import { ChartsAxisHighlight } from '@mui/x-charts-premium/ChartsAxisHighlight';

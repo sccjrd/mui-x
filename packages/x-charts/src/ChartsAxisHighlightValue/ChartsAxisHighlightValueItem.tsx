@@ -1,6 +1,7 @@
 'use client';
 import * as React from 'react';
-import { styled, type SxProps } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
+import type { SxProps } from '@mui/material/styles';
 import { shouldForwardProp } from '@mui/system/createStyled';
 import { useUtilityClasses } from './chartsAxisHighlightValueClasses';
 
@@ -51,6 +52,9 @@ export interface ChartsAxisHighlightValueItemProps {
   minCoord: number;
   maxCoord: number;
   space: number;
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx?: SxProps;
 }
 

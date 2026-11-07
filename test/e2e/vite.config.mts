@@ -25,7 +25,7 @@ export default defineConfig({
     alias,
   },
   test: {
-    globals: true,
+    globalSetup: ['./globalSetup.ts'],
     testTimeout: 20000,
     hookTimeout: 20000,
   },

@@ -3,7 +3,7 @@ import * as React from 'react';
 import PropTypes from 'prop-types';
 import { useThemeProps } from '@mui/material/styles';
 import refType from '@mui/utils/refType';
-import { TimeFieldProps } from './TimeField.types';
+import type { TimeFieldProps } from './TimeField.types';
 import { useTimeField } from './useTimeField';
 import {
   PickerFieldUI,
@@ -52,7 +52,7 @@ const TimeField = React.forwardRef(function TimeField(
   );
 }) as TimeFieldComponent;
 
-TimeField.propTypes = {
+TimeField.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -197,6 +197,9 @@ TimeField.propTypes = {
    * Name attribute of the `input` element.
    */
   name: PropTypes.string,
+  /**
+   * @ignore
+   */
   onBlur: PropTypes.func,
   /**
    * Callback fired when the value changes.
@@ -210,6 +213,9 @@ TimeField.propTypes = {
    * Callback fired when the clear button is clicked.
    */
   onClear: PropTypes.func,
+  /**
+   * @ignore
+   */
   onClick: PropTypes.func,
   /**
    * Callback fired when the error associated with the current value changes.
@@ -221,9 +227,25 @@ TimeField.propTypes = {
    * @param {TValue} value The value associated with the error.
    */
   onError: PropTypes.func,
+  /**
+   * @ignore
+   */
   onFocus: PropTypes.func,
+  /**
+   * @ignore
+   */
   onInput: PropTypes.func,
+  /**
+   * @ignore
+   */
   onKeyDown: PropTypes.func,
+  /**
+   * @ignore
+   */
+  onMouseDown: PropTypes.func,
+  /**
+   * @ignore
+   */
   onPaste: PropTypes.func,
   /**
    * Callback fired when the selected sections change.

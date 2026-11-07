@@ -1,6 +1,7 @@
 {
   "props": {
     "adapterLocale": { "type": { "name": "any" } },
+    "children": { "type": { "name": "node" } },
     "dateAdapter": {
       "type": { "name": "func" },
       "seeMoreLink": {
@@ -29,6 +30,5 @@
   "muiName": "MuiLocalizationProvider",
   "filename": "/packages/x-date-pickers/src/LocalizationProvider/LocalizationProvider.tsx",
   "inheritance": null,
-  "demos": "<ul><li><a href=\"/x/react-date-pickers/adapters-locale/\">Date format and localization</a></li>\n<li><a href=\"/x/react-date-pickers/calendar-systems/\">Calendar systems</a></li>\n<li><a href=\"/x/react-date-pickers/localization/\">Translated components</a></li>\n<li><a href=\"/x/react-date-pickers/timezone/\">UTC and timezones</a></li></ul>",
-  "cssComponent": false
+  "demos": "<ul><li><a href=\"/x/react-date-pickers/adapters-locale/\">Date format and localization</a></li>\n<li><a href=\"/x/react-date-pickers/calendar-systems/\">Calendar systems</a></li>\n<li><a href=\"/x/react-date-pickers/localization/\">Translated components</a></li>\n<li><a href=\"/x/react-date-pickers/timezone/\">UTC and timezones</a></li></ul>"
 }

@@ -2,23 +2,38 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import useSlotProps from '@mui/utils/useSlotProps';
-import { type SlotComponentPropsFromProps } from '@mui/x-internals/types';
+import type { SlotComponentPropsFromProps } from '@mui/x-internals/types';
 import { useInteractionItemProps } from '../hooks/useInteractionItemProps';
-import { AnimatedLine, type AnimatedLineProps } from './AnimatedLine';
-import { type SeriesId } from '../models/seriesType/common';
+import { AnimatedLine } from './AnimatedLine';
+import type { AnimatedLineProps } from './AnimatedLine';
+import type { SeriesId } from '../models/seriesType/common';
 import { useItemHighlightState } from '../hooks/useItemHighlightState';
 import { selectorChartExperimentalFeaturesState } from '../internals/plugins/corePlugins/useChartExperimentalFeature';
 import { useStore } from '../internals/store/useStore';
-import { type LineClasses, useUtilityClasses as useLineUtilityClasses } from './lineClasses';
+import { useUtilityClasses as useLineUtilityClasses } from './lineClasses';
+import type { LineClasses } from './lineClasses';
 import type { LinePropsOverrides } from '../models/chartsSlotsComponentsProps';
 
 export interface LineElementOwnerState {
+  /**
+   * The id of the series the element belongs to.
+   */
   seriesId: SeriesId;
+  /**
+   * The color of the line.
+   */
   color: string;
+  /**
+   * The id of the gradient used to color the element.
+   * The `gradientId` is used as `url(#gradientId)`.
+   */
   gradientId?: string;
   isFaded: boolean;
   isHighlighted: boolean;
-  classes?: Partial<LineClasses>;
+  /**
+   * Override or extend the styles applied to the component.
+   */
+  classes?: Partial<Pick<LineClasses, 'line'>>;
   /** If `true`, the line is hidden. */
   hidden?: boolean;
 }
@@ -40,6 +55,9 @@ export interface LineElementProps
     Omit<LineElementOwnerState, 'isFaded' | 'isHighlighted'>,
     Pick<AnimatedLineProps, 'skipAnimation'>,
     Omit<React.SVGProps<SVGPathElement>, 'ref' | 'color'> {
+  /**
+   * The SVG path of the element.
+   */
   d: string;
   /** If `true`, the line is hidden. */
   hidden?: boolean;
@@ -81,7 +99,8 @@ function LineElement(props: LineElementProps) {
   const store = useStore();
   const enablePositionBasedPointerInteraction = store.use(
     selectorChartExperimentalFeaturesState,
-  )?.enablePositionBasedPointerInteraction;
+    'enablePositionBasedPointerInteraction',
+  );
   const identifier = React.useMemo(() => ({ type: 'line' as const, seriesId }), [seriesId]);
   const interactionProps = useInteractionItemProps(identifier);
 
@@ -120,17 +139,35 @@ function LineElement(props: LineElementProps) {
   return <Line {...other} {...lineProps} />;
 }
 
-LineElement.propTypes = {
+LineElement.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes: PropTypes.object,
+  /**
+   * The color of the line.
+   */
   color: PropTypes.string.isRequired,
+  /**
+   * The SVG path of the element.
+   */
   d: PropTypes.string.isRequired,
+  /**
+   * The id of the gradient used to color the element.
+   * The `gradientId` is used as `url(#gradientId)`.
+   */
   gradientId: PropTypes.string,
-  /** If `true`, the line is hidden. */
+  /**
+   * If `true`, the line is hidden.
+   */
   hidden: PropTypes.bool,
+  /**
+   * The id of the series the element belongs to.
+   */
   seriesId: PropTypes.string.isRequired,
   /**
    * If `true`, animations are skipped.

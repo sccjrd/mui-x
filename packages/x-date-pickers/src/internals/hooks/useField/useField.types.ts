@@ -1,5 +1,5 @@
-import * as React from 'react';
-import {
+import type * as React from 'react';
+import type {
   FieldSectionType,
   FieldSection,
   FieldSelectedSections,
@@ -13,9 +13,9 @@ import {
   PickerManager,
   PickerValueType,
 } from '../../../models';
-import { InternalPropNames } from '../../../hooks/useSplitFieldProps';
+import type { InternalPropNames } from '../../../hooks/useSplitFieldProps';
 import type { PickersSectionElement, PickersSectionListRef } from '../../../PickersSectionList';
-import {
+import type {
   FormProps,
   InferNonNullablePickerValue,
   PickerRangeValue,
@@ -117,12 +117,37 @@ export interface UseFieldForwardedProps {
   clearable?: boolean;
   error?: boolean;
   focused?: boolean;
+  /**
+   * The ref used to access the DOM elements of the sections.
+   */
   sectionListRef?: React.Ref<PickersSectionListRef>;
+  /**
+   * @ignore
+   */
   onClick?: React.MouseEventHandler;
+  /**
+   * @ignore
+   */
+  onMouseDown?: React.MouseEventHandler;
+  /**
+   * @ignore
+   */
   onKeyDown?: React.KeyboardEventHandler;
+  /**
+   * @ignore
+   */
   onFocus?: React.FocusEventHandler;
+  /**
+   * @ignore
+   */
   onBlur?: React.FocusEventHandler;
+  /**
+   * @ignore
+   */
   onInput?: React.FormEventHandler<HTMLDivElement>;
+  /**
+   * @ignore
+   */
   onPaste?: React.ClipboardEventHandler<HTMLDivElement>;
   onClear?: React.MouseEventHandler;
 }

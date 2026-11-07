@@ -1,5 +1,6 @@
 'use client';
-import { styled, type SxProps, type Theme, useThemeProps } from '@mui/material/styles';
+import { styled, useThemeProps } from '@mui/material/styles';
+import type { SxProps, Theme } from '@mui/material/styles';
 import PropTypes from 'prop-types';
 import * as React from 'react';
 import clsx from 'clsx';
@@ -18,6 +19,9 @@ export interface ChartsSvgLayerProps extends Omit<
   'id' | 'children' | 'className' | 'height' | 'width' | 'cx' | 'cy' | 'viewBox' | 'color' | 'ref'
 > {
   className?: string;
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx?: SxProps<Theme>;
   children?: React.ReactNode;
 }
@@ -76,13 +80,16 @@ const ChartsSvgLayer = React.forwardRef<SVGSVGElement, ChartsSvgLayerProps>(
   },
 );
 
-ChartsSvgLayer.propTypes = {
+ChartsSvgLayer.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
   children: PropTypes.node,
   className: PropTypes.string,
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx: PropTypes.oneOfType([
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
     PropTypes.func,

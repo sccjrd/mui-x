@@ -1,11 +1,7 @@
 'use client';
 import PropTypes from 'prop-types';
 import { warnOnce } from '@mui/x-internals/warning';
-import {
-  type ChartsXAxisProps,
-  type ChartsAxisSlots,
-  type ChartsAxisSlotProps,
-} from '../models/axis';
+import type { ChartsXAxisProps, ChartsAxisSlots, ChartsAxisSlotProps } from '../models/axis';
 import { useXAxes } from '../hooks/useAxis';
 
 import { ChartsXAxisImpl } from './ChartsXAxisImpl';
@@ -37,11 +33,14 @@ function ChartsXAxis(inProps: ChartsXAxisProps) {
   return <ChartsXAxisImpl {...inProps} axis={axis} />;
 }
 
-ChartsXAxis.propTypes = {
+ChartsXAxis.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * The direction of the axis.
+   */
   axis: PropTypes.oneOf(['x']),
   /**
    * The id of the axis to render.
@@ -52,6 +51,10 @@ ChartsXAxis.propTypes = {
    * Override or extend the styles applied to the component.
    */
   classes: PropTypes.object,
+  /**
+   * A CSS class name applied to the root element.
+   */
+  className: PropTypes.string,
   /**
    * If true, the axis line is disabled.
    * @default false
@@ -80,6 +83,9 @@ ChartsXAxis.propTypes = {
    * @default {}
    */
   slots: PropTypes.object,
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx: PropTypes.oneOfType([
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
     PropTypes.func,
@@ -146,6 +152,11 @@ ChartsXAxis.propTypes = {
    * @default 6
    */
   tickSize: PropTypes.number,
+  /**
+   * The minimum space between ticks when using an ordinal scale. It defines the minimum distance in pixels between two ticks.
+   * @default 0
+   */
+  tickSpacing: PropTypes.number,
 } as any;
 
 export { ChartsXAxis };

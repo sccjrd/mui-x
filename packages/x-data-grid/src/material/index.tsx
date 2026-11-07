@@ -9,7 +9,8 @@ import MUICheckbox from '@mui/material/Checkbox';
 import MUIChip from '@mui/material/Chip';
 import MUICircularProgress from '@mui/material/CircularProgress';
 import MUIDivider from '@mui/material/Divider';
-import MUIInputBase, { type InputBaseProps as MUIInputBaseProps } from '@mui/material/InputBase';
+import MUIInputBase from '@mui/material/InputBase';
+import type { InputBaseProps as MUIInputBaseProps } from '@mui/material/InputBase';
 import MUIFocusTrap from '@mui/material/Unstable_TrapFocus';
 import MUILinearProgress from '@mui/material/LinearProgress';
 import MUIListItemIcon from '@mui/material/ListItemIcon';
@@ -17,6 +18,7 @@ import MUIListItemText, { listItemTextClasses } from '@mui/material/ListItemText
 import type { MenuProps as MUIMenuProps } from '@mui/material/Menu';
 import MUIMenuList from '@mui/material/MenuList';
 import MUIMenuItem from '@mui/material/MenuItem';
+import MUIModal from '@mui/material/Modal';
 import MUITextField from '@mui/material/TextField';
 import MUITextareaAutosize from '@mui/material/TextareaAutosize';
 import MUIFormControl from '@mui/material/FormControl';
@@ -28,7 +30,8 @@ import MUIIconButton, { iconButtonClasses } from '@mui/material/IconButton';
 import MUIInputAdornment, { inputAdornmentClasses } from '@mui/material/InputAdornment';
 import MUITooltip from '@mui/material/Tooltip';
 import MUIPagination, { tablePaginationClasses } from '@mui/material/TablePagination';
-import MUIPopper, { type PopperProps as MUIPopperProps } from '@mui/material/Popper';
+import MUIPopper from '@mui/material/Popper';
+import type { PopperProps as MUIPopperProps } from '@mui/material/Popper';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import MUIGrow from '@mui/material/Grow';
 import MUIPaper from '@mui/material/Paper';
@@ -146,11 +149,13 @@ const BaseSelect = forwardRef<any, P['baseSelect']>(function BaseSelect(props, r
     labelId,
     material,
     disabled,
+    multiple,
     slotProps,
     onChange,
     onKeyDown,
     onOpen,
     onClose,
+    renderValue,
     size,
     style,
     fullWidth,
@@ -160,9 +165,7 @@ const BaseSelect = forwardRef<any, P['baseSelect']>(function BaseSelect(props, r
   const textFieldDefaults = (theme.components?.MuiTextField?.defaultProps ?? {}) as any;
   const computedSize = (size ?? textFieldDefaults.size) as 'small' | 'medium' | undefined;
   const computedVariant = (textFieldDefaults.variant ?? 'outlined') as
-    | 'standard'
-    | 'filled'
-    | 'outlined';
+    'standard' | 'filled' | 'outlined';
   const menuProps = {
     slotProps: { paper: { onKeyDown } },
   } as Partial<MUIMenuProps>;
@@ -185,7 +188,9 @@ const BaseSelect = forwardRef<any, P['baseSelect']>(function BaseSelect(props, r
         labelId={labelId}
         label={label}
         displayEmpty
+        multiple={multiple}
         onChange={onChange as any}
+        renderValue={renderValue}
         variant={computedVariant as any}
         {...other}
         inputProps={slotProps?.htmlInput}
@@ -282,7 +287,6 @@ const BaseCheckbox = forwardRef<any, P['baseCheckbox']>(function BaseCheckbox(pr
       input?.focus({ preventScroll: true });
     } else if (autoFocus === false && rippleRef.current) {
       // Only available in @mui/material v5.4.1 or later
-      // @ts-ignore
       rippleRef.current.stop({});
     }
   }, [autoFocus]);
@@ -421,6 +425,11 @@ function BaseMenuItem(props: P['baseMenuItem']) {
   ]);
 }
 
+function BaseModal(props: P['baseModal']) {
+  const { material, ...other } = props;
+  return <MUIModal {...other} {...material} />;
+}
+
 function BaseTextField(props: P['baseTextField']) {
   const { slotProps, material, ...other } = props;
   const theme = useTheme();
@@ -480,6 +489,9 @@ function BaseAutocomplete(props: P['baseAutocomplete']) {
               size="small"
               label={typeof option === 'string' ? option : getOptionLabel?.(option as any)}
               {...tagProps}
+              {...(typeof slotProps?.chip === 'function'
+                ? slotProps.chip(option, index)
+                : slotProps?.chip)}
             />
           );
         })
@@ -573,9 +585,8 @@ const transformOrigin = {
   'bottom-end': 'top right',
 };
 
-function BasePopper(props: P['basePopper']) {
+const BasePopper = forwardRef<any, P['basePopper']>(function BasePopper(props, ref) {
   const {
-    ref,
     open,
     children,
     className,
@@ -591,6 +602,8 @@ function BasePopper(props: P['basePopper']) {
     target,
     transition,
     placement,
+    // Destructured so MUI Popper's default `role="tooltip"` is not applied unless explicitly requested
+    role,
     material,
     ...other
   } = props;
@@ -662,13 +675,15 @@ function BasePopper(props: P['basePopper']) {
       transition={transition}
       placement={placement}
       modifiers={modifiers}
+      role={role}
       {...other}
       {...material}
+      ref={ref}
     >
       {content}
     </MUIPopper>
   );
-}
+});
 
 function wrappers(props: PopperProps, content: any) {
   return focusTrapWrapper(props, clickAwayWrapper(props, content));
@@ -836,6 +851,7 @@ const baseSlots: GridBaseSlots = {
   baseLinearProgress: BaseLinearProgress,
   baseMenuList: BaseMenuList,
   baseMenuItem: BaseMenuItem,
+  baseModal: BaseModal,
   baseTextField: BaseTextField,
   baseButton: BaseButton,
   baseIconButton: BaseIconButton,

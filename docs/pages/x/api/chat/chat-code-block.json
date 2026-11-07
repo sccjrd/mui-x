@@ -1,6 +1,7 @@
 {
   "props": {
     "children": { "type": { "name": "string" }, "required": true },
+    "classes": { "type": { "name": "object" }, "additionalInfo": { "cssApi": true } },
     "highlighter": {
       "type": { "name": "func" },
       "signature": {
@@ -9,7 +10,14 @@
         "returned": "React.ReactNode"
       }
     },
-    "language": { "type": { "name": "string" } }
+    "language": { "type": { "name": "string" } },
+    "sx": {
+      "type": {
+        "name": "union",
+        "description": "Array&lt;func<br>&#124;&nbsp;object<br>&#124;&nbsp;bool&gt;<br>&#124;&nbsp;func<br>&#124;&nbsp;object"
+      },
+      "additionalInfo": { "sx": true }
+    }
   },
   "name": "ChatCodeBlock",
   "imports": [
@@ -59,6 +67,5 @@
   "muiName": "MuiChatCodeBlock",
   "filename": "/packages/x-chat/src/ChatCodeBlock/ChatCodeBlock.tsx",
   "inheritance": null,
-  "demos": "<ul><li><a href=\"/x/react-chat/display/message-parts/code-blocks/\">Chat - Code Blocks</a></li></ul>",
-  "cssComponent": false
+  "demos": "<ul><li><a href=\"/x/react-chat/display/message-parts/code-blocks/\">Chat - Code blocks</a></li></ul>"
 }

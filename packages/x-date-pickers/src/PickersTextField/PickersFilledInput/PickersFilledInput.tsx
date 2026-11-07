@@ -5,17 +5,18 @@ import { styled, useThemeProps } from '@mui/material/styles';
 import { shouldForwardProp } from '@mui/system';
 import refType from '@mui/utils/refType';
 import composeClasses from '@mui/utils/composeClasses';
+import type { PickersFilledInputClasses } from './pickersFilledInputClasses';
 import {
   pickersFilledInputClasses,
   getPickersFilledInputUtilityClass,
-  PickersFilledInputClasses,
 } from './pickersFilledInputClasses';
-import { PickersInputBaseProps, PickersInputBase } from '../PickersInputBase';
+import type { PickersInputBaseProps } from '../PickersInputBase';
+import { PickersInputBase } from '../PickersInputBase';
 import {
   PickersInputBaseRoot,
   PickersInputBaseSectionsContainer,
 } from '../PickersInputBase/PickersInputBase';
-import { PickerTextFieldOwnerState } from '../../models/fields';
+import type { PickerTextFieldOwnerState } from '../../models/fields';
 import { usePickerTextFieldOwnerState } from '../usePickerTextFieldOwnerState';
 
 export interface PickersFilledInputProps extends PickersInputBaseProps {
@@ -65,13 +66,15 @@ const PickersFilledInputRoot = styled(PickersInputBaseRoot, {
     },
     variants: [
       ...Object.keys((theme.vars ?? theme).palette)
-        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- Dynamic palette keys error only in consumers enabling noImplicitAny.
+        // @ts-ignore Palette entries are discovered and filtered for their main color at runtime.
         .filter((key) => (theme.vars ?? theme).palette[key].main)
         .map((color) => ({
           props: { inputColor: color, disableUnderline: false },
           style: {
             '&::after': {
-              // @ts-ignore
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- Dynamic palette keys error only in consumers enabling noImplicitAny.
+              // @ts-ignore Palette entries are discovered and filtered for their main color at runtime.
               borderBottom: `2px solid ${(theme.vars || theme).palette[color]?.main}`,
             },
           },
@@ -264,7 +267,7 @@ const PickersFilledInput = React.forwardRef(function PickersFilledInput(
   );
 });
 
-PickersFilledInput.propTypes = {
+PickersFilledInput.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -276,6 +279,9 @@ PickersFilledInput.propTypes = {
    */
   areAllSectionsEmpty: PropTypes.bool.isRequired,
   classes: PropTypes.object,
+  /**
+   * A CSS class name applied to the root element.
+   */
   className: PropTypes.string,
   /**
    * If true, the whole element is editable.
@@ -323,14 +329,39 @@ PickersFilledInput.propTypes = {
    * Name attribute of the `input` element.
    */
   name: PropTypes.string,
+  /**
+   * @ignore
+   */
   onChange: PropTypes.func.isRequired,
+  /**
+   * @ignore
+   */
   onClick: PropTypes.func.isRequired,
+  /**
+   * @ignore
+   */
   onInput: PropTypes.func.isRequired,
+  /**
+   * @ignore
+   */
   onKeyDown: PropTypes.func.isRequired,
+  /**
+   * @ignore
+   */
+  onMouseDown: PropTypes.func.isRequired,
+  /**
+   * @ignore
+   */
   onPaste: PropTypes.func.isRequired,
   ownerState: PropTypes /* @typescript-to-proptypes-ignore */.any,
+  /**
+   * If `true`, the component is read-only.
+   */
   readOnly: PropTypes.bool,
   renderSuffix: PropTypes.func,
+  /**
+   * @ignore
+   */
   sectionListRef: PropTypes.oneOfType([
     PropTypes.func,
     PropTypes.shape({
@@ -365,6 +396,9 @@ PickersFilledInput.propTypes = {
     PropTypes.func,
     PropTypes.object,
   ]),
+  /**
+   * The value of the hidden `input` element.
+   */
   value: PropTypes.string.isRequired,
 } as any;
 

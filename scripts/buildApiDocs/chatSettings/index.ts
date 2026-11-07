@@ -1,12 +1,12 @@
 import path from 'path';
 import fs from 'fs';
 import { LANGUAGES } from '@mui/internal-core-docs/constants';
-import {
+import type {
   ProjectSettings,
   ComponentReactApi,
   HookReactApi,
-  findApiPages,
 } from '@mui/internal-api-docs-builder';
+import { findApiPages } from '@mui/internal-api-docs-builder';
 import generateUtilityClass, { isGlobalState } from '@mui/utils/generateUtilityClass';
 import { getComponentImports, getComponentInfo } from './getComponentInfo';
 
@@ -96,14 +96,10 @@ export default chatApiPages;
       'suggestions/SuggestionsRoot.tsx',
       // Internal implementation detail of ChatBox, not exported from the package index.
       'ChatBox/ChatBoxContent.tsx',
-      // Internal default icon components, not intended as public API.
-      'icons/DefaultAttachIcon.tsx',
-      'icons/DefaultCloseIcon.tsx',
-      'icons/DefaultFileIcon.tsx',
-      'icons/DefaultNewChatIcon.tsx',
-      'icons/DefaultSendIcon.tsx',
-      'icons/DefaultSettingsIcon.tsx',
-      'icons/DefaultMenuIcon.tsx',
+      // Default row builder shared by ChatBox and ChatMessageList, not part of the public API.
+      'ChatMessageList/DefaultMessageItem.tsx',
+      // Default waiting-phase presentation of the streaming indicator, not exported from the package index.
+      'ChatIndicators/ChatStreamingIndicatorRow.tsx',
     ];
     if (compoundFiles.some((f) => filename.includes(f))) {
       return true;

@@ -2,21 +2,23 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import refType from '@mui/utils/refType';
+import type {
+  PickerViewRenderer,
+  TimeViewWithMeridiem,
+  PickerRangeValue,
+  PickerViewRendererLookup,
+  PickerRendererInterceptorProps,
+} from '@mui/x-date-pickers/internals';
 import {
   DIALOG_WIDTH,
   VIEW_HEIGHT,
   isInternalTimeView,
   isDatePickerView,
-  PickerViewRenderer,
-  TimeViewWithMeridiem,
   resolveDateTimeFormat,
-  PickerRangeValue,
-  PickerViewRendererLookup,
-  PickerRendererInterceptorProps,
   TIME_VIEWS,
 } from '@mui/x-date-pickers/internals';
 import { extractValidationProps } from '@mui/x-date-pickers/validation';
-import { PickerOwnerState } from '@mui/x-date-pickers/models';
+import type { PickerOwnerState } from '@mui/x-date-pickers/models';
 import resolveComponentProps from '@mui/utils/resolveComponentProps';
 import {
   renderDigitalClockTimeView,
@@ -28,18 +30,17 @@ import {
 } from '@mui/x-date-pickers/MultiSectionDigitalClock';
 import { digitalClockClasses } from '@mui/x-date-pickers/DigitalClock';
 import { usePickerAdapter } from '@mui/x-date-pickers/hooks';
-import { rangeValueManager } from '../internals/utils/valueManagers';
-import { MobileDateTimeRangePickerProps } from './MobileDateTimeRangePicker.types';
+import type { MobileDateTimeRangePickerProps } from './MobileDateTimeRangePicker.types';
 import { renderDateRangeViewCalendar } from '../dateRangeViewRenderers';
 import { useMobileRangePicker } from '../internals/hooks/useMobileRangePicker';
-import { validateDateTimeRange } from '../validation';
-import { DateTimeRangePickerView } from '../internals/models';
+import type { DateTimeRangePickerView } from '../internals/models';
+import { useDateTimeRangeManager } from '../managers';
 import { useDateTimeRangePickerDefaultizedProps } from '../DateTimeRangePicker/shared';
 import { SingleInputDateTimeRangeField } from '../SingleInputDateTimeRangeField';
 import { DateTimeRangePickerTimeWrapper } from '../DateTimeRangePicker/DateTimeRangePickerTimeWrapper';
 import { RANGE_VIEW_HEIGHT } from '../internals/constants/dimensions';
 import { usePickerRangePositionContext } from '../hooks';
-import { PickerRangeStep } from '../internals/utils/createRangePickerStepNavigation';
+import type { PickerRangeStep } from '../internals/utils/createRangePickerStepNavigation';
 
 const STEPS: PickerRangeStep[] = [
   { views: ['day'], rangePosition: 'start' },
@@ -128,6 +129,7 @@ const MobileDateTimeRangePicker = React.forwardRef(function MobileDateTimeRangeP
   ref: React.Ref<HTMLDivElement>,
 ) {
   const adapter = usePickerAdapter();
+  const manager = useDateTimeRangeManager();
   // Props with the default values common to all date time range pickers
   const defaultizedProps = useDateTimeRangePickerDefaultizedProps<MobileDateTimeRangePickerProps>(
     inProps,
@@ -185,9 +187,7 @@ const MobileDateTimeRangePicker = React.forwardRef(function MobileDateTimeRangeP
   const { renderPicker } = useMobileRangePicker<DateTimeRangePickerView, typeof props>({
     ref,
     props,
-    valueManager: rangeValueManager,
-    valueType: 'date-time',
-    validator: validateDateTimeRange,
+    manager,
     rendererInterceptor,
     steps: STEPS,
   });
@@ -195,7 +195,7 @@ const MobileDateTimeRangePicker = React.forwardRef(function MobileDateTimeRangeP
   return renderPicker();
 }) as MobileDateRangePickerComponent;
 
-MobileDateTimeRangePicker.propTypes = {
+MobileDateTimeRangePicker.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -212,6 +212,9 @@ MobileDateTimeRangePicker.propTypes = {
    * - the `input` element if there is a field rendered.
    */
   autoFocus: PropTypes.bool,
+  /**
+   * A CSS class name applied to the root element.
+   */
   className: PropTypes.string,
   /**
    * If `true`, the Picker will close after submitting the full date.
@@ -377,6 +380,10 @@ MobileDateTimeRangePicker.propTypes = {
    * - `shortcut` (optional): the shortcut metadata if the value was accepted via a shortcut selection
    */
   onAccept: PropTypes.func,
+  /**
+   * Callback fired when the Cancel action is triggered.
+   */
+  onCancel: PropTypes.func,
   /**
    * Callback fired when the value changes.
    * @template TValue The value type. It will be the same type as `value` or `null`. It can be in `[start, end]` format in case of range value.

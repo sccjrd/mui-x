@@ -5,10 +5,11 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlined';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
 import { useTreeItemUtils } from '@mui/x-tree-view/hooks';
-import { TreeItem, TreeItemProps } from '@mui/x-tree-view/TreeItem';
-import { UseTreeItemLabelInputSlotOwnProps } from '@mui/x-tree-view/useTreeItem';
+import type { TreeItemProps } from '@mui/x-tree-view/TreeItem';
+import { TreeItem } from '@mui/x-tree-view/TreeItem';
+import type { UseTreeItemLabelInputSlotOwnProps } from '@mui/x-tree-view/useTreeItem';
 import { TreeItemLabelInput } from '@mui/x-tree-view/TreeItemLabelInput';
-import { MUI_X_PRODUCTS } from './products';
+import { MUI_X_PRODUCTS } from '../../datasets/products';
 
 const ERRORS = {
   REQUIRED: 'The label cannot be empty',

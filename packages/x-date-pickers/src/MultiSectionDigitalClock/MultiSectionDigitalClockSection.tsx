@@ -8,10 +8,8 @@ import MenuItem from '@mui/material/MenuItem';
 import useForkRef from '@mui/utils/useForkRef';
 import useEnhancedEffect from '@mui/utils/useEnhancedEffect';
 import useEventCallback from '@mui/utils/useEventCallback';
-import {
-  MultiSectionDigitalClockSectionClasses,
-  getMultiSectionDigitalClockSectionUtilityClass,
-} from './multiSectionDigitalClockSectionClasses';
+import type { MultiSectionDigitalClockSectionClasses } from './multiSectionDigitalClockSectionClasses';
+import { getMultiSectionDigitalClockSectionUtilityClass } from './multiSectionDigitalClockSectionClasses';
 import type {
   MultiSectionDigitalClockOption,
   MultiSectionDigitalClockSlots,
@@ -22,10 +20,10 @@ import {
   MULTI_SECTION_CLOCK_SECTION_WIDTH,
 } from '../internals/constants/dimensions';
 import { getFocusedListItemIndex } from '../internals/utils/utils';
-import { FormProps } from '../internals/models/formProps';
-import { PickerOwnerState } from '../models/pickers';
+import type { FormProps } from '../internals/models/formProps';
+import type { PickerOwnerState } from '../models/pickers';
 import { usePickerPrivateContext } from '../internals/hooks/usePickerPrivateContext';
-import { MultiSectionDigitalClockClasses } from './multiSectionDigitalClockClasses';
+import type { MultiSectionDigitalClockClasses } from './multiSectionDigitalClockClasses';
 
 export interface ExportedMultiSectionDigitalClockSectionProps {
   className?: string;
@@ -143,6 +141,7 @@ export const MultiSectionDigitalClockSection = React.forwardRef(
     const containerRef = React.useRef<HTMLUListElement>(null);
     const handleRef = useForkRef(ref, containerRef);
     const previousActive = React.useRef<HTMLElement | null>(null);
+    const lastScrollRef = React.useRef<{ item: HTMLElement; offsetTop: number } | null>(null);
     const shouldRefocusOnNextRender = React.useRef(false);
 
     const props = useThemeProps({
@@ -204,11 +203,15 @@ export const MultiSectionDigitalClockSection = React.forwardRef(
         activeItem.focus();
       }
 
-      if (isSameItemAsPrevious) {
+      const offsetTop = activeItem.offsetTop;
+      // Only scroll when the active item or its position changes, so that re-renders don't undo the user's scrolling
+      if (
+        lastScrollRef.current?.item === activeItem &&
+        lastScrollRef.current.offsetTop === offsetTop
+      ) {
         return;
       }
-
-      const offsetTop = activeItem.offsetTop;
+      lastScrollRef.current = { item: activeItem, offsetTop };
       const itemHeight = activeItem.offsetHeight;
       const containerHeight = containerRef.current.clientHeight;
       const scrollableHeight = containerRef.current.scrollHeight;

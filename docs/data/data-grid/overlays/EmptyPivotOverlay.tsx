@@ -1,10 +1,10 @@
-import {
-  DataGridPremium,
+import type {
   GridColDef,
   GridRowModel,
   GridPivotModel,
   GridInitialState,
 } from '@mui/x-data-grid-premium';
+import { DataGridPremium } from '@mui/x-data-grid-premium';
 
 const rows: GridRowModel[] = [
   { id: 1, product: 'Apples', region: 'North', quarter: 'Q1', sales: 1000 },
@@ -25,7 +25,7 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
 });
 
 const columns: GridColDef[] = [
-  { field: 'product', headerName: 'Product' },
+  { field: 'product', headerName: 'Product', rowHeader: true },
   { field: 'region', headerName: 'Region' },
   { field: 'quarter', headerName: 'Quarter' },
   {

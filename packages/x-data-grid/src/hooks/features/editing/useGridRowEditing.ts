@@ -3,19 +3,19 @@ import * as React from 'react';
 import type { RefObject } from '@mui/x-internals/types';
 import useEventCallback from '@mui/utils/useEventCallback';
 import useEnhancedEffect from '@mui/utils/useEnhancedEffect';
-import { warnOnce } from '@mui/x-internals/warning';
+import { errorOnce } from '@mui/x-internals/warning';
 import { isDeepEqual } from '@mui/x-internals/isDeepEqual';
 import { useGridEvent, useGridEventPriority } from '../../utils/useGridEvent';
 import type { GridEventListener } from '../../../models/events/gridEventListener';
-import {
-  GridEditModes,
-  GridRowModes,
-  type GridEditingState,
-  type GridEditCellProps,
-  type GridEditRowProps,
+import { GridEditModes, GridRowModes, GridCellModes } from '../../../models/gridEditRowModel';
+import type {
+  GridEditingState,
+  GridEditCellProps,
+  GridEditRowProps,
 } from '../../../models/gridEditRowModel';
 import type { GridPrivateApiCommunity } from '../../../models/api/gridApiCommunity';
 import type { DataGridProcessedProps } from '../../../models/props/DataGridProps';
+import { getPublicApiRef } from '../../../utils/getPublicApiRef';
 import type {
   GridRowEditingApi,
   GridEditingSharedApi,
@@ -29,7 +29,8 @@ import type {
 import { useGridApiMethod } from '../../utils/useGridApiMethod';
 import { gridEditRowsStateSelector, gridRowIsEditingSelector } from './gridEditingSelectors';
 import type { GridRowId, GridValidRowModel } from '../../../models/gridRows';
-import { isPrintableKey, isPasteShortcut } from '../../../utils/keyboardUtils';
+import { isPrintableKey, isPasteShortcut, isImeKeyDown } from '../../../utils/keyboardUtils';
+import { isEventFromPreMountedEditor } from '../../../utils/cellEditor';
 import {
   gridColumnDefinitionsSelector,
   gridVisibleColumnFieldsSelector,
@@ -38,10 +39,12 @@ import type { GridCellParams } from '../../../models/params/gridCellParams';
 import { gridRowsLookupSelector } from '../rows/gridRowsSelector';
 import { deepClone } from '../../../utils/utils';
 import {
-  type GridRowEditStopParams,
-  type GridRowEditStartParams,
   GridRowEditStopReasons,
   GridRowEditStartReasons,
+} from '../../../models/params/gridRowParams';
+import type {
+  GridRowEditStopParams,
+  GridRowEditStartParams,
 } from '../../../models/params/gridRowParams';
 import { GRID_ACTIONS_COLUMN_TYPE } from '../../../colDef';
 import { getDefaultCellValue } from './utils';
@@ -194,9 +197,8 @@ export const useGridRowEditing = (
   const handleCellKeyDown = React.useCallback<GridEventListener<'cellKeyDown'>>(
     (params, event) => {
       if (params.cellMode === GridRowModes.Edit) {
-        // Wait until IME is settled for Asian languages like Japanese and Chinese
-        // TODO: to replace at one point. See https://github.com/mui/material-ui/pull/39713#discussion_r1381678957.
-        if (event.which === 229) {
+        // Wait until the IME composition ends.
+        if (isImeKeyDown(event)) {
           return;
         }
 
@@ -209,7 +211,7 @@ export const useGridRowEditing = (
         } else if (event.key === 'Tab') {
           const columnFields = gridVisibleColumnFieldsSelector(apiRef).filter((field) => {
             const column = apiRef.current.getColumn(field);
-            if (column.type === GRID_ACTIONS_COLUMN_TYPE) {
+            if (column?.type === GRID_ACTIONS_COLUMN_TYPE) {
               return true;
             }
             return apiRef.current.isCellEditable(apiRef.current.getCellParams(params.id, field));
@@ -247,6 +249,11 @@ export const useGridRowEditing = (
           apiRef.current.publishEvent('rowEditStop', newParams, event);
         }
       } else if (params.isEditable) {
+        // The composition starts edit mode instead, see `handleCellCompositionStart`.
+        if (isEventFromPreMountedEditor(event) && isImeKeyDown(event)) {
+          return;
+        }
+
         let reason: GridRowEditStartReasons | undefined;
 
         const canStartEditing = apiRef.current.unstable_applyPipeProcessors(
@@ -265,6 +272,7 @@ export const useGridRowEditing = (
           reason = GridRowEditStartReasons.printableKeyDown;
         } else if (event.key === 'Enter') {
           reason = GridRowEditStartReasons.enterKeyDown;
+          event.preventDefault();
         } else if (event.key === 'Backspace' || event.key === 'Delete') {
           reason = GridRowEditStartReasons.deleteKeyDown;
         }
@@ -275,15 +283,31 @@ export const useGridRowEditing = (
             ...rowParams,
             field: params.field,
             reason,
-            // Only pass the pressed key when the row editing is controlled via `rowModesModel`.
-            // In uncontrolled mode, the default editor already inserts the character and passing it here would duplicate it.
-            key: rowModesModelProp && isPrintableKey(event) ? event.key : undefined,
           };
           apiRef.current.publishEvent('rowEditStart', newParams, event);
         }
       }
     },
-    [apiRef, hasFieldsWithErrors, rowModesModelProp],
+    [apiRef, hasFieldsWithErrors],
+  );
+
+  const handleCellCompositionStart = React.useCallback<GridEventListener<'cellCompositionStart'>>(
+    (params, event) => {
+      if (params.cellMode !== GridCellModes.View || !params.isEditable) {
+        return;
+      }
+      if (apiRef.current.getRowMode(params.id) !== GridRowModes.View) {
+        return;
+      }
+      const rowParams = apiRef.current.getRowParams(params.id);
+      const newParams: GridRowEditStartParams = {
+        ...rowParams,
+        field: params.field,
+        reason: GridRowEditStartReasons.compositionStart,
+      };
+      apiRef.current.publishEvent('rowEditStart', newParams, event);
+    },
+    [apiRef],
   );
 
   const handleRowEditStart = React.useCallback<GridEventListener<'rowEditStart'>>(
@@ -294,26 +318,15 @@ export const useGridRowEditing = (
 
       if (
         reason === GridRowEditStartReasons.printableKeyDown ||
-        reason === GridRowEditStartReasons.deleteKeyDown
+        reason === GridRowEditStartReasons.deleteKeyDown ||
+        reason === GridRowEditStartReasons.compositionStart
       ) {
-        // If the user typed a printable key, initialize the value with that key
-        // to avoid losing the first character when the component is controlled.
-        if (
-          rowModesModelProp &&
-          reason === GridRowEditStartReasons.printableKeyDown &&
-          params.key &&
-          field
-        ) {
-          startRowEditModeParams.initialValue = params.key;
-        } else {
-          // For Delete / Backspace or for uncontrolled row editing we clear the value
-          startRowEditModeParams.deleteValue = !!field;
-        }
+        startRowEditModeParams.deleteValue = !!field;
       }
 
       apiRef.current.startRowEditMode(startRowEditModeParams);
     },
-    [apiRef, rowModesModelProp],
+    [apiRef],
   );
 
   const handleRowEditStop = React.useCallback<GridEventListener<'rowEditStop'>>(
@@ -342,6 +355,7 @@ export const useGridRowEditing = (
   useGridEvent(apiRef, 'cellFocusIn', runIfEditModeIsRow(handleCellFocusIn));
   useGridEvent(apiRef, 'cellFocusOut', runIfEditModeIsRow(handleCellFocusOut));
   useGridEvent(apiRef, 'cellKeyDown', runIfEditModeIsRow(handleCellKeyDown));
+  useGridEvent(apiRef, 'cellCompositionStart', runIfEditModeIsRow(handleCellCompositionStart));
 
   useGridEvent(apiRef, 'rowEditStart', runIfEditModeIsRow(handleRowEditStart));
   useGridEvent(apiRef, 'rowEditStop', runIfEditModeIsRow(handleRowEditStop));
@@ -366,6 +380,7 @@ export const useGridRowEditing = (
     if (onRowModesModelChange && isNewModelDifferentFromProp) {
       onRowModesModelChange(newModel, {
         api: apiRef.current,
+        apiRef: getPublicApiRef(apiRef),
       });
     }
 
@@ -455,11 +470,10 @@ export const useGridRowEditing = (
           return acc;
         }
 
-        const column = apiRef.current.getColumn(field);
         let newValue = apiRef.current.getCellValue(id, field);
         if (fieldToFocus === field && (deleteValue || initialValue)) {
           if (deleteValue) {
-            newValue = getDefaultCellValue(column);
+            newValue = getDefaultCellValue(col);
           } else if (initialValue) {
             newValue = initialValue;
           }
@@ -468,7 +482,7 @@ export const useGridRowEditing = (
         acc[field] = {
           value: newValue,
           error: false,
-          isProcessingProps: column.editable && !!column.preProcessEditCellProps && deleteValue,
+          isProcessingProps: col.editable && !!col.preProcessEditCellProps && deleteValue,
         };
 
         return acc;
@@ -604,14 +618,13 @@ export const useGridRowEditing = (
 
           if (onProcessRowUpdateError) {
             onProcessRowUpdateError(errorThrown);
-          } else {
-            warnOnce(
+          } else if (process.env.NODE_ENV !== 'production') {
+            errorOnce(
               [
                 'MUI X: A call to `processRowUpdate()` threw an error which was not handled because `onProcessRowUpdateError()` is missing.',
                 'To handle the error pass a callback to the `onProcessRowUpdateError()` prop, for example `<DataGrid onProcessRowUpdateError={(error) => ...} />`.',
                 'For more detail, see https://mui.com/x/react-data-grid/editing/persistence/.',
-              ],
-              'error',
+              ].join('\n'),
             );
           }
         };
@@ -646,6 +659,9 @@ export const useGridRowEditing = (
       throwIfNotEditable(id, field);
 
       const column = apiRef.current.getColumn(field);
+      if (!column) {
+        return Promise.resolve(false);
+      }
       const row = apiRef.current.getRow(id)!;
 
       let parsedValue = value;
@@ -711,7 +727,7 @@ export const useGridRowEditing = (
           }
 
           const fieldColumn = apiRef.current.getColumn(thisField);
-          if (!fieldColumn.preProcessEditCellProps) {
+          if (!fieldColumn?.preProcessEditCellProps) {
             return;
           }
 
@@ -800,7 +816,9 @@ export const useGridRowEditing = (
   useGridApiMethod(apiRef, editingApi, 'public');
   useGridApiMethod(apiRef, editingPrivateApi, 'private');
 
-  React.useEffect(() => {
+  // Apply the controlled model before the browser inserts the typed character.
+  // With a passive effect, the edit state is created too late, and the editor ignores the first key.
+  useEnhancedEffect(() => {
     if (rowModesModelProp) {
       updateRowModesModel(rowModesModelProp);
     }

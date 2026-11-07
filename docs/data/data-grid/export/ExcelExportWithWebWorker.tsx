@@ -2,7 +2,8 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
-import Slide, { SlideProps } from '@mui/material/Slide';
+import type { SlideProps } from '@mui/material/Slide';
+import Slide from '@mui/material/Slide';
 import CircularProgress from '@mui/material/CircularProgress';
 import { DataGridPremium } from '@mui/x-data-grid-premium';
 import { useDemoData } from '@mui/x-data-grid-generator';
@@ -18,6 +19,7 @@ export default function ExcelExportWithWebWorker() {
     dataSet: 'Commodity',
     rowLength: 50_000,
     editable: true,
+    multiSelect: true,
   });
 
   return (

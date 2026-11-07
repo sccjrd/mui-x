@@ -1,6 +1,5 @@
 import type { RefObject } from '@mui/x-internals/types';
 import type {
-  GridCallbackDetails,
   GridValidRowModel,
   GridGroupNode,
   GridEventListener,
@@ -28,7 +27,7 @@ import type {
 import type { GridPremiumSlotsComponent } from './gridPremiumSlotsComponent';
 import type { GridPremiumSlotProps } from './gridPremiumSlotProps';
 import type { GridInitialStatePremium } from './gridStatePremium';
-import type { GridApiPremium } from './gridApiPremium';
+import type { GridApiPremium, GridCallbackDetailsPremium } from './gridApiPremium';
 import type { GridCellSelectionModel } from '../hooks/features/cellSelection';
 import type {
   GridPivotingColDefOverrides,
@@ -45,6 +44,13 @@ import type {
   PromptSuggestion,
 } from '../hooks/features/aiAssistant/gridAiAssistantInterfaces';
 import type { GridHistoryEventHandler } from '../hooks/features/history/gridHistoryInterfaces';
+import type { GridFormulaFunctionDefinition } from '../hooks/features/formula/gridFormulaInterfaces';
+import type {
+  GridComputedColDefOverrides,
+  GridComputedColumnDefinition,
+  GridComputedColumnsModel,
+} from '../hooks/features/computedColumns/gridComputedColumnsInterfaces';
+import type { GridPremiumFeatureDependencies } from './gridFeatureDependencies';
 
 export interface GridExperimentalPremiumFeatures extends GridExperimentalProFeatures {}
 
@@ -114,8 +120,7 @@ export interface DataGridPremiumPropsWithDefaultValue<R extends GridValidRowMode
    * @default GRID_AGGREGATION_FUNCTIONS when `dataSource` is not provided, `{}` when `dataSource` is provided
    */
   aggregationFunctions:
-    | Record<string, GridAggregationFunction>
-    | Record<string, GridAggregationFunctionDataSource>;
+    Record<string, GridAggregationFunction> | Record<string, GridAggregationFunctionDataSource>;
   /**
    * Rows used to generate the aggregated value.
    * If `filtered`, the aggregated values are generated using only the rows currently passing the filtering process.
@@ -130,6 +135,31 @@ export interface DataGridPremiumPropsWithDefaultValue<R extends GridValidRowMode
    * @default (groupNode) => (groupNode.depth === -1 ? 'footer' : 'inline')
    */
   getAggregationPosition: (groupNode: GridGroupNode) => GridAggregationPosition | null;
+  /**
+   * If `true`, the formula evaluation is disabled: `=` cell values render as raw strings.
+   * @default false
+   */
+  disableFormulas: boolean;
+  /**
+   * If `true`, formulas can be entered and are displayed using A1 notation
+   * (`=A1 + B2`) while still being stored in the canonical syntax.
+   * A leftmost row-number column and column-letter header adornments are shown.
+   * Has no effect when `disableFormulas` is `true` or a `dataSource` is set.
+   * @default false
+   */
+  formulaA1Notation: boolean;
+  /**
+   * If `true`, the suggestion dropdown shown while editing a formula cell is disabled.
+   * Has no effect when `disableFormulas` is `true` or a `dataSource` is set.
+   * @default false
+   */
+  disableFormulaAutocomplete: boolean;
+  /**
+   * If `true`, the computed columns are disabled: the columns of the `computedColumns` model are
+   * not added to the grid and the UI to manage them is hidden.
+   * @default false
+   */
+  disableComputedColumns: boolean;
   /**
    * If `true`, the clipboard paste is disabled.
    * @default false
@@ -186,7 +216,7 @@ export interface DataGridPremiumPropsWithDefaultValue<R extends GridValidRowMode
 export interface DataGridPremiumPropsWithoutDefaultValue<
   R extends GridValidRowModel = any,
 > extends Omit<
-  DataGridProPropsWithoutDefaultValue<R>,
+  DataGridProPropsWithoutDefaultValue<R, GridApiPremium>,
   'initialState' | 'apiRef' | 'dataSource' | 'onDataSourceError'
 > {
   /**
@@ -204,6 +234,44 @@ export interface DataGridPremiumPropsWithoutDefaultValue<
    */
   slotProps?: GridPremiumSlotProps;
   /**
+   * Injectable feature implementations.
+   * Import the formula feature from `@mui/x-data-grid-premium/formula` and pass it here to
+   * enable formula evaluation — the feature is not bundled with the grid itself.
+   * The value is read on the first render and must not change afterwards.
+   */
+  featureDependencies?: GridPremiumFeatureDependencies;
+  /**
+   * Functions available to formulas, keyed by name.
+   * The prop replaces the built-in set: spread `GRID_FORMULA_FUNCTIONS`
+   * (imported from `@mui/x-data-grid-premium/formula`) to extend it.
+   * Has no effect unless the formula feature is provided through `featureDependencies`.
+   * @default GRID_FORMULA_FUNCTIONS when `dataSource` is not provided, `{}` when `dataSource` is provided
+   */
+  formulaFunctions?: Record<string, GridFormulaFunctionDefinition>;
+  /**
+   * Set the computed columns of the grid: read-only columns whose value is a formula
+   * evaluated for every row from the other fields of the same row.
+   * Has no effect unless the formula feature is provided through `featureDependencies`.
+   */
+  computedColumns?: GridComputedColumnsModel;
+  /**
+   * Callback fired when the computed columns model changes.
+   * @param {GridComputedColumnsModel} model The new computed columns model.
+   * @param {GridCallbackDetails} details Additional details for this callback.
+   */
+  onComputedColumnsChange?: (
+    model: GridComputedColumnsModel,
+    details: GridCallbackDetailsPremium,
+  ) => void;
+  /**
+   * The column definition properties applied to the columns generated from the `computedColumns` model.
+   * Pass a function to return different properties for each computed column.
+   * Keep the reference stable between renders when it holds functions, arrays, or objects: the overrides are compared property by property, so a new one re-creates the computed columns on every render, and loops when the parent re-renders on grid state.
+   */
+  computedColDef?:
+    | GridComputedColDefOverrides
+    | ((definition: GridComputedColumnDefinition) => GridComputedColDefOverrides);
+  /**
    * Set the row grouping model of the grid.
    */
   rowGroupingModel?: GridRowGroupingModel;
@@ -212,7 +280,10 @@ export interface DataGridPremiumPropsWithoutDefaultValue<
    * @param {GridRowGroupingModel} model Columns used as grouping criteria.
    * @param {GridCallbackDetails} details Additional details for this callback.
    */
-  onRowGroupingModelChange?: (model: GridRowGroupingModel, details: GridCallbackDetails) => void;
+  onRowGroupingModelChange?: (
+    model: GridRowGroupingModel,
+    details: GridCallbackDetailsPremium,
+  ) => void;
   /**
    * Set the aggregation model of the grid.
    */
@@ -222,7 +293,10 @@ export interface DataGridPremiumPropsWithoutDefaultValue<
    * @param {GridAggregationModel} model The aggregated columns.
    * @param {GridCallbackDetails} details Additional details for this callback.
    */
-  onAggregationModelChange?: (model: GridAggregationModel, details: GridCallbackDetails) => void;
+  onAggregationModelChange?: (
+    model: GridAggregationModel,
+    details: GridCallbackDetailsPremium,
+  ) => void;
   /**
    * Set the cell selection model of the grid.
    */
@@ -234,7 +308,7 @@ export interface DataGridPremiumPropsWithoutDefaultValue<
    */
   onCellSelectionModelChange?: (
     cellSelectionModel: GridCellSelectionModel,
-    details: GridCallbackDetails,
+    details: GridCallbackDetailsPremium,
   ) => void;
   /**
    * Callback fired when the state of the Excel export changes.
@@ -252,11 +326,11 @@ export interface DataGridPremiumPropsWithoutDefaultValue<
   /**
    * Callback fired when the clipboard paste operation starts.
    */
-  onClipboardPasteStart?: GridEventListener<'clipboardPasteStart'>;
+  onClipboardPasteStart?: GridEventListener<'clipboardPasteStart', GridApiPremium>;
   /**
    * Callback fired when the clipboard paste operation ends.
    */
-  onClipboardPasteEnd?: GridEventListener<'clipboardPasteEnd'>;
+  onClipboardPasteEnd?: GridEventListener<'clipboardPasteEnd', GridApiPremium>;
   /**
    * Unstable features, breaking changes might be introduced.
    * For each feature, if the flag is not explicitly set to `true`, then the feature is fully disabled, and neither property nor method calls will have any effect.
@@ -371,14 +445,14 @@ export interface DataGridPremiumPropsWithoutDefaultValue<
    * @param {MuiEvent<{}>} event The event object.
    * @param {GridCallbackDetails} details Additional details for this callback.
    */
-  onSidebarClose?: GridEventListener<'sidebarClose'>;
+  onSidebarClose?: GridEventListener<'sidebarClose', GridApiPremium>;
   /**
    * Callback fired when the sidebar is opened.
    * @param {GridSidebarParams} params With all properties from [[GridSidebarParams]].
    * @param {MuiEvent<{}>} event The event object.
    * @param {GridCallbackDetails} details Additional details for this callback.
    */
-  onSidebarOpen?: GridEventListener<'sidebarOpen'>;
+  onSidebarOpen?: GridEventListener<'sidebarOpen', GridApiPremium>;
   /**
    * The id of the active chart.
    */
@@ -391,9 +465,9 @@ export interface DataGridPremiumPropsWithoutDefaultValue<
   /**
    * Callback fired when an undo operation is executed.
    */
-  onUndo?: GridEventListener<'undo'>;
+  onUndo?: GridEventListener<'undo', GridApiPremium>;
   /**
    * Callback fired when a redo operation is executed.
    */
-  onRedo?: GridEventListener<'redo'>;
+  onRedo?: GridEventListener<'redo', GridApiPremium>;
 }

@@ -3,28 +3,54 @@ import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
 import { styled } from '@mui/material/styles';
-import { Scatter, type ScatterProps, type ScatterSlotProps, type ScatterSlots } from './Scatter';
+import useId from '@mui/utils/useId';
+import { Scatter } from './Scatter';
+import type { ScatterProps, ScatterSlotProps, ScatterSlots } from './Scatter';
 import { useScatterSeriesContext } from '../hooks/useScatterSeries';
 import { useXAxes, useYAxes } from '../hooks';
 import { useZAxes } from '../hooks/useZAxis';
-import { scatterSeriesConfig as scatterSeriesConfig } from './seriesConfig';
+import { scatterSeriesConfig } from './seriesConfig';
 import getMarkerSize from './seriesConfig/getMarkerSize';
 import { BatchScatter } from './BatchScatter';
+import { ScatterAsync } from './async/ScatterAsync';
 import { useUtilityClasses } from './scatterClasses';
+import { useChartsContext } from '../context/ChartsProvider';
+import { useStore } from '../internals/store/useStore';
+import { selectorShouldUseProgressiveRenderer } from '../internals/plugins/featurePlugins/useProgressiveRendering';
+import type { UseProgressiveRenderingSignature } from '../internals/plugins/featurePlugins/useProgressiveRendering';
+import type { SeriesId } from '../models/seriesType/common';
 import type { ScatterPropsOverrides } from '../models/chartsSlotsComponentsProps';
 
+const EMPTY_SERIES_IDS: readonly SeriesId[] = [];
+
 export interface ScatterPlotSlots extends ScatterSlots {
+  /**
+   * The component that renders the scatter markers.
+   */
   scatter?: React.JSXElementConstructor<ScatterProps & ScatterPropsOverrides>;
 }
 
 export interface ScatterPlotSlotProps extends ScatterSlotProps {
+  // Not widened with `data-*`: none of the default renderers (svg-single
+  // `Scatter`, svg-batch `BatchScatter`, progressive `ScatterAsync`) spread
+  // unknown props onto an element, so `data-*` here never reaches the DOM.
+  /**
+   * The props used for the `scatter` slot.
+   */
   scatter?: Partial<ScatterProps> & ScatterPropsOverrides;
 }
 
 export type RendererType = 'svg-single' | 'svg-batch';
 
-export interface ScatterPlotProps extends Pick<ScatterProps, 'onItemClick' | 'classes'> {
+export interface ScatterPlotProps extends Pick<ScatterProps, 'classes'> {
   className?: string;
+  /**
+   * Callback fired when a marker is clicked directly.
+   * For closest-point clicks (the `ScatterChart` default), pass `onItemClick` to the chart container instead.
+   * @param {MouseEvent} event Mouse event recorded on the `<svg/>` element.
+   * @param {ScatterItemIdentifier} scatterItemIdentifier The scatter item identifier.
+   */
+  onItemClick?: ScatterProps['onItemClick'];
   /**
    * Overridable component slots.
    * @default {}
@@ -37,13 +63,15 @@ export interface ScatterPlotProps extends Pick<ScatterProps, 'onItemClick' | 'cl
   slotProps?: ScatterPlotSlotProps;
   /**
    * The type of renderer to use for the scatter plot.
-   * - `svg-single`: Renders every scatter item in a `<circle />` element.
+   * - `svg-single`: Renders every scatter item in a `<circle />` element, synchronously.
+   * - `svg-progressive`: Renders every scatter item in a `<circle />` element, in progressive batches that paint over several animation frames to keep the main thread responsive.
    * - `svg-batch`: Batch renders scatter items in `<path />` elements for better performance with large datasets, at the cost of some limitations.
    *                Read more: https://mui.com/x/react-charts/scatter/#performance
    *
+   * When not set, defaults to `svg-single`. Enable the `progressiveRendering` experimental feature to auto-select `svg-progressive` above an internal point-count threshold; this will become the default in the next major version.
    * @default 'svg-single'
    */
-  renderer?: RendererType;
+  renderer?: RendererType | 'svg-progressive';
 }
 
 const ScatterPlotRoot = styled('g', {
@@ -69,6 +97,17 @@ function ScatterPlot(props: ScatterPlotProps) {
   const { zAxis, zAxisIds } = useZAxes();
   const classes = useUtilityClasses({ classes: inClasses });
 
+  const { instance } = useChartsContext<[UseProgressiveRenderingSignature]>();
+  const store = useStore<[UseProgressiveRenderingSignature]>();
+  const plotId = useId();
+  const seriesIds = seriesData?.seriesOrder ?? EMPTY_SERIES_IDS;
+  const isProgressive = store.use(selectorShouldUseProgressiveRenderer, seriesIds, renderer);
+  React.useEffect(
+    // `plotId` is `undefined` on the first render in React 17.
+    () => (plotId ? instance.registerProgressivePlan(plotId, seriesIds, renderer) : undefined),
+    [instance, plotId, seriesIds, renderer],
+  );
+
   if (seriesData === undefined) {
     return null;
   }
@@ -78,7 +117,14 @@ function ScatterPlot(props: ScatterPlotProps) {
   const defaultYAxisId = yAxisIds[0];
   const defaultZAxisId = zAxisIds[0];
 
-  const DefaultScatterItems = renderer === 'svg-batch' ? BatchScatter : Scatter;
+  let DefaultScatterItems: React.JSXElementConstructor<ScatterProps>;
+  if (renderer === 'svg-batch') {
+    DefaultScatterItems = BatchScatter;
+  } else if (isProgressive) {
+    DefaultScatterItems = ScatterAsync;
+  } else {
+    DefaultScatterItems = Scatter;
+  }
   const ScatterItems = slots?.scatter ?? DefaultScatterItems;
 
   return (
@@ -120,26 +166,34 @@ function ScatterPlot(props: ScatterPlotProps) {
   );
 }
 
-ScatterPlot.propTypes = {
+ScatterPlot.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
   /**
-   * Callback fired when clicking on a scatter item.
+   * Override or extend the styles applied to the component.
+   */
+  classes: PropTypes.object,
+  className: PropTypes.string,
+  /**
+   * Callback fired when a marker is clicked directly.
+   * For closest-point clicks (the `ScatterChart` default), pass `onItemClick` to the chart container instead.
    * @param {MouseEvent} event Mouse event recorded on the `<svg/>` element.
    * @param {ScatterItemIdentifier} scatterItemIdentifier The scatter item identifier.
    */
   onItemClick: PropTypes.func,
   /**
    * The type of renderer to use for the scatter plot.
-   * - `svg-single`: Renders every scatter item in a `<circle />` element.
+   * - `svg-single`: Renders every scatter item in a `<circle />` element, synchronously.
+   * - `svg-progressive`: Renders every scatter item in a `<circle />` element, in progressive batches that paint over several animation frames to keep the main thread responsive.
    * - `svg-batch`: Batch renders scatter items in `<path />` elements for better performance with large datasets, at the cost of some limitations.
    *                Read more: https://mui.com/x/react-charts/scatter/#performance
    *
+   * When not set, defaults to `svg-single`. Enable the `progressiveRendering` experimental feature to auto-select `svg-progressive` above an internal point-count threshold; this will become the default in the next major version.
    * @default 'svg-single'
    */
-  renderer: PropTypes.oneOf(['svg-batch', 'svg-single']),
+  renderer: PropTypes.oneOf(['svg-batch', 'svg-progressive', 'svg-single']),
   /**
    * The props used for each component slot.
    * @default {}

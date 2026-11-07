@@ -1,7 +1,7 @@
 'use client';
 import * as React from 'react';
 import useSlotProps from '@mui/utils/useSlotProps';
-import { SlotComponentProps } from '@mui/utils/types';
+import type { SlotComponentProps } from '@mui/utils/types';
 import { useChatPartRenderer } from '../hooks/useChatPartRenderer';
 import type { ChatMessagePart, ChatStepStartMessagePart } from '../types/chat-message-parts';
 import type { ChatPartRenderer } from '../renderers/chatPartRenderer';
@@ -9,23 +9,37 @@ import { useChatOnToolCall } from '../hooks/useChatOnToolCall';
 import { useChatLocaleText } from '../chat/internals/ChatLocaleContext';
 import type { ChatLocaleText } from '../chat/internals/chatLocaleText';
 import { useMessageContext } from './internals/MessageContext';
-import { type MessageContentOwnerState } from './message.types';
-import { FilePart, type FilePartExternalProps } from './parts/FilePart';
-import { ReasoningPart, type ReasoningPartExternalProps } from './parts/ReasoningPart';
-import {
-  SourceDocumentPart,
-  type SourceDocumentPartExternalProps,
-} from './parts/SourceDocumentPart';
-import { SourceUrlPart, type SourceUrlPartExternalProps } from './parts/SourceUrlPart';
-import { ToolPart, type ToolPartExternalProps } from './parts/ToolPart';
+import type { MessageContentOwnerState } from './message.types';
+import { FilePart } from './parts/FilePart';
+import type { FilePartExternalProps } from './parts/FilePart';
+import { ReasoningPart } from './parts/ReasoningPart';
+import type { ReasoningPartExternalProps } from './parts/ReasoningPart';
+import { SourceDocumentPart } from './parts/SourceDocumentPart';
+import type { SourceDocumentPartExternalProps } from './parts/SourceDocumentPart';
+import { SourceUrlPart } from './parts/SourceUrlPart';
+import type { SourceUrlPartExternalProps } from './parts/SourceUrlPart';
+import { ToolPart } from './parts/ToolPart';
+import type { ToolPartExternalProps } from './parts/ToolPart';
 
 export interface MessageContentSlots {
+  /**
+   * The component that renders the content.
+   */
   content: React.ElementType;
+  /**
+   * The component that renders the bubble.
+   */
   bubble: React.ElementType;
 }
 
 export interface MessageContentSlotProps {
+  /**
+   * The props used for the content slot.
+   */
   content?: SlotComponentProps<'div', {}, MessageContentOwnerState>;
+  /**
+   * The props used for the bubble slot.
+   */
   bubble?: SlotComponentProps<'div', {}, MessageContentOwnerState>;
 }
 
@@ -57,8 +71,8 @@ export interface MessageContentProps extends React.HTMLAttributes<HTMLDivElement
    */
   partProps?: MessageContentPartProps;
   /**
-   * @deprecated Use `partProps` instead.
    * Callback to resolve a built-in part renderer for a given part type.
+   * @deprecated Use `partProps` instead.
    * @param {ChatMessagePart} part The message part to resolve a renderer for.
    * @param {ChatLocaleText} localeText The locale text for the chat.
    * @returns {ChatPartRenderer<ChatMessagePart> | null} A renderer or null.
@@ -72,7 +86,15 @@ export interface MessageContentProps extends React.HTMLAttributes<HTMLDivElement
    * Useful for placing inline metadata (e.g. timestamp, status) inside the bubble.
    */
   afterContent?: React.ReactNode;
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
   slots?: Partial<MessageContentSlots>;
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
   slotProps?: MessageContentSlotProps;
 }
 

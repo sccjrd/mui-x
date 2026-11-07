@@ -2,12 +2,8 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import Rating from '@mui/material/Rating';
 import useEnhancedEffect from '@mui/utils/useEnhancedEffect';
-import {
-  DataGrid,
-  GridRenderCellParams,
-  GridColDef,
-  useGridApiContext,
-} from '@mui/x-data-grid';
+import type { GridRenderCellParams, GridColDef } from '@mui/x-data-grid';
+import { DataGrid, useGridApiContext } from '@mui/x-data-grid';
 
 function renderRating(params: GridRenderCellParams<any, number>) {
   return <Rating readOnly value={params.value} />;
@@ -59,6 +55,7 @@ export default function CustomEditComponent() {
 const columns: GridColDef[] = [
   {
     field: 'places',
+    rowHeader: true,
     headerName: 'Places',
     width: 120,
   },

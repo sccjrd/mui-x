@@ -1,8 +1,5 @@
-import {
-  DataGrid,
-  GridColDef,
-  gridStringOrNumberComparator,
-} from '@mui/x-data-grid';
+import type { GridColDef } from '@mui/x-data-grid';
+import { DataGrid, gridStringOrNumberComparator } from '@mui/x-data-grid';
 import {
   randomQuantity,
   randomId,
@@ -10,7 +7,7 @@ import {
 } from '@mui/x-data-grid-generator';
 
 const columns: GridColDef[] = [
-  { field: 'commodity', headerName: 'Commodity', width: 200 },
+  { field: 'commodity', headerName: 'Commodity', width: 200, rowHeader: true },
   {
     type: 'number',
     field: 'quantity',

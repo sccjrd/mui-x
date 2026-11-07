@@ -1,10 +1,7 @@
-import Select, { SelectChangeEvent } from '@mui/material/Select';
-import {
-  DataGrid,
-  GridRenderCellParams,
-  GridColDef,
-  useGridApiContext,
-} from '@mui/x-data-grid';
+import type { SelectChangeEvent } from '@mui/material/Select';
+import Select from '@mui/material/Select';
+import type { GridRenderCellParams, GridColDef } from '@mui/x-data-grid';
+import { DataGrid, useGridApiContext } from '@mui/x-data-grid';
 
 function SelectEditInputCell(props: GridRenderCellParams) {
   const { id, value, field } = props;
@@ -47,6 +44,7 @@ const columns = [
   {
     field: 'name',
     headerName: 'Name',
+    rowHeader: true,
     width: 120,
   },
   {

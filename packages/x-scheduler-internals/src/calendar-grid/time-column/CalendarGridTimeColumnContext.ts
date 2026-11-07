@@ -1,20 +1,18 @@
 'use client';
 import * as React from 'react';
-import { TemporalSupportedObject } from '../../models';
+import type { TimelineAxis } from '../../internals/utils/timeline-axis';
+import type { BaseTemporal } from '../../internals/utils/base-temporal';
 
 export interface CalendarGridTimeColumnContext {
   /**
-   * The start date and time of the column.
+   * The date of the column, in the display timezone.
    */
-  start: TemporalSupportedObject;
+  plainDate: BaseTemporal.PlainDate;
   /**
-   * The end date and time of the column.
+   * The axis of the column: its bounds, read in the display timezone, and the hour window of the
+   * view.
    */
-  end: TemporalSupportedObject;
-  /**
-   * The index of the column in the grid.
-   */
-  index: number;
+  axis: TimelineAxis;
   /**
    * Whether this column currently owns focus within the grid.
    * When `true`, interactive children (e.g. events) should use `tabIndex={0}`
@@ -26,15 +24,24 @@ export interface CalendarGridTimeColumnContext {
    * @param {Object} parameters The parameters of the method.
    * @param {{ clientY: number }} parameters.input The input object provided by the drag and drop library for the current event.
    * @param {React.RefObject<HTMLElement | null>} parameters.elementRef The ref of the element on which the event has been triggered.
+   * @param {number} parameters.elementStart The start of the element as a timestamp, when known. Disambiguates an element starting in the hour repeated by a DST transition.
    * @returns {number} The cursor position in milliseconds.
    */
   getCursorPositionInElementMs: ({
     input,
     elementRef,
+    elementStart,
   }: {
     input: { clientY: number };
     elementRef: React.RefObject<HTMLElement | null>;
+    elementStart?: number;
   }) => number;
+  /**
+   * Maps a pointer position to a precision-rounded timestamp within this column (vertical axis), used by the pointer-based resize.
+   * @param {{ clientX: number, clientY: number }} input The pointer coordinates.
+   * @returns {number | null} The timestamp under the pointer, or `null` when the column isn't measurable yet.
+   */
+  getTimestampAtPointer: (input: { clientX: number; clientY: number }) => number | null;
 }
 
 export const CalendarGridTimeColumnContext = React.createContext<

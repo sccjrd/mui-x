@@ -15,17 +15,20 @@ import { useId } from '@base-ui/utils/useId';
 import {
   ErrorContainer,
   SharedComponentsStyledContext,
+  SchedulerSlotsProvider,
+  SchedulerDirectionProvider,
   eventDialogSlots,
-  EventDialogStyledContext,
+  eventContextMenuSlots,
+  EventEditingStyledContext,
   EVENT_TIMELINE_DEFAULT_LOCALE_TEXT,
 } from '@mui/x-scheduler/internals';
-import { EventTimelinePremiumProps } from './EventTimelinePremium.types';
+import type { EventTimelinePremiumProps } from './EventTimelinePremium.types';
 import { EventTimelinePremiumContent } from './content';
-import {
-  EventTimelinePremiumClasses,
-  getEventTimelinePremiumUtilityClass,
-} from './eventTimelinePremiumClasses';
+import type { EventTimelinePremiumClasses } from './eventTimelinePremiumClasses';
+import { getEventTimelinePremiumUtilityClass } from './eventTimelinePremiumClasses';
 import { EventTimelinePremiumStyledContext } from './EventTimelinePremiumStyledContext';
+import { EventTimelinePremiumFeaturesContext } from './features/EventTimelinePremiumFeaturesContext';
+import { useFrozenEventTimelinePremiumFeatures } from './features/useFrozenEventTimelinePremiumFeatures';
 
 const packageInfo = {
   releaseDate: '__RELEASE_INFO__',
@@ -59,11 +62,30 @@ const useUtilityClasses = (classes: Partial<EventTimelinePremiumClasses> | undef
     eventResizeHandler: ['eventResizeHandler'],
     eventLinesClamp: ['eventLinesClamp'],
     eventRecurringIcon: ['eventRecurringIcon'],
+    dependencyArrows: ['dependencyArrows'],
+    dependencyTerminals: ['dependencyTerminals'],
+    eventDependencyTerminal: ['eventDependencyTerminal'],
+    dependencyDialog: ['dependencyDialog'],
+    dependencyDialogPaper: ['dependencyDialogPaper'],
+    dependencyDialogHeader: ['dependencyDialogHeader'],
+    dependencyDialogTitle: ['dependencyDialogTitle'],
+    dependencyDialogCloseButton: ['dependencyDialogCloseButton'],
+    dependencyDialogContent: ['dependencyDialogContent'],
+    dependencyDialogForm: ['dependencyDialogForm'],
+    dependencyDialogBody: ['dependencyDialogBody'],
+    dependencyDialogDetails: ['dependencyDialogDetails'],
+    dependencyDialogEventChip: ['dependencyDialogEventChip'],
+    dependencyDialogLag: ['dependencyDialogLag'],
+    dependencyDialogLagUnit: ['dependencyDialogLagUnit'],
+    dependencyDialogLagNote: ['dependencyDialogLagNote'],
+    dependencyDialogDivider: ['dependencyDialogDivider'],
+    dependencyDialogActions: ['dependencyDialogActions'],
     eventSkeleton: ['eventSkeleton'],
     errorContainer: ['errorContainer'],
     errorAlert: ['errorAlert'],
     errorMessage: ['errorMessage'],
     ...eventDialogSlots,
+    ...eventContextMenuSlots,
   };
 
   return composeClasses(slots, getEventTimelinePremiumUtilityClass, classes);
@@ -102,12 +124,18 @@ const EventTimelinePremium = React.forwardRef(function EventTimelinePremium<
 
   const {
     parameters,
-    forwardedProps: { className, classes: classesProp, ...forwardedProps },
+    forwardedProps: { className, classes: classesProp, features: featuresProp, ...forwardedProps },
   } = useExtractEventTimelinePremiumParameters<TEvent, TResource, typeof props>(props);
-  const store = useEventTimelinePremium(parameters);
+  const { features, storeFeatures } = useFrozenEventTimelinePremiumFeatures(featuresProp);
+  const storeParameters = React.useMemo(
+    () => ({ ...parameters, storeFeatures }),
+    [parameters, storeFeatures],
+  );
+  const store = useEventTimelinePremium(storeParameters);
   const classes = useUtilityClasses(classesProp);
 
-  const { localeText, resourceColumnLabel, apiRef, ...other } = forwardedProps;
+  const { localeText, resourceColumnLabel, getEventAriaLabel, apiRef, slots, slotProps, ...other } =
+    forwardedProps;
   useInitializeApiRef(store, apiRef);
 
   const schedulerId = useId();
@@ -118,39 +146,54 @@ const EventTimelinePremium = React.forwardRef(function EventTimelinePremium<
   );
 
   const timelineStyledContextValue = React.useMemo(
-    () => ({ schedulerId, classes, localeText: mergedLocaleText, resourceColumnLabel }),
-    [schedulerId, classes, mergedLocaleText, resourceColumnLabel],
+    () => ({
+      schedulerId,
+      classes,
+      localeText: mergedLocaleText,
+      resourceColumnLabel,
+      getEventAriaLabel,
+    }),
+    [schedulerId, classes, mergedLocaleText, resourceColumnLabel, getEventAriaLabel],
   );
 
-  const dialogStyledContextValue = React.useMemo(
+  const editingStyledContextValue = React.useMemo(
     () => ({ schedulerId, classes, localeText: mergedLocaleText }),
     [schedulerId, classes, mergedLocaleText],
   );
 
-  const sharedComponentsStyledContextValue = React.useMemo(() => ({ classes }), [classes]);
+  const sharedComponentsStyledContextValue = React.useMemo(
+    () => ({ classes, localeText: mergedLocaleText }),
+    [classes, mergedLocaleText],
+  );
 
   return (
     <SchedulerStoreContext.Provider value={store as any}>
-      <EventTimelinePremiumStyledContext.Provider value={timelineStyledContextValue}>
-        <EventDialogStyledContext.Provider value={dialogStyledContextValue}>
-          <SharedComponentsStyledContext.Provider value={sharedComponentsStyledContextValue}>
-            <EventTimelinePremiumRoot
-              ref={forwardedRef}
-              className={clsx(classes.root, className)}
-              {...other}
-            >
-              <EventTimelinePremiumContent />
-              <ErrorContainer />
-              {watermark}
-            </EventTimelinePremiumRoot>
-          </SharedComponentsStyledContext.Provider>
-        </EventDialogStyledContext.Provider>
-      </EventTimelinePremiumStyledContext.Provider>
+      <EventTimelinePremiumFeaturesContext.Provider value={features}>
+        <EventTimelinePremiumStyledContext.Provider value={timelineStyledContextValue}>
+          <EventEditingStyledContext.Provider value={editingStyledContextValue}>
+            <SharedComponentsStyledContext.Provider value={sharedComponentsStyledContextValue}>
+              <SchedulerSlotsProvider slots={slots} slotProps={slotProps}>
+                <SchedulerDirectionProvider>
+                  <EventTimelinePremiumRoot
+                    ref={forwardedRef}
+                    className={clsx(classes.root, className)}
+                    {...other}
+                  >
+                    <EventTimelinePremiumContent />
+                    <ErrorContainer />
+                    {watermark}
+                  </EventTimelinePremiumRoot>
+                </SchedulerDirectionProvider>
+              </SchedulerSlotsProvider>
+            </SharedComponentsStyledContext.Provider>
+          </EventEditingStyledContext.Provider>
+        </EventTimelinePremiumStyledContext.Provider>
+      </EventTimelinePremiumFeaturesContext.Provider>
     </SchedulerStoreContext.Provider>
   );
 }) as EventTimelinePremiumComponent;
 
-EventTimelinePremium.propTypes = {
+EventTimelinePremium.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -197,6 +240,10 @@ EventTimelinePremium.propTypes = {
    */
   classes: PropTypes.object,
   /**
+   * The collapsed resources. A resource is expanded unless included here with a `true` value.
+   */
+  collapsedResources: PropTypes.object,
+  /**
    * Data source for fetching events asynchronously.
    * When provided, events are fetched through the data source instead of the `events` prop.
    */
@@ -205,20 +252,27 @@ EventTimelinePremium.propTypes = {
     persistEvents: PropTypes.func.isRequired,
   }),
   /**
-   * The locale object from `date-fns` used to format dates.
-   * This affects day names, month names, week start day, and other locale-dependent formatting.
-   * Import a locale from `date-fns/locale` and pass it to this prop.
-   * @default enUS (English)
+   * The locale of the dates, as a BCP 47 language tag such as `"fr-FR"`, like the locales of
+   * `Intl.DateTimeFormat`.
+   * This affects day names, month names, the first day of the week, week numbers, the 12-hour
+   * or 24-hour clock and the other locale-dependent formatting.
+   * @default "en-US"
    */
-  dateLocale: PropTypes.object,
+  dateLocale: PropTypes.string,
+  /**
+   * The resources initially collapsed.
+   * To render a controlled scheduler, use the `collapsedResources` prop.
+   * @default {} - all resources are expanded
+   */
+  defaultCollapsedResources: PropTypes.object,
   /**
    * The default preferences for the timeline.
    * To use controlled preferences, use the `preferences` prop.
-   * @default { ampm: true }
+   * @default {}
    */
   defaultPreferences: PropTypes.shape({
     ampm: PropTypes.bool,
-    weekStartsOn: PropTypes.oneOf([0, 1, 2, 3, 4, 5, 6]),
+    weekStartsOn: PropTypes.oneOf([1, 2, 3, 4, 5, 6, 7]),
   }),
   /**
    * The preset initially displayed in the timeline.
@@ -245,6 +299,23 @@ EventTimelinePremium.propTypes = {
    */
   defaultVisibleResources: PropTypes.object,
   /**
+   * The dependencies between events.
+   * Requires `dependenciesFeature` from `@mui/x-scheduler-premium/dependencies`.
+   * With it, any value, even an empty array, enables the dependencies.
+   * Pass `onDependenciesChange` to keep the changes users make.
+   */
+  dependencies: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+      lag: PropTypes.number,
+      lagUnit: PropTypes.oneOf(['day', 'hour', 'minute', 'week']),
+      source: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+      target: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+      type: PropTypes.oneOf(['FinishToFinish', 'FinishToStart', 'StartToFinish', 'StartToStart'])
+        .isRequired,
+    }),
+  ),
+  /**
    * The timezone used to display events in the scheduler.
    *
    * Accepts any valid IANA timezone name
@@ -254,7 +325,8 @@ EventTimelinePremium.propTypes = {
    * "locale" (use the user's current locale timezone),
    * or "UTC".
    *
-   * This timezone only affects rendering, events keep their original data timezone.
+   * Events keep their original data timezone. The visible range starts on the day of the visible
+   * date in this timezone, and the next and previous navigation return dates in this timezone.
    * @default "default"
    */
   displayTimezone: PropTypes.string,
@@ -285,8 +357,22 @@ EventTimelinePremium.propTypes = {
    */
   eventCreation: PropTypes.oneOfType([
     PropTypes.shape({
+      canHaveMultipleResources: PropTypes.bool,
       duration: PropTypes.number,
       interaction: PropTypes.oneOf(['click', 'double-click']),
+    }),
+    PropTypes.bool,
+  ]),
+  /**
+   * Configures how events are deleted.
+   * If `false`, event deletion is disabled.
+   * If `true`, event deletion is enabled with default configuration.
+   * If an object, event deletion is enabled with the provided configuration.
+   * @default true
+   */
+  eventDeletion: PropTypes.oneOfType([
+    PropTypes.shape({
+      confirmation: PropTypes.bool,
     }),
     PropTypes.bool,
   ]),
@@ -298,9 +384,26 @@ EventTimelinePremium.propTypes = {
   eventModelStructure: PropTypes.object,
   /**
    * The events currently available in the calendar.
+   *
+   * Event models are compared by reference to avoid reprocessing unchanged events.
+   * Replace an event model with a new object when updating it instead of mutating it in place.
    * @default []
    */
   events: PropTypes.arrayOf(PropTypes.object),
+  /**
+   * The optional features of the Event Timeline: `recurringEvents` from `@mui/x-scheduler-premium/recurring-events`
+   * and `dependencies` from `@mui/x-scheduler-premium/dependencies`.
+   * They are read once when the component mounts, later changes are ignored.
+   * @example { recurringEvents: recurringEventsFeature, dependencies: dependenciesFeature }
+   */
+  features: PropTypes.object,
+  /**
+   * Returns the accessible name of an event block.
+   * Use it to announce details rendered through the `timelineEventContent` slot.
+   * @param {EventTimelineGetEventAriaLabelParameters} parameters The occurrence, its row resource and the default name.
+   * @returns {string} The accessible name of the event block.
+   */
+  getEventAriaLabel: PropTypes.func,
   /**
    * Set the locale text of the Event Timeline.
    * You can find all the translation keys supported in [the source](https://github.com/mui/mui-x/blob/HEAD/packages/x-scheduler/src/models/translations.ts)
@@ -308,13 +411,26 @@ EventTimelinePremium.propTypes = {
    */
   localeText: PropTypes.object,
   /**
+   * Event handler called when the collapsed resources change.
+   */
+  onCollapsedResourcesChange: PropTypes.func,
+  /**
+   * Event handler called when the dependencies change.
+   */
+  onDependenciesChange: PropTypes.func,
+  /**
+   * Event handler called right before the built-in event dialog (or its mobile drawer variant) opens,
+   * regardless of what triggered it (pointer, keyboard, the armed toolbar's Edit action or event creation).
+   * `eventDetails.reason` is `"creation"` when the user is creating a new event, `"view"` when the
+   * occurrence is read-only (through the event, its resource or the `readOnly` prop) and the dialog
+   * opens in view-only mode, and `"edit"` otherwise.
+   * Call `eventDetails.cancel()` to keep it closed and handle the interaction in your own UI.
+   */
+  onEventEditingStart: PropTypes.func,
+  /**
    * Callback fired when some event of the calendar change.
    */
   onEventsChange: PropTypes.func,
-  /**
-   * Event handler called when the preferences change.
-   */
-  onPreferencesChange: PropTypes.func,
   /**
    * Event handler called when the preset changes.
    */
@@ -332,12 +448,29 @@ EventTimelinePremium.propTypes = {
    */
   preferences: PropTypes.shape({
     ampm: PropTypes.bool,
-    weekStartsOn: PropTypes.oneOf([0, 1, 2, 3, 4, 5, 6]),
+    weekStartsOn: PropTypes.oneOf([1, 2, 3, 4, 5, 6, 7]),
   }),
   /**
    * The preset currently displayed in the timeline.
    */
   preset: PropTypes.oneOf(['dayAndHour', 'dayAndMonth', 'dayAndWeek', 'monthAndYear', 'year']),
+  /**
+   * Configuration applied to each preset, keyed by the preset name.
+   * For the `dayAndHour` preset, `startTime` and `endTime` limit the hours displayed on
+   * each day: `startTime` is inclusive and `endTime` exclusive, so `{ startTime: 8,
+   * endTime: 20 }` renders the cells 8 AM through 7 PM and an event ending at 20:00 is
+   * still fully visible. Both must be whole hours between 0 and 24 with
+   * `startTime` lower than `endTime`; they default to 0 and 24, the full day, and an
+   * invalid range falls back to the full day with a warning in development.
+   * Presets that do not tick in hours ignore the configuration.
+   * @example { dayAndHour: { startTime: 8, endTime: 20 } }
+   */
+  presetConfig: PropTypes.shape({
+    dayAndHour: PropTypes.shape({
+      endTime: PropTypes.number,
+      startTime: PropTypes.number,
+    }),
+  }),
   /**
    * The presets available in the timeline.
    * The order is canonical (from most-zoomed-in to most-zoomed-out) and enforced internally,
@@ -378,6 +511,16 @@ EventTimelinePremium.propTypes = {
    * @default true
    */
   showCurrentTimeIndicator: PropTypes.bool,
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
+  slotProps: PropTypes.object,
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
+  slots: PropTypes.object,
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */

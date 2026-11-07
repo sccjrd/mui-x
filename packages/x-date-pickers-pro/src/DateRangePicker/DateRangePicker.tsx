@@ -7,7 +7,7 @@ import { DEFAULT_DESKTOP_MODE_MEDIA_QUERY } from '@mui/x-date-pickers/internals'
 import refType from '@mui/utils/refType';
 import { DesktopDateRangePicker } from '../DesktopDateRangePicker';
 import { MobileDateRangePicker } from '../MobileDateRangePicker';
-import { DateRangePickerProps } from './DateRangePicker.types';
+import type { DateRangePickerProps } from './DateRangePicker.types';
 
 type DatePickerComponent = ((
   props: DateRangePickerProps & React.RefAttributes<HTMLDivElement>,
@@ -41,7 +41,7 @@ const DateRangePicker = React.forwardRef(function DateRangePicker(
   return <MobileDateRangePicker ref={ref} {...other} />;
 }) as DatePickerComponent;
 
-DateRangePicker.propTypes = {
+DateRangePicker.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -58,6 +58,9 @@ DateRangePicker.propTypes = {
    * @default 2
    */
   calendars: PropTypes.oneOf([1, 2, 3]),
+  /**
+   * A CSS class name applied to the root element.
+   */
   className: PropTypes.string,
   /**
    * If `true`, the Picker will close after submitting the full date.
@@ -201,6 +204,10 @@ DateRangePicker.propTypes = {
    * - `shortcut` (optional): the shortcut metadata if the value was accepted via a shortcut selection
    */
   onAccept: PropTypes.func,
+  /**
+   * Callback fired when the Cancel action is triggered.
+   */
+  onCancel: PropTypes.func,
   /**
    * Callback fired when the value changes.
    * @template TValue The value type. It will be the same type as `value` or `null`. It can be in `[start, end]` format in case of range value.

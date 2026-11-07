@@ -1,5 +1,6 @@
 import { styled } from '@mui/material/styles';
-import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
+import type { GridColDef, GridRowsProp } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
 import { randomPrice } from '@mui/x-data-grid-generator';
 
 const StyledBox = styled('div')(({ theme }) => ({
@@ -50,7 +51,13 @@ const rows: GridRowsProp = [
 
 export default function ConditionalValidationGrid() {
   const columns: GridColDef[] = [
-    { field: 'expense', headerName: 'Expense', width: 160, editable: true },
+    {
+      field: 'expense',
+      headerName: 'Expense',
+      width: 160,
+      editable: true,
+      rowHeader: true,
+    },
     {
       field: 'price',
       headerName: 'Price',

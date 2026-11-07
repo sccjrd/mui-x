@@ -11,17 +11,15 @@ import useId from '@mui/utils/useId';
 import InputLabel from '@mui/material/InputLabel';
 import FormHelperText from '@mui/material/FormHelperText';
 import FormControl from '@mui/material/FormControl';
-import {
-  getPickersTextFieldUtilityClass,
-  PickersTextFieldClasses,
-} from './pickersTextFieldClasses';
-import { PickersTextFieldProps } from './PickersTextField.types';
+import type { PickersTextFieldClasses } from './pickersTextFieldClasses';
+import { getPickersTextFieldUtilityClass } from './pickersTextFieldClasses';
+import type { PickersTextFieldProps } from './PickersTextField.types';
 import { PickersOutlinedInput } from './PickersOutlinedInput';
 import { PickersFilledInput } from './PickersFilledInput';
 import { PickersInput } from './PickersInput';
 import { useFieldOwnerState } from '../internals/hooks/useFieldOwnerState';
 import { PickerTextFieldOwnerStateContext } from './usePickerTextFieldOwnerState';
-import { PickerTextFieldOwnerState } from '../models/fields';
+import type { PickerTextFieldOwnerState } from '../models/fields';
 
 const VARIANT_COMPONENT = {
   standard: PickersInput,
@@ -77,12 +75,14 @@ const PickersTextField = React.forwardRef(function PickersTextField(
       legacyProps.InputLabelProps ||
       legacyProps.FormHelperTextProps
     ) {
-      warnOnce([
-        'MUI X: `PickersTextField` no longer supports the `InputProps`, `inputProps`, `InputLabelProps` and `FormHelperTextProps` props.',
-        'They are silently dropped, which can hide configuration bugs in JavaScript codebases that do not benefit from TypeScript checks.',
-        'Use `slotProps.input`, `slotProps.htmlInput`, `slotProps.inputLabel` and `slotProps.formHelperText` instead.',
-        'You can run the `migrate-text-field-props` codemod to migrate automatically.',
-      ]);
+      warnOnce(
+        [
+          'MUI X: `PickersTextField` no longer supports the `InputProps`, `inputProps`, `InputLabelProps` and `FormHelperTextProps` props.',
+          'They are silently dropped, which can hide configuration bugs in JavaScript codebases that do not benefit from TypeScript checks.',
+          'Use `slotProps.input`, `slotProps.htmlInput`, `slotProps.inputLabel` and `slotProps.formHelperText` instead.',
+          'You can run the `migrate-text-field-props` codemod to migrate automatically.',
+        ].join('\n'),
+      );
     }
   }
 
@@ -104,6 +104,7 @@ const PickersTextField = React.forwardRef(function PickersTextField(
     elements,
     areAllSectionsEmpty,
     onClick,
+    onMouseDown,
     onKeyDown,
     onKeyUp,
     onPaste,
@@ -116,6 +117,7 @@ const PickersTextField = React.forwardRef(function PickersTextField(
     value,
     onChange,
     fullWidth,
+    readOnly,
     id: idProp,
     name,
     // Props used by FormHelperText
@@ -125,7 +127,7 @@ const PickersTextField = React.forwardRef(function PickersTextField(
     // Slot system
     slots,
     slotProps,
-    // @ts-ignore
+    // @ts-expect-error Range pickers pass this internal data attribute outside the public text-field props.
     'data-active-range-position': dataActiveRangePosition,
     ...other
   } = props;
@@ -143,7 +145,7 @@ const PickersTextField = React.forwardRef(function PickersTextField(
   const fieldOwnerState = useFieldOwnerState({
     disabled: props.disabled,
     required: props.required,
-    readOnly: inputSlotProps?.readOnly,
+    readOnly: inputSlotProps?.readOnly ?? readOnly,
   });
   const ownerState = React.useMemo<PickerTextFieldOwnerState>(
     () => ({
@@ -222,6 +224,7 @@ const PickersTextField = React.forwardRef(function PickersTextField(
           elements={elements}
           areAllSectionsEmpty={areAllSectionsEmpty}
           onClick={onClick}
+          onMouseDown={onMouseDown}
           onKeyDown={onKeyDown}
           onKeyUp={onKeyUp}
           onInput={onInput}
@@ -236,6 +239,7 @@ const PickersTextField = React.forwardRef(function PickersTextField(
           onChange={onChange}
           id={id}
           fullWidth={fullWidth}
+          readOnly={readOnly}
           inputRef={inputRef}
           sectionListRef={sectionListRef}
           label={label}
@@ -266,7 +270,7 @@ const PickersTextField = React.forwardRef(function PickersTextField(
   );
 });
 
-PickersTextField.propTypes = {
+PickersTextField.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -291,6 +295,10 @@ PickersTextField.propTypes = {
    * Useful when all the sections are selected.
    */
   contentEditable: PropTypes.bool.isRequired,
+  /**
+   * If `true`, the component is disabled.
+   * @default false
+   */
   disabled: PropTypes.bool.isRequired,
   /**
    * The elements to render.
@@ -354,19 +362,50 @@ PickersTextField.propTypes = {
    * Name attribute of the `input` element.
    */
   name: PropTypes.string,
+  /**
+   * @ignore
+   */
   onBlur: PropTypes.func.isRequired,
+  /**
+   * @ignore
+   */
   onChange: PropTypes.func.isRequired,
+  /**
+   * @ignore
+   */
   onClick: PropTypes.func.isRequired,
+  /**
+   * @ignore
+   */
   onFocus: PropTypes.func.isRequired,
+  /**
+   * @ignore
+   */
   onInput: PropTypes.func.isRequired,
+  /**
+   * @ignore
+   */
   onKeyDown: PropTypes.func.isRequired,
+  /**
+   * @ignore
+   */
+  onMouseDown: PropTypes.func.isRequired,
+  /**
+   * @ignore
+   */
   onPaste: PropTypes.func.isRequired,
+  /**
+   * If `true`, the component is read-only.
+   */
   readOnly: PropTypes.bool,
   /**
    * If `true`, the label will indicate that the `input` is required.
    * @default false
    */
   required: PropTypes.bool,
+  /**
+   * @ignore
+   */
   sectionListRef: PropTypes.oneOfType([
     PropTypes.func,
     PropTypes.shape({
@@ -406,6 +445,9 @@ PickersTextField.propTypes = {
     PropTypes.func,
     PropTypes.object,
   ]),
+  /**
+   * The value of the hidden `input` element.
+   */
   value: PropTypes.string.isRequired,
   /**
    * The variant to use.

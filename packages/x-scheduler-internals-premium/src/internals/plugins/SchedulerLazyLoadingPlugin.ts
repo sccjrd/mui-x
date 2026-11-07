@@ -1,47 +1,61 @@
-import { TemporalSupportedObject } from '@mui/x-scheduler-internals/models';
-import {
+import { DisposableStack, disposeSymbol } from '@mui/x-internals/disposable';
+import type { TemporalTimezone } from '@mui/x-scheduler-internals/models';
+import type {
   SchedulerState,
   SchedulerParameters,
   SchedulerStore,
-  buildEventsState,
   SchedulerEventParameters,
   SchedulerPersistEventsResult,
 } from '@mui/x-scheduler-internals/internals';
+import {
+  buildEventsState,
+  createAdapterDate,
+  getEndOfDayMs,
+  getStartOfDayMs,
+} from '@mui/x-scheduler-internals/internals';
 import { SchedulerDataSourceCacheDefault } from '../utils/cache';
-import { SchedulerDataManager } from '../utils/queue';
+import { getDateRangeKey, SchedulerDataManager } from '../utils/queue';
+import type { DateRange } from '../utils/queue';
+import type { SchedulerLazyLoadingParameters } from '../../models';
 
 export class SchedulerLazyLoadingPlugin<
   TEvent extends object,
   State extends SchedulerState,
-  Parameters extends SchedulerParameters<TEvent, any>,
+  Parameters extends SchedulerParameters<TEvent, any> & SchedulerLazyLoadingParameters<TEvent>,
 > {
-  protected store: SchedulerStore<TEvent, any, State, Parameters>;
+  declare protected store: SchedulerStore<TEvent, any, State, Parameters>;
 
   private dataManager: SchedulerDataManager | null = null;
   private cache: SchedulerDataSourceCacheDefault<TEvent> | null = null;
 
   private isFetchScheduled = false;
   private pendingIsInstantLoad = false;
-  private pendingComputeRange:
-    | (() => { start: TemporalSupportedObject; end: TemporalSupportedObject })
-    | null = null;
+  private pendingComputeRange: (() => DateRange | null) | null = null;
 
   /**
-   * Range key of the most recently requested fetch. Used to skip stale fetches:
-   * if a request resolves while a different range has been requested since, its
-   * cache write + state update are dropped so the latest range's data isn't
-   * polluted by stale, possibly-deleted events.
+   * The most recent request.
    */
-  private latestRequestedRangeKey: string | null = null;
+  private latestRequest: {
+    /**
+     * The whole days the view asked for, before trimming the parts already cached.
+     */
+    range: DateRange;
+    /**
+     * Range key of the fetch sent to the data source. Used to skip stale fetches:
+     * if a request resolves while a different range has been requested since, its
+     * cache write + state update are dropped so the latest range's data isn't
+     * polluted by stale, possibly-deleted events.
+     */
+    fetchKey: string;
+  } | null = null;
+
+  protected readonly disposables = new DisposableStack();
 
   /**
    * Coalesces multiple calls within the same tick into one microtask. The latest
    * `computeRange` wins; `isInstantLoad=true` is sticky across coalesced calls.
    */
-  protected scheduleFetch = (
-    computeRange: () => { start: TemporalSupportedObject; end: TemporalSupportedObject },
-    isInstantLoad: boolean,
-  ) => {
+  protected scheduleFetch = (computeRange: () => DateRange | null, isInstantLoad: boolean) => {
     if (isInstantLoad) {
       this.pendingIsInstantLoad = true;
     }
@@ -54,6 +68,9 @@ export class SchedulerLazyLoadingPlugin<
 
     queueMicrotask(async () => {
       try {
+        if (this.disposables.disposed) {
+          return;
+        }
         this.isFetchScheduled = false;
         const instantLoad = this.pendingIsInstantLoad;
         const compute = this.pendingComputeRange;
@@ -63,6 +80,9 @@ export class SchedulerLazyLoadingPlugin<
           return;
         }
         const range = compute();
+        if (range === null) {
+          return;
+        }
         await this.queueDataFetchForRange(range, instantLoad);
       } catch (error) {
         if (process.env.NODE_ENV !== 'production') {
@@ -72,10 +92,6 @@ export class SchedulerLazyLoadingPlugin<
     });
   };
 
-  // TODO #22418: add a dispose lifecycle. The `dataManager` keeps timers (debounce), the
-  // `eventsUpdated` subscription below is never unsubscribed, and consumer plugins
-  // attach `registerStoreEffect` callbacks. After unmount, in-flight fetches
-  // and pending debounce callbacks can still write to a torn-down store.
   constructor(store: SchedulerStore<TEvent, any, State, Parameters>) {
     this.store = store;
 
@@ -84,47 +100,63 @@ export class SchedulerLazyLoadingPlugin<
         ttl: 300_000,
         getId: this.store.parameters.eventModelStructure?.id?.getter,
       });
-      this.dataManager = new SchedulerDataManager(
-        this.store.state.adapter,
-        this.loadEventsFromDataSource,
+      this.dataManager = this.disposables.use(
+        new SchedulerDataManager(this.loadEventsFromDataSource),
       );
 
-      this.store.subscribeEvent('eventsUpdated', this.handleEventsUpdated);
+      this.disposables.defer(this.store.subscribeEvent('eventsUpdated', this.handleEventsUpdated));
+      this.disposables.defer(() => {
+        this.latestRequest = null;
+        this.pendingComputeRange = null;
+        this.cache = null;
+        this.dataManager = null;
+      });
     }
   }
 
-  public queueDataFetchForRange = async (
-    range: {
-      start: TemporalSupportedObject;
-      end: TemporalSupportedObject;
-    },
-    immediate = false,
-  ) => {
+  [disposeSymbol](): void {
+    this.disposables.dispose();
+  }
+
+  /**
+   * Fetches the events of the days from `range.start` to `range.end`, read in the display
+   * timezone.
+   */
+  public queueDataFetchForRange = async (range: DateRange, immediate = false) => {
     try {
-      if (this.dataManager) {
-        const { adapter } = this.store.state;
-        this.latestRequestedRangeKey = `${adapter.getTime(range.start)}:${adapter.getTime(adapter.endOfDay(range.end))}`;
+      const { dataManager, cache } = this;
+      if (dataManager && cache) {
+        const { displayTimezone } = this.store.state;
+        const requestedRange = toWholeDays(range, displayTimezone);
+
+        // Only request the days of the range the cache does not cover yet. The cache can hold the
+        // days of a previous display timezone, so the part it lacks is extended to whole days.
+        // A fully covered range still goes through the queue so the cache-hit branch runs.
+        const missingRange = cache.getMissingRange(requestedRange.start, requestedRange.end);
+        const rangeToFetch =
+          missingRange === null ? requestedRange : toWholeDays(missingRange, displayTimezone);
+        this.latestRequest = {
+          range: requestedRange,
+          fetchKey: getDateRangeKey(rangeToFetch),
+        };
 
         // Flip `isLoading` synchronously so the skeleton shows immediately,
         // before any debounce delay on the queued path.
-        if (
-          this.cache &&
-          !this.cache.hasCoverage(
-            adapter.getTime(range.start),
-            adapter.getTime(adapter.endOfDay(range.end)),
-          )
-        ) {
+        if (missingRange !== null) {
           this.store.set('isLoading', true);
         }
 
         if (immediate) {
-          await this.dataManager.queueImmediate([range]);
+          await dataManager.queueImmediate([rangeToFetch]);
         } else {
-          await this.dataManager.queue([range]);
+          await dataManager.queue([rangeToFetch]);
         }
       }
     } catch (error) {
-      this.store.pushError(error);
+      if (this.disposables.disposed) {
+        return;
+      }
+      this.store.pushUserFacingError({ code: 'somethingWentWrongError' }, { error });
       this.store.set('isLoading', false);
     }
   };
@@ -132,30 +164,31 @@ export class SchedulerLazyLoadingPlugin<
   /**
    * Loads events from the data source.
    */
-  private loadEventsFromDataSource = async (range: {
-    start: TemporalSupportedObject;
-    end: TemporalSupportedObject;
-  }) => {
+  private loadEventsFromDataSource = async (range: DateRange) => {
     const { dataSource } = this.store.parameters;
     const { adapter, displayTimezone } = this.store.state;
+    // Capture locally; `dispose` may null these during the await.
+    const dataManager = this.dataManager;
+    const cache = this.cache;
 
-    if (!dataSource || !this.cache || !this.dataManager) {
+    if (!dataSource || !cache || !dataManager) {
       return;
     }
-    if (
-      this.cache.hasCoverage(
-        adapter.getTime(range.start),
-        adapter.getTime(adapter.endOfDay(range.end)),
-      )
-    ) {
+    const fetchedRangeKey = getDateRangeKey(range);
+    if (cache.hasCoverage(range.start, range.end)) {
       try {
-        const allCachedEvents = this.cache.getAll();
-        const eventsState = buildEventsState(
-          { ...this.store.parameters, events: allCachedEvents } as Parameters,
+        // Like a stale fetch, a stale cache hit leaves the state to the latest request.
+        if (this.latestRequest?.fetchKey !== fetchedRangeKey) {
+          return;
+        }
+        const allCachedEvents = cache.getAll();
+        const eventsState = buildEventsState({
+          events: allCachedEvents,
+          eventModelStructure: this.store.parameters.eventModelStructure,
           adapter,
           displayTimezone,
-          this.store.state.recurringEventsPlugin,
-        );
+          previousState: this.store.state,
+        });
 
         this.store.update({
           ...this.store.state,
@@ -164,47 +197,69 @@ export class SchedulerLazyLoadingPlugin<
           errors: [],
         });
       } finally {
-        await this.dataManager.setRequestSettled(range);
+        await dataManager.setRequestSettled(range);
       }
 
       return;
     }
 
+    let isStale = false;
+    let requestToRefetch: typeof this.latestRequest = null;
     try {
-      const fetchedRangeKey = `${adapter.getTime(range.start)}:${adapter.getTime(adapter.endOfDay(range.end))}`;
-      const events = await dataSource.getEvents(range.start, range.end);
+      const events = await dataSource.getEvents(
+        createAdapterDate(adapter, range.start, displayTimezone),
+        createAdapterDate(adapter, range.end, displayTimezone),
+      );
+      const latestRequest = this.latestRequest;
 
       // Drop the result if a more recent range has been requested since this
       // fetch started — its events are now stale relative to the latest range
       // (e.g. a server-side delete could be hidden by re-introducing them).
-      if (this.latestRequestedRangeKey !== fetchedRangeKey) {
+      // The latest fetch owns `isLoading`, so this one leaves it untouched.
+      if (latestRequest?.fetchKey !== fetchedRangeKey) {
+        isStale = true;
         return;
       }
 
-      this.cache!.setRange(
-        adapter.getTime(range.start),
-        adapter.getTime(adapter.endOfDay(range.end)),
-        events ?? [],
-      );
+      cache.setRange(range.start, range.end, events ?? []);
+      // The cached part of a trimmed request can expire while it is pending.
+      if (cache.getMissingRange(latestRequest.range.start, latestRequest.range.end) !== null) {
+        requestToRefetch = latestRequest;
+      }
       // Build from the full cache so disjoint already-cached ranges stay visible
       // when the visible range expands to cover them.
-      const allCachedEvents = this.cache.getAll();
-      const eventsState = buildEventsState(
-        { ...this.store.parameters, events: allCachedEvents } as Parameters,
+      const allCachedEvents = cache.getAll();
+      const eventsState = buildEventsState({
+        events: allCachedEvents,
+        eventModelStructure: this.store.parameters.eventModelStructure,
         adapter,
         displayTimezone,
-        this.store.state.recurringEventsPlugin,
-      );
+        previousState: this.store.state,
+      });
       this.store.update({
         ...this.store.state,
         ...eventsState,
         errors: [],
       });
     } catch (error) {
-      this.store.pushError(error);
+      if (this.disposables.disposed) {
+        return;
+      }
+      // The user already left this range, so its error is dropped too.
+      if (this.latestRequest?.fetchKey !== fetchedRangeKey) {
+        isStale = true;
+        return;
+      }
+      this.store.pushUserFacingError({ code: 'somethingWentWrongError' }, { error });
     } finally {
-      this.store.set('isLoading', false);
-      await this.dataManager.setRequestSettled(range);
+      if (!this.disposables.disposed && !isStale && !requestToRefetch) {
+        this.store.set('isLoading', false);
+      }
+      await dataManager.setRequestSettled(range);
+      // Settling can wait for other queued fetches, skip the refetch if the user navigated meanwhile.
+      if (requestToRefetch && requestToRefetch === this.latestRequest) {
+        await this.queueDataFetchForRange(requestToRefetch.range, true);
+      }
     }
   };
 
@@ -227,17 +282,37 @@ export class SchedulerLazyLoadingPlugin<
         created,
       });
     } catch (error) {
-      this.store.pushError(error);
+      if (this.disposables.disposed) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.error(
+            'MUI X Scheduler: `dataSource.persistEvents` rejected after the store was disposed; the error will not be surfaced to the user.',
+            error,
+          );
+        }
+        return;
+      }
+      this.store.pushUserFacingError({ code: 'somethingWentWrongError' }, { error });
+      return;
+    }
+
+    if (this.disposables.disposed) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn(
+          'MUI X Scheduler: a successful `dataSource.persistEvents` write was discarded because the store was disposed during the await. ' +
+            'The cache will repopulate on the next fetch.',
+        );
+      }
       return;
     }
 
     if (!persistResult.success) {
-      this.store.pushError(
-        new Error(
-          'MUI X Scheduler: `dataSource.persistEvents` returned `{ success: false }`, so the cache was not updated and the UI is now out of sync with your data source. ' +
-            'To surface a specific message to the user, throw a descriptive Error from `persistEvents` instead. ' +
+      this.store.pushUserFacingError(
+        { code: 'somethingWentWrongError' },
+        {
+          error:
+            '`dataSource.persistEvents` returned `{ success: false }`, so the cache was not updated and the UI is now out of sync with your data source. ' +
             'See the `persistEvents` contract at https://mui.com/x/react-scheduler/event-calendar/lazy-loading/ (EventCalendar) or https://mui.com/x/react-scheduler/event-timeline/lazy-loading/ (EventTimeline).',
-        ),
+        },
       );
       return;
     }
@@ -253,17 +328,29 @@ export class SchedulerLazyLoadingPlugin<
       this.cache.upsert(event);
     }
 
-    const eventsState = buildEventsState(
-      { ...this.store.parameters, events: newEvents },
+    const eventsState = buildEventsState({
+      events: newEvents,
+      eventModelStructure: this.store.parameters.eventModelStructure,
       adapter,
       displayTimezone,
-      this.store.state.recurringEventsPlugin,
-    );
+      previousState: this.store.state,
+    });
 
     this.store.update({
       ...this.store.state,
       ...eventsState,
       errors: [],
     });
+  };
+}
+
+/**
+ * Extends a range to the whole days it touches in `timezone`, which is the coverage the cache
+ * records.
+ */
+export function toWholeDays(range: DateRange, timezone: TemporalTimezone): DateRange {
+  return {
+    start: getStartOfDayMs(range.start, timezone),
+    end: getEndOfDayMs(range.end, timezone),
   };
 }

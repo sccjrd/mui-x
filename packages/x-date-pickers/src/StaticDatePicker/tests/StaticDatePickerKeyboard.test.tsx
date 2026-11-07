@@ -1,7 +1,8 @@
 import { act, screen } from '@mui/internal-test-utils';
 import { StaticDatePicker } from '@mui/x-date-pickers/StaticDatePicker';
-import { DateView } from '@mui/x-date-pickers/models';
+import type { DateView } from '@mui/x-date-pickers/models';
 import { createPickerRenderer, adapterToUse } from 'test/utils/pickers';
+import { describe, it, expect } from 'vitest';
 
 describe('<StaticDatePicker /> - Keyboard interactions', () => {
   const { render } = createPickerRenderer();
@@ -139,6 +140,42 @@ describe('<StaticDatePicker /> - Keyboard interactions', () => {
         await user.keyboard(`{${key}}`);
 
         expect(document.activeElement).to.have.text(expectFocusedMonth);
+      });
+    });
+
+    describe('with `monthsPerRow={4}`', () => {
+      [
+        {
+          initialMonth: 'Jan',
+          initialDate: '2022-01-13',
+          key: 'ArrowDown',
+          expectFocusedMonth: 'May',
+        },
+        {
+          initialMonth: 'Dec',
+          initialDate: '2022-12-13',
+          key: 'ArrowUp',
+          expectFocusedMonth: 'Aug',
+        },
+      ].forEach(({ initialMonth, initialDate, key, expectFocusedMonth }) => {
+        it(`${key}`, async () => {
+          const { user } = render(
+            <StaticDatePicker
+              openTo="month"
+              views={['month']}
+              monthsPerRow={4}
+              reduceAnimations
+              displayStaticWrapperAs="desktop"
+              defaultValue={adapterToUse.date(initialDate)}
+            />,
+          );
+
+          const month = screen.getByText(initialMonth, { selector: 'button' });
+          act(() => month.focus());
+          await user.keyboard(`{${key}}`);
+
+          expect(document.activeElement).to.have.text(expectFocusedMonth);
+        });
       });
     });
   });

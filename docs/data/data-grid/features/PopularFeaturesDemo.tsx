@@ -1,12 +1,15 @@
+import { gridRowNodeSelector } from '@mui/x-data-grid';
 import * as React from 'react';
-import {
-  DataGridPremium,
+import type {
   DataGridPremiumProps,
-  gridClasses,
   GridColDef,
   GridEventListener,
   GridRenderCellParams,
   GridRowParams,
+} from '@mui/x-data-grid-premium';
+import {
+  DataGridPremium,
+  gridClasses,
   Toolbar,
   useGridApiRef,
   QuickFilter,
@@ -439,6 +442,7 @@ const columns: GridColDef[] = [
   {
     field: 'name',
     headerName: 'Feature name',
+    rowHeader: true,
     maxWidth: 172,
     flex: 0.2,
     minWidth: 100,
@@ -561,7 +565,9 @@ export default function PopularFeaturesDemo() {
 
   const onRowClick = React.useCallback<GridEventListener<'rowClick'>>(
     (params) => {
-      const rowNode = apiRef.current?.getRowNode(params.id);
+      const rowNode = apiRef.current
+        ? gridRowNodeSelector(apiRef, params.id)
+        : undefined;
       if (rowNode && rowNode.type === 'group') {
         apiRef.current?.setRowChildrenExpansion(
           params.id,

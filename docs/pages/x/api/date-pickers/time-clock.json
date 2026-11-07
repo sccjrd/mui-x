@@ -4,6 +4,7 @@
     "ampmInClock": { "type": { "name": "bool" }, "default": "false" },
     "autoFocus": { "type": { "name": "bool" } },
     "classes": { "type": { "name": "object" }, "additionalInfo": { "cssApi": true } },
+    "className": { "type": { "name": "string" } },
     "defaultValue": { "type": { "name": "object" } },
     "disabled": { "type": { "name": "bool" }, "default": "false" },
     "disableFuture": { "type": { "name": "bool" }, "default": "false" },
@@ -55,6 +56,7 @@
         "returned": "boolean"
       }
     },
+    "showViewSwitcher": { "type": { "name": "bool" } },
     "slotProps": { "type": { "name": "object" }, "default": "{}" },
     "slots": {
       "type": { "name": "object" },
@@ -143,6 +145,5 @@
   "forwardsRefTo": "HTMLDivElement",
   "filename": "/packages/x-date-pickers/src/TimeClock/TimeClock.tsx",
   "inheritance": null,
-  "demos": "<ul><li><a href=\"/x/react-date-pickers/date-time-picker/\">Date Time Picker</a></li>\n<li><a href=\"/x/react-date-pickers/time-clock/\">Time Clock</a></li>\n<li><a href=\"/x/react-date-pickers/time-picker/\">Time Picker</a></li></ul>",
-  "cssComponent": false
+  "demos": "<ul><li><a href=\"/x/react-date-pickers/date-time-picker/\">Date Time Picker</a></li>\n<li><a href=\"/x/react-date-pickers/time-clock/\">Time Clock</a></li>\n<li><a href=\"/x/react-date-pickers/time-picker/\">Time Picker</a></li></ul>"
 }

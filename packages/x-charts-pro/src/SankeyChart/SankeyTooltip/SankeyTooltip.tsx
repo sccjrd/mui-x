@@ -2,7 +2,7 @@
 import PropTypes from 'prop-types';
 import { ChartsTooltipContainer } from '@mui/x-charts/ChartsTooltip';
 import { SankeyTooltipContent } from './SankeyTooltipContent';
-import { type SankeyTooltipProps } from './SankeyTooltip.types';
+import type { SankeyTooltipProps } from './SankeyTooltip.types';
 import { useUtilityClasses } from './SankeyTooltip.classes';
 
 function SankeyTooltip(props: SankeyTooltipProps) {
@@ -15,7 +15,7 @@ function SankeyTooltip(props: SankeyTooltipProps) {
   );
 }
 
-SankeyTooltip.propTypes = {
+SankeyTooltip.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -24,9 +24,9 @@ SankeyTooltip.propTypes = {
    * Determine if the tooltip should be placed on the pointer location or on the node.
    * @default 'pointer'
    */
-  anchor: PropTypes.oneOf(['node', 'pointer']),
+  anchor: PropTypes.oneOf(['chart', 'node', 'pointer']),
   /**
-   * An HTML element, [virtualElement](https://popper.js.org/docs/v2/virtual-elements/),
+   * An HTML element, [virtualElement](https://github.com/floating-ui/popper-docs/blob/main/docs/v2/virtual-elements.md),
    * or a function that returns either.
    * It's used to set the position of the popper.
    * The return value will passed as the reference object of the Popper instance.
@@ -34,10 +34,10 @@ SankeyTooltip.propTypes = {
   anchorEl: PropTypes.oneOfType([
     (props, propName) => {
       if (props[propName] == null) {
-        return new Error(`MUI X: Prop '${propName}' is required but wasn't specified`);
+        return new Error(`Prop '${propName}' is required but wasn't specified`);
       }
       if (typeof props[propName] !== 'object' || props[propName].nodeType !== 1) {
-        return new Error(`MUI X: Expected prop '${propName}' to be of type Element`);
+        return new Error(`Expected prop '${propName}' to be of type Element`);
       }
       return null;
     },
@@ -65,25 +65,6 @@ SankeyTooltip.propTypes = {
    */
   component: PropTypes.elementType,
   /**
-   * The components used for each slot inside the Popper.
-   * Either a string to use a HTML element or a component.
-   *
-   * @deprecated use the `slots` prop instead. This prop will be removed in a future major release. [How to migrate](/material-ui/migration/migrating-from-deprecated-apis/).
-   * @default {}
-   */
-  components: PropTypes.shape({
-    Root: PropTypes.elementType,
-  }),
-  /**
-   * The props used for each slot inside the Popper.
-   *
-   * @deprecated use the `slotProps` prop instead. This prop will be removed in a future major release. [How to migrate](/material-ui/migration/migrating-from-deprecated-apis/).
-   * @default {}
-   */
-  componentsProps: PropTypes.shape({
-    root: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
-  }),
-  /**
    * An HTML element or function that returns one.
    * The `container` will have the portal children appended to it.
    *
@@ -96,10 +77,10 @@ SankeyTooltip.propTypes = {
   container: PropTypes.oneOfType([
     (props, propName) => {
       if (props[propName] == null) {
-        return new Error(`MUI X: Prop '${propName}' is required but wasn't specified`);
+        return new Error(`Prop '${propName}' is required but wasn't specified`);
       }
       if (typeof props[propName] !== 'object' || props[propName].nodeType !== 1) {
-        return new Error(`MUI X: Expected prop '${propName}' to be of type Element`);
+        return new Error(`Expected prop '${propName}' to be of type Element`);
       }
       return null;
     },
@@ -124,7 +105,7 @@ SankeyTooltip.propTypes = {
    * A modifier is a function that is called each time Popper.js needs to
    * compute the position of the popper.
    * For this reason, modifiers should be very performant to avoid bottlenecks.
-   * To learn how to create a modifier, [read the modifiers documentation](https://popper.js.org/docs/v2/modifiers/).
+   * To learn how to create a modifier, [read the modifiers documentation](https://github.com/floating-ui/popper-docs/blob/main/docs/v2/modifiers/index.md).
    */
   modifiers: PropTypes.arrayOf(
     PropTypes.shape({
@@ -175,7 +156,7 @@ SankeyTooltip.propTypes = {
     'top',
   ]),
   /**
-   * Options provided to the [`Popper.js`](https://popper.js.org/docs/v2/constructors/#options) instance.
+   * Options provided to the [`Popper.js`](https://github.com/floating-ui/popper-docs/blob/main/docs/v2/constructors.md#options) instance.
    * @default {}
    */
   popperOptions: PropTypes.shape({
@@ -248,13 +229,12 @@ SankeyTooltip.propTypes = {
    */
   position: PropTypes.oneOf(['bottom', 'left', 'right', 'top']),
   /**
-   * The props used for each slot inside the Popper.
+   * The props used for each component slot.
    * @default {}
    */
   slotProps: PropTypes.object,
   /**
-   * The components used for each slot inside the Popper.
-   * Either a string to use a HTML element or a component.
+   * Overridable component slots.
    * @default {}
    */
   slots: PropTypes.object,

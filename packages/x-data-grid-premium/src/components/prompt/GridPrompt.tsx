@@ -5,8 +5,8 @@ import {
   gridClasses,
   gridColumnLookupSelector,
   useGridSelector,
-  type GridSingleSelectColDef,
 } from '@mui/x-data-grid-pro';
+import type { GridSingleSelectColDef } from '@mui/x-data-grid-pro';
 import composeClasses from '@mui/utils/composeClasses';
 import capitalize from '@mui/utils/capitalize';
 
@@ -289,11 +289,13 @@ function GridPrompt(props: GridPromptProps) {
             getColumnName(filter.column),
             filterOperator,
             filterValue as string,
+            filter.operator,
           ),
           description: apiRef.current.getLocaleText('promptChangeFilterDescription')(
             getColumnName(filter.column),
             filterOperator,
             filterValue as string,
+            filter.operator,
           ),
           icon: rootProps.slots.promptFilterIcon,
         };

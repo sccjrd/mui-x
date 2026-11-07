@@ -1,16 +1,36 @@
 'use client';
+import * as React from 'react';
 import type { ChartPlugin } from '../../models';
 import type { ChartSeriesType } from '../../../../models/seriesType/config';
 import type { UseChartItemClickSignature } from './useChartItemClick.types';
 import type { SeriesItemIdentifierWithType } from '../../../../models/seriesType';
 import { getChartPoint } from '../../../getChartPoint';
+import type { ChartsActivationEvent } from '../../../../models/events';
 
-export const useChartItemClick: ChartPlugin<UseChartItemClickSignature> = ({
+export const useChartItemClick: ChartPlugin<UseChartItemClickSignature<any>> = ({
   params,
   store,
   instance,
 }) => {
   const { onItemClick } = params;
+
+  React.useEffect(() => {
+    if (!onItemClick || !instance.registerItemActivationHandler) {
+      return undefined;
+    }
+
+    return instance.registerItemActivationHandler({}, (event, item) => {
+      const seriesTypeConfig = store.state.seriesConfig.config[item.type];
+      // @ts-expect-error The series-specific handler expects a narrowed store state and item type.
+      const itemWithData = seriesTypeConfig?.getItemWithData?.(store.state, item);
+
+      // The callback only describes the pointer event unless the user augments the types.
+      onItemClick(
+        event as unknown as ChartsActivationEvent<HTMLDivElement>,
+        (itemWithData ?? item) as SeriesItemIdentifierWithType<ChartSeriesType>,
+      );
+    });
+  }, [instance, onItemClick, store]);
 
   if (!onItemClick) {
     return { instance: {} };
@@ -25,8 +45,8 @@ export const useChartItemClick: ChartPlugin<UseChartItemClickSignature> = ({
 
     let item: SeriesItemIdentifierWithType<ChartSeriesType> | undefined = undefined;
 
-    for (const seriesType of Object.keys(store.state.seriesConfig.config)) {
-      // @ts-ignore The type inference for store.state does not support generic yet
+    for (const seriesType of Object.keys(store.state.seriesConfig.config) as ChartSeriesType[]) {
+      // @ts-expect-error The series handler requires its own plugin state, but the store type keeps the plugin union.
       item = store.state.seriesConfig.config[seriesType].getItemAtPosition?.(store.state, {
         x: svgPoint.x,
         y: svgPoint.y,

@@ -1,10 +1,10 @@
 'use client';
 import * as React from 'react';
 import useEventCallback from '@mui/utils/useEventCallback';
-import { SlideDirection } from './PickersSlideTransition';
+import type { SlideDirection } from './PickersSlideTransition';
 import { useIsDateDisabled } from './useIsDateDisabled';
-import { MuiPickersAdapter, PickersTimezone, PickerValidDate } from '../models';
-import { DateCalendarDefaultizedProps } from './DateCalendar.types';
+import type { MuiPickersAdapter, PickersTimezone, PickerValidDate } from '../models';
+import type { DateCalendarDefaultizedProps } from './DateCalendar.types';
 import { singleItemValueManager } from '../internals/utils/valueManagers';
 import { SECTION_TYPE_GRANULARITY } from '../internals/utils/getDefaultReferenceDate';
 import { findClosestEnabledDate } from '../internals/utils/date-utils';
@@ -157,6 +157,10 @@ export const useCalendarState = (
     slideDirection: 'left',
   });
 
+  // A day cell can focus itself before `setVisibleDate` sees the new `calendarState`.
+  // This ref stops that focus from firing `onMonthChange` and `onYearChange` a second time.
+  const focusedDayRef = React.useRef(calendarState.focusedDay);
+
   const isDateDisabled = useIsDateDisabled({
     shouldDisableDate,
     minDate,
@@ -178,8 +182,8 @@ export const useCalendarState = (
   const setVisibleDate = useEventCallback(({ target, reason }: SetVisibleDateParameters) => {
     if (
       reason === 'cell-interaction' &&
-      calendarState.focusedDay != null &&
-      adapter.isSameDay(target, calendarState.focusedDay)
+      focusedDayRef.current != null &&
+      adapter.isSameDay(target, focusedDayRef.current)
     ) {
       return;
     }
@@ -222,16 +226,18 @@ export const useCalendarState = (
       onYearChange?.(adapter.startOfYear(month));
     }
 
+    focusedDayRef.current =
+      calendarState.focusedDay != null &&
+      focusedDay != null &&
+      adapter.isSameDay(focusedDay, calendarState.focusedDay)
+        ? calendarState.focusedDay
+        : focusedDay;
+
     dispatch({
       type: 'setVisibleDate',
       month,
       direction: adapter.isAfterDay(month, calendarState.currentMonth) ? 'left' : 'right',
-      focusedDay:
-        calendarState.focusedDay != null &&
-        focusedDay != null &&
-        adapter.isSameDay(focusedDay, calendarState.focusedDay)
-          ? calendarState.focusedDay
-          : focusedDay,
+      focusedDay: focusedDayRef.current,
       skipAnimation,
     });
   });

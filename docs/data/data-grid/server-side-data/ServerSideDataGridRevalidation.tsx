@@ -1,11 +1,11 @@
 import * as React from 'react';
-import {
-  DataGrid,
+import type {
   GridColDef,
   GridDataSource,
   GridGetRowsParams,
   GridRenderCellParams,
 } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
 import Typography from '@mui/material/Typography';
 import { alpha } from '@mui/material/styles';
 import { Chance } from 'chance';
@@ -95,7 +95,13 @@ function FlashOnChange({
 
 const columns: GridColDef<StockRow>[] = [
   { field: 'symbol', headerName: 'Symbol', width: 100 },
-  { field: 'company', headerName: 'Company', flex: 1, minWidth: 160 },
+  {
+    field: 'company',
+    headerName: 'Company',
+    flex: 1,
+    minWidth: 160,
+    rowHeader: true,
+  },
   {
     field: 'price',
     headerName: 'Price',

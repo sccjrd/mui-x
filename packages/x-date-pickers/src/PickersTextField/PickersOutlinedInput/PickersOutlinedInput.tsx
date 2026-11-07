@@ -5,18 +5,19 @@ import { useFormControl } from '@mui/material/FormControl';
 import { styled, useThemeProps } from '@mui/material/styles';
 import refType from '@mui/utils/refType';
 import composeClasses from '@mui/utils/composeClasses';
+import type { PickersOutlinedInputClasses } from './pickersOutlinedInputClasses';
 import {
   pickersOutlinedInputClasses,
   getPickersOutlinedInputUtilityClass,
-  PickersOutlinedInputClasses,
 } from './pickersOutlinedInputClasses';
 import Outline from './Outline';
-import { PickersInputBase, PickersInputBaseProps } from '../PickersInputBase';
+import type { PickersInputBaseProps } from '../PickersInputBase';
+import { PickersInputBase } from '../PickersInputBase';
 import {
   PickersInputBaseRoot,
   PickersInputBaseSectionsContainer,
 } from '../PickersInputBase/PickersInputBase';
-import { PickerTextFieldOwnerState } from '../../models/fields';
+import type { PickerTextFieldOwnerState } from '../../models/fields';
 
 export interface PickersOutlinedInputProps extends PickersInputBaseProps {
   notched?: boolean;
@@ -55,14 +56,16 @@ const PickersOutlinedInputRoot = styled(PickersInputBaseRoot, {
       },
     },
     variants: Object.keys((theme.vars ?? theme).palette)
-      // @ts-ignore
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- Dynamic palette keys error only in consumers enabling noImplicitAny.
+      // @ts-ignore Palette entries are discovered and filtered for their main color at runtime.
       .filter((key) => (theme.vars ?? theme).palette[key]?.main ?? false)
       .map((color) => ({
         props: { inputColor: color },
         style: {
           [`&.${pickersOutlinedInputClasses.focused}:not(.${pickersOutlinedInputClasses.error}) .${pickersOutlinedInputClasses.notchedOutline}`]:
             {
-              // @ts-ignore
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- Dynamic palette keys error only in consumers enabling noImplicitAny.
+              // @ts-ignore Palette entries are discovered and filtered for their main color at runtime.
               borderColor: (theme.vars || theme).palette[color].main,
             },
         },
@@ -135,23 +138,29 @@ const PickersOutlinedInput = React.forwardRef(function PickersOutlinedInput(
         ...inSlots,
       }}
       slotProps={inSlotProps}
-      renderSuffix={(state) => (
-        <Outline
-          shrink={Boolean(notched || state.adornedStart || state.focused || state.filled)}
-          notched={Boolean(notched || state.adornedStart || state.focused || state.filled)}
-          className={classes.notchedOutline}
-          label={
-            label != null && label !== '' && muiFormControl?.required ? (
-              <React.Fragment>
-                {label}
-                &thinsp;{'*'}
-              </React.Fragment>
-            ) : (
-              label
-            )
-          }
-        />
-      )}
+      renderSuffix={(state) => {
+        const isNotched =
+          typeof notched !== 'undefined'
+            ? notched
+            : Boolean(state.adornedStart || state.focused || state.filled);
+        return (
+          <Outline
+            shrink={isNotched}
+            notched={isNotched}
+            className={classes.notchedOutline}
+            label={
+              label != null && label !== '' && muiFormControl?.required ? (
+                <React.Fragment>
+                  {label}
+                  &thinsp;{'*'}
+                </React.Fragment>
+              ) : (
+                label
+              )
+            }
+          />
+        );
+      }}
       label={label}
       classes={classes}
       ref={ref as any}
@@ -159,7 +168,7 @@ const PickersOutlinedInput = React.forwardRef(function PickersOutlinedInput(
   );
 });
 
-PickersOutlinedInput.propTypes = {
+PickersOutlinedInput.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -171,6 +180,9 @@ PickersOutlinedInput.propTypes = {
    */
   areAllSectionsEmpty: PropTypes.bool.isRequired,
   classes: PropTypes.object,
+  /**
+   * A CSS class name applied to the root element.
+   */
   className: PropTypes.string,
   /**
    * If true, the whole element is editable.
@@ -217,14 +229,39 @@ PickersOutlinedInput.propTypes = {
    */
   name: PropTypes.string,
   notched: PropTypes.bool,
+  /**
+   * @ignore
+   */
   onChange: PropTypes.func.isRequired,
+  /**
+   * @ignore
+   */
   onClick: PropTypes.func.isRequired,
+  /**
+   * @ignore
+   */
   onInput: PropTypes.func.isRequired,
+  /**
+   * @ignore
+   */
   onKeyDown: PropTypes.func.isRequired,
+  /**
+   * @ignore
+   */
+  onMouseDown: PropTypes.func.isRequired,
+  /**
+   * @ignore
+   */
   onPaste: PropTypes.func.isRequired,
   ownerState: PropTypes /* @typescript-to-proptypes-ignore */.any,
+  /**
+   * If `true`, the component is read-only.
+   */
   readOnly: PropTypes.bool,
   renderSuffix: PropTypes.func,
+  /**
+   * @ignore
+   */
   sectionListRef: PropTypes.oneOfType([
     PropTypes.func,
     PropTypes.shape({
@@ -259,6 +296,9 @@ PickersOutlinedInput.propTypes = {
     PropTypes.func,
     PropTypes.object,
   ]),
+  /**
+   * The value of the hidden `input` element.
+   */
   value: PropTypes.string.isRequired,
 } as any;
 

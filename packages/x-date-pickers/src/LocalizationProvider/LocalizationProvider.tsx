@@ -2,8 +2,8 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import { useThemeProps } from '@mui/material/styles';
-import { AdapterFormats, MuiPickersAdapter, PickerValidDate } from '../models';
-import { PickersInputLocaleText } from '../locales';
+import type { AdapterFormats, MuiPickersAdapter, PickerValidDate } from '../models';
+import type { PickersInputLocaleText } from '../locales';
 
 export interface PickersAdapterContextValue {
   defaultDates: {
@@ -24,6 +24,9 @@ export const PickerAdapterContext = React.createContext<PickerAdapterContextNull
 );
 
 export interface LocalizationProviderProps<TLocale> {
+  /**
+   * The components that use the localization settings.
+   */
   children?: React.ReactNode;
   /**
    * Date library adapter class function.
@@ -146,7 +149,7 @@ export const LocalizationProvider = function LocalizationProvider<TLocale>(
   );
 } as LocalizationProviderComponent;
 
-LocalizationProvider.propTypes = {
+LocalizationProvider.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -155,6 +158,9 @@ LocalizationProvider.propTypes = {
    * Locale for the date library you are using
    */
   adapterLocale: PropTypes.any,
+  /**
+   * The components that use the localization settings.
+   */
   children: PropTypes.node,
   /**
    * Date library adapter class function.

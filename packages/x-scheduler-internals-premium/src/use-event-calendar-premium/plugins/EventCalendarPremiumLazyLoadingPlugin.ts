@@ -1,6 +1,12 @@
 import type { EventCalendarState } from '@mui/x-scheduler-internals/use-event-calendar';
-import { SchedulerLazyLoadingPlugin } from '../../internals/plugins/SchedulerLazyLoadingPlugin';
+import { toEpochMs } from '@mui/x-scheduler-internals/internals';
 import {
+  SchedulerLazyLoadingPlugin,
+  toWholeDays,
+} from '../../internals/plugins/SchedulerLazyLoadingPlugin';
+import { getDateRangeKey } from '../../internals/utils/queue';
+import type { DateRange } from '../../internals/utils/queue';
+import type {
   EventCalendarPremiumState,
   EventCalendarPremiumParameters,
 } from '../EventCalendarPremiumStore.types';
@@ -16,41 +22,58 @@ export class EventCalendarPremiumLazyLoadingPlugin<
   constructor(store: EventCalendarPremiumStore<TEvent, any>) {
     super(store);
 
-    store.registerStoreEffect(
-      (state) => {
-        const visibleDays =
-          state.viewConfig?.visibleDaysSelector?.(state as EventCalendarState) ?? [];
+    this.disposables.defer(
+      store.registerStoreEffect(
+        (state) => {
+          const range = getRangeToFetch(state);
+          if (range === null) {
+            return null;
+          }
 
-        const visibleDaysKey = visibleDays.map((day) => day.key).join('|');
+          return getDateRangeKey(range);
+        },
 
-        return {
-          viewConfig: state.viewConfig,
-          visibleDaysKey,
-          isLoading: state.isLoading,
-        };
-      },
+        (previousKey, nextKey) => {
+          // `null` means no view is registered or it has no range to fetch.
+          if (previousKey === nextKey || nextKey === null || !store.parameters.dataSource) {
+            return;
+          }
 
-      (previous, next) => {
-        if (previous.visibleDaysKey === next.visibleDaysKey) {
-          return;
-        }
-
-        const visibleDays =
-          next.viewConfig?.visibleDaysSelector?.(store.state as EventCalendarState) ?? [];
-
-        if (!store.parameters.dataSource || visibleDays.length === 0) {
-          return;
-        }
-
-        this.scheduleFetch(() => {
-          const days =
-            store.state.viewConfig?.visibleDaysSelector?.(store.state as EventCalendarState) ?? [];
-          return {
-            start: days[0].value,
-            end: days[days.length - 1].value,
-          };
-        }, previous.viewConfig == null);
-      },
+          this.scheduleFetch(() => getRangeToFetch(store.state), previousKey === null);
+        },
+      ),
     );
   }
+}
+
+/**
+ * Returns the range to fetch for the registered view, spanning whole days of the display timezone,
+ * or `null` when there is nothing to fetch.
+ */
+function getRangeToFetch(state: EventCalendarPremiumState): DateRange | null {
+  const { viewDefinition, displayTimezone } = state;
+  if (!viewDefinition) {
+    return null;
+  }
+
+  const calendarState = state as EventCalendarState;
+  if (viewDefinition.fetchRangeSelector) {
+    const range = viewDefinition.fetchRangeSelector(calendarState);
+    return toWholeDays(
+      {
+        start: toEpochMs(range.start, 0, displayTimezone),
+        end: toEpochMs(range.end, 0, displayTimezone),
+      },
+      displayTimezone,
+    );
+  }
+
+  const days = viewDefinition.visibleDaysSelector(calendarState);
+  if (days.length === 0) {
+    return null;
+  }
+  return toWholeDays(
+    { start: days[0].timestamp, end: days[days.length - 1].timestamp },
+    displayTimezone,
+  );
 }

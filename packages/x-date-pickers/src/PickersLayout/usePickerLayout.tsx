@@ -4,11 +4,17 @@ import useSlotProps from '@mui/utils/useSlotProps';
 import composeClasses from '@mui/utils/composeClasses';
 import { useRtl } from '@mui/system/RtlProvider';
 import { PickersActionBar } from '../PickersActionBar';
-import { PickerLayoutOwnerState, PickersLayoutProps, SubComponents } from './PickersLayout.types';
-import { getPickersLayoutUtilityClass, PickersLayoutClasses } from './pickersLayoutClasses';
-import { PickersShortcuts, PickersShortcutsProps } from '../PickersShortcuts';
-import { BaseToolbarProps } from '../internals/models/props/toolbar';
-import { PickerValidValue } from '../internals/models';
+import type {
+  PickerLayoutOwnerState,
+  PickersLayoutProps,
+  SubComponents,
+} from './PickersLayout.types';
+import type { PickersLayoutClasses } from './pickersLayoutClasses';
+import { getPickersLayoutUtilityClass } from './pickersLayoutClasses';
+import type { PickersShortcutsProps } from '../PickersShortcuts';
+import { PickersShortcuts } from '../PickersShortcuts';
+import type { BaseToolbarProps } from '../internals/models/props/toolbar';
+import type { PickerValidValue } from '../internals/models';
 import { usePickerPrivateContext } from '../internals/hooks/usePickerPrivateContext';
 import { usePickerContext } from '../hooks';
 
@@ -48,7 +54,12 @@ const usePickerLayout = <TValue extends PickerValidValue>(
   const { children, slots, slotProps, classes: classesProp } = props;
 
   const ownerState = React.useMemo<PickerLayoutOwnerState>(
-    () => ({ ...pickerOwnerState, layoutDirection: isRtl ? 'rtl' : 'ltr', hasShortcuts: false }),
+    () => ({
+      ...pickerOwnerState,
+      layoutDirection: isRtl ? 'rtl' : 'ltr',
+      hasShortcuts: false,
+      hasToolbar: false,
+    }),
     [pickerOwnerState, isRtl],
   );
   const classes = useUtilityClasses(classesProp, ownerState);
@@ -79,6 +90,7 @@ const usePickerLayout = <TValue extends PickerValidValue>(
     ownerState,
   });
   const toolbar = toolbarHasView(toolbarProps) && !!Toolbar ? <Toolbar {...toolbarProps} /> : null;
+  const hasToolbar = toolbar !== null && !(toolbarProps as BaseToolbarProps).hidden;
 
   // Content
   const content = children;
@@ -106,7 +118,7 @@ const usePickerLayout = <TValue extends PickerValidValue>(
     tabs,
     actionBar,
     shortcuts,
-    ownerState: { ...ownerState, hasShortcuts },
+    ownerState: { ...ownerState, hasShortcuts, hasToolbar },
   };
 };
 

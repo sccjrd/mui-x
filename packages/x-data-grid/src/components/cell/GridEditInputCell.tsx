@@ -1,5 +1,6 @@
 'use client';
 import * as React from 'react';
+import PropTypes from 'prop-types';
 import composeClasses from '@mui/utils/composeClasses';
 import useEnhancedEffect from '@mui/utils/useEnhancedEffect';
 import { styled } from '@mui/material/styles';
@@ -12,6 +13,8 @@ import { getDataGridUtilityClass } from '../../constants/gridClasses';
 import { useGridRootProps } from '../../hooks/utils/useGridRootProps';
 import type { DataGridProcessedProps } from '../../models/props/DataGridProps';
 import { useGridApiContext } from '../../hooks/utils/useGridApiContext';
+import { GridCellModes } from '../../models/gridEditRowModel';
+import { isEventFromPreMountedEditor } from '../../utils/cellEditor';
 
 type OwnerState = DataGridProcessedProps;
 
@@ -43,7 +46,7 @@ export interface GridEditInputCellProps extends GridRenderEditCellParams {
    * Callback called when the value is changed by the user.
    * @param {React.ChangeEvent<HTMLInputElement>} event The event source of the callback.
    * @param {Date | null} newValue The value that is going to be passed to `apiRef.current.setEditCellValue`.
-   * @returns {Promise<void> | void} A promise to be awaited before calling `apiRef.current.setEditCellValue`
+   * @returns {Promise<void> | void} A promise to be awaited after `apiRef.current.setEditCellValue` is called
    */
   onValueChange?: (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -85,12 +88,20 @@ const GridEditInputCell = forwardRef<HTMLInputElement, GridEditInputCellProps>((
 
   const handleChange = React.useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
+      // Pre-mounted editor (`imeFastEdit`): keep the input empty until edit mode starts.
+      if (
+        isEventFromPreMountedEditor(event) &&
+        apiRef.current.getCellMode(id, field) === GridCellModes.View
+      ) {
+        return;
+      }
+
       const newValue = event.target.value;
 
       const column = apiRef.current.getColumn(field);
 
       let parsedValue = newValue;
-      if (column.valueParser) {
+      if (column?.valueParser) {
         parsedValue = column.valueParser(newValue, apiRef.current.getRow(id), column, apiRef);
       }
 
@@ -140,6 +151,74 @@ const GridEditInputCell = forwardRef<HTMLInputElement, GridEditInputCellProps>((
     />
   );
 });
+
+GridEditInputCell.propTypes /* remove-proptypes */ = {
+  // ----------------------------- Warning --------------------------------
+  // | These PropTypes are generated from the TypeScript type definitions |
+  // | To update them edit the TypeScript types and run "pnpm proptypes"  |
+  // ----------------------------------------------------------------------
+  /**
+   * GridApi that let you manipulate the grid.
+   */
+  api: PropTypes.object.isRequired,
+  /**
+   * The mode of the cell.
+   */
+  cellMode: PropTypes.oneOf(['edit', 'view']).isRequired,
+  changeReason: PropTypes.oneOf(['debouncedSetEditCellValue', 'setEditCellValue']),
+  /**
+   * The column of the row that the current cell belongs to.
+   */
+  colDef: PropTypes.object.isRequired,
+  debounceMs: PropTypes.number,
+  /**
+   * The column field of the cell that triggered the event.
+   */
+  field: PropTypes.string.isRequired,
+  /**
+   * The cell value formatted with the column valueFormatter.
+   */
+  formattedValue: PropTypes.any,
+  /**
+   * If true, the cell is the active element.
+   */
+  hasFocus: PropTypes.bool.isRequired,
+  /**
+   * The grid row id.
+   */
+  id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+  /**
+   * If true, the cell is editable.
+   */
+  isEditable: PropTypes.bool,
+  isProcessingProps: PropTypes.bool,
+  isValidating: PropTypes.bool,
+  /**
+   * Callback called when the value is changed by the user.
+   * @param {React.ChangeEvent<HTMLInputElement>} event The event source of the callback.
+   * @param {Date | null} newValue The value that is going to be passed to `apiRef.current.setEditCellValue`.
+   * @returns {Promise<void> | void} A promise to be awaited after `apiRef.current.setEditCellValue` is called
+   */
+  onValueChange: PropTypes.func,
+  /**
+   * The row model of the row that the current cell belongs to.
+   */
+  row: PropTypes.any.isRequired,
+  /**
+   * The node of the row that the current cell belongs to.
+   */
+  rowNode: PropTypes.object.isRequired,
+  slotProps: PropTypes.object,
+  /**
+   * the tabIndex value.
+   */
+  tabIndex: PropTypes.oneOf([-1, 0]).isRequired,
+  /**
+   * The cell value.
+   * If the column has `valueGetter`, use `params.row` to directly access the fields.
+   */
+  value: PropTypes.any,
+} as any;
 
 export { GridEditInputCell };
 

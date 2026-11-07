@@ -1,16 +1,16 @@
 'use client';
 import PropTypes from 'prop-types';
 import { forwardRef } from '@mui/x-internals/forwardRef';
-import {
-  GridToolbarContainer,
-  type GridToolbarContainerProps,
-} from '../containers/GridToolbarContainer';
+import { GridToolbarContainer } from '../containers/GridToolbarContainer';
+import type { GridToolbarContainerProps } from '../containers/GridToolbarContainer';
 import { GridToolbarColumnsButton } from './GridToolbarColumnsButton';
 import { GridToolbarDensitySelector } from './GridToolbarDensitySelector';
 import { GridToolbarFilterButton } from './GridToolbarFilterButton';
-import { GridToolbarExport, type GridToolbarExportProps } from './GridToolbarExport';
+import { GridToolbarExport } from './GridToolbarExport';
+import type { GridToolbarExportProps } from './GridToolbarExport';
 import { useGridRootProps } from '../../hooks/utils/useGridRootProps';
-import { GridToolbarQuickFilter, type GridToolbarQuickFilterProps } from './GridToolbarQuickFilter';
+import { GridToolbarQuickFilter } from './GridToolbarQuickFilter';
+import type { GridToolbarQuickFilterProps } from './GridToolbarQuickFilter';
 import { GridToolbarLabel } from '../toolbarV8/GridToolbar';
 
 export interface GridToolbarProps extends GridToolbarContainerProps, GridToolbarExportProps {
@@ -65,7 +65,8 @@ const GridToolbar = forwardRef<HTMLDivElement, GridToolbarProps>(function GridTo
       <GridToolbarExport
         csvOptions={csvOptions}
         printOptions={printOptions}
-        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- Premium augmentation adds excelOptions only when the Premium package is included.
+        // @ts-ignore Premium augmentation adds excelOptions only when the Premium package is included.
         excelOptions={excelOptions}
       />
       <div style={{ flex: 1 }} />
@@ -74,7 +75,7 @@ const GridToolbar = forwardRef<HTMLDivElement, GridToolbarProps>(function GridTo
   );
 });
 
-GridToolbar.propTypes = {
+GridToolbar.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |

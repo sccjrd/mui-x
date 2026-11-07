@@ -1,12 +1,11 @@
 import * as React from 'react';
-import {
-  DataGrid,
-  GridCellModes,
+import type {
   GridCellModesModel,
   GridCellParams,
   GridRowsProp,
   GridColDef,
 } from '@mui/x-data-grid';
+import { DataGrid, GridCellModes } from '@mui/x-data-grid';
 import {
   randomCreatedDate,
   randomTraderName,
@@ -14,7 +13,7 @@ import {
 } from '@mui/x-data-grid-generator';
 
 const columns: GridColDef[] = [
-  { field: 'name', headerName: 'Name', width: 180, editable: true },
+  { field: 'name', headerName: 'Name', width: 180, editable: true, rowHeader: true },
   { field: 'age', headerName: 'Age', type: 'number', editable: true },
   {
     field: 'dateCreated',

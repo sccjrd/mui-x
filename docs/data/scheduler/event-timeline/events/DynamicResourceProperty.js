@@ -3,7 +3,6 @@ import Stack from '@mui/material/Stack';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import ToggleButton from '@mui/material/ToggleButton';
 import capitalize from '@mui/utils/capitalize';
-
 import { EventTimelinePremium } from '@mui/x-scheduler-premium/event-timeline-premium';
 import { defaultVisibleDate } from '../../datasets/company-roadmap';
 
@@ -125,10 +124,12 @@ export default function DynamicResourceProperty() {
       resource: {
         getter: (event) => event[resourceProperty],
         setter: (event, newValue) => {
-          if (newValue == null) {
+          // Demo only supports a single resource per event; take the first id if an array is passed.
+          const value = Array.isArray(newValue) ? newValue[0] : newValue;
+          if (value == null) {
             delete event[resourceProperty];
           } else {
-            event[resourceProperty] = newValue;
+            event[resourceProperty] = value;
           }
           return event;
         },

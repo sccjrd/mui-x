@@ -5,12 +5,12 @@ import {
   selectorChartPolarCenter,
   selectorChartRadiusAxis,
   selectorChartRotationAxis,
-  type UseChartPolarAxisSignature,
   selectorChartsInteractionRadius,
   selectorChartsInteractionRadiusAxisValue,
 } from '../internals/plugins/featurePlugins/useChartPolarAxis';
-import { type ChartsRadialAxisHighlightRadiusType } from './ChartsRadialAxisHighlight.types';
-import { type ChartsRadialAxisHighlightClasses } from './chartsRadialAxisHighlightClasses';
+import type { UseChartPolarAxisSignature } from '../internals/plugins/featurePlugins/useChartPolarAxis';
+import type { ChartsRadialAxisHighlightRadiusType } from './ChartsRadialAxisHighlight.types';
+import type { ChartsRadialAxisHighlightClasses } from './chartsRadialAxisHighlightClasses';
 import {
   ChartsRadialAxisHighlightCircle,
   ChartsRadialAxisHighlightPath,
@@ -27,6 +27,9 @@ function polarToSvg(cx: number, cy: number, radius: number, angle: number) {
  */
 export default function ChartsRadiusAxisHighlight(props: {
   type: ChartsRadialAxisHighlightRadiusType;
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes: ChartsRadialAxisHighlightClasses;
 }) {
   const { type, classes } = props;

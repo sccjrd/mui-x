@@ -3,13 +3,13 @@ import * as React from 'react';
 import PropTypes from 'prop-types';
 import resolveComponentProps from '@mui/utils/resolveComponentProps';
 import refType from '@mui/utils/refType';
-import { singleItemValueManager } from '../internals/utils/valueManagers';
 import { DateTimeField } from '../DateTimeField';
-import { MobileDateTimePickerProps } from './MobileDateTimePicker.types';
+import type { MobileDateTimePickerProps } from './MobileDateTimePicker.types';
 import { useDateTimePickerDefaultizedProps } from '../DateTimePicker/shared';
 import { usePickerAdapter } from '../hooks/usePickerAdapter';
-import { extractValidationProps, validateDateTime } from '../validation';
-import { PickerOwnerState } from '../models';
+import { extractValidationProps } from '../validation';
+import { useDateTimeManager } from '../managers';
+import type { PickerOwnerState } from '../models';
 import { useMobilePicker } from '../internals/hooks/useMobilePicker';
 import { renderDateViewCalendar } from '../dateViewRenderers';
 import {
@@ -17,8 +17,8 @@ import {
   renderMultiSectionDigitalClockTimeView,
 } from '../timeViewRenderers';
 import { resolveDateTimeFormat } from '../internals/utils/date-time-utils';
-import { PickerViewRendererLookup } from '../internals/hooks/usePicker';
-import { DateOrTimeViewWithMeridiem, PickerValue } from '../internals/models';
+import type { PickerViewRendererLookup } from '../internals/hooks/usePicker';
+import type { DateOrTimeViewWithMeridiem, PickerValue } from '../internals/models';
 import { DIALOG_WIDTH, VIEW_HEIGHT } from '../internals/constants/dimensions';
 import {
   multiSectionDigitalClockClasses,
@@ -26,7 +26,7 @@ import {
 } from '../MultiSectionDigitalClock';
 import { mergeSx } from '../internals/utils/utils';
 import { digitalClockClasses } from '../DigitalClock';
-import { PickerStep } from '../internals/utils/createNonRangePickerStepNavigation';
+import type { PickerStep } from '../internals/utils/createNonRangePickerStepNavigation';
 import { EXPORTED_TIME_VIEWS } from '../internals/utils/time-utils';
 import { DATE_VIEWS } from '../internals/utils/date-utils';
 
@@ -51,6 +51,7 @@ const MobileDateTimePicker = React.forwardRef(function MobileDateTimePicker(
   ref: React.Ref<HTMLDivElement>,
 ) {
   const adapter = usePickerAdapter();
+  const manager = useDateTimeManager();
 
   // Props with the default values common to all date time pickers
   const defaultizedProps = useDateTimePickerDefaultizedProps<MobileDateTimePickerProps>(
@@ -144,16 +145,14 @@ const MobileDateTimePicker = React.forwardRef(function MobileDateTimePicker(
   const { renderPicker } = useMobilePicker<DateOrTimeViewWithMeridiem, typeof props>({
     ref,
     props,
-    valueManager: singleItemValueManager,
-    valueType: 'date-time',
-    validator: validateDateTime,
+    manager,
     steps: STEPS,
   });
 
   return renderPicker();
 }) as MobileDateTimePickerComponent;
 
-MobileDateTimePicker.propTypes = {
+MobileDateTimePicker.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -175,6 +174,9 @@ MobileDateTimePicker.propTypes = {
    * - the `input` element if there is a field rendered.
    */
   autoFocus: PropTypes.bool,
+  /**
+   * A CSS class name applied to the root element.
+   */
   className: PropTypes.string,
   /**
    * If `true`, the Picker will close after submitting the full date.
@@ -324,6 +326,10 @@ MobileDateTimePicker.propTypes = {
    * - `shortcut` (optional): the shortcut metadata if the value was accepted via a shortcut selection
    */
   onAccept: PropTypes.func,
+  /**
+   * Callback fired when the Cancel action is triggered.
+   */
+  onCancel: PropTypes.func,
   /**
    * Callback fired when the value changes.
    * @template TValue The value type. It will be the same type as `value` or `null`. It can be in `[start, end]` format in case of range value.

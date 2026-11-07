@@ -1,21 +1,16 @@
 'use client';
 import * as React from 'react';
+import { useOnFirstRender } from '@base-ui/utils/useOnFirstRender';
+import { useValueAsRef } from '@base-ui/utils/useValueAsRef';
 import type { RefObject } from '@mui/x-internals/types';
+import { gridRowTreeSelector } from '@mui/x-data-grid';
+import type { GridColDef, GridRenderCellParams, GridGroupNode, GridRowId } from '@mui/x-data-grid';
 import {
-  gridRowTreeSelector,
-  useFirstRender,
-  type GridColDef,
-  type GridRenderCellParams,
-  type GridGroupNode,
-  type GridRowId,
-} from '@mui/x-data-grid';
-import {
-  type GridPipeProcessor,
   GridStrategyGroup,
-  type GridStrategyProcessor,
   useGridRegisterPipeProcessor,
   useGridRegisterStrategyProcessor,
 } from '@mui/x-data-grid/internals';
+import type { GridPipeProcessor, GridStrategyProcessor } from '@mui/x-data-grid/internals';
 import {
   GRID_TREE_DATA_GROUPING_COL_DEF,
   GRID_TREE_DATA_GROUPING_COL_DEF_FORCED_PROPERTIES,
@@ -51,13 +46,16 @@ export const useGridTreeDataPreProcessors = (
     | 'dataSource'
   >,
 ) => {
+  // Read lazily so processor re-registrations in the same commit see the new mode (#10251).
+  const isTreeDataActiveRef = useValueAsRef(!!props.treeData && !props.dataSource);
+
   const setStrategyAvailability = React.useCallback(() => {
     privateApiRef.current.setStrategyAvailability(
       GridStrategyGroup.RowTree,
       TreeDataStrategy.Default,
-      props.treeData && !props.dataSource ? () => true : () => false,
+      () => isTreeDataActiveRef.current,
     );
-  }, [privateApiRef, props.treeData, props.dataSource]);
+  }, [privateApiRef, isTreeDataActiveRef]);
 
   const getGroupingColDef = React.useCallback(() => {
     const groupingColDefProp = props.groupingColDef;
@@ -232,7 +230,7 @@ export const useGridTreeDataPreProcessors = (
   /**
    * 1ST RENDER
    */
-  useFirstRender(() => {
+  useOnFirstRender(() => {
     setStrategyAvailability();
   });
 
@@ -246,5 +244,6 @@ export const useGridTreeDataPreProcessors = (
     } else {
       isFirstRender.current = false;
     }
-  }, [setStrategyAvailability]);
+    // `setStrategyAvailability` is stable. These props trigger the `strategyAvailabilityChange` event.
+  }, [setStrategyAvailability, props.treeData, props.dataSource]);
 };

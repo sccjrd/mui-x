@@ -1,12 +1,16 @@
 'use client';
 import { useStore } from '@base-ui/utils/store';
-import { SchedulerEventCreationConfig } from '../../models';
+import type { SchedulerEventCreationConfig, TemporalTimezone } from '../../models';
 import { useSchedulerStoreContext } from '../../use-scheduler-store-context';
-import { schedulerEventSelectors } from '../../scheduler-selectors';
+import { schedulerEventSelectors, schedulerOtherSelectors } from '../../scheduler-selectors';
 import type { CreationPlaceholderFields } from './useEventCreation';
 
 interface GetKeyboardCreationPlaceholderParams {
   creationConfig: SchedulerEventCreationConfig;
+  /**
+   * The display timezone, in which the dates of the placeholder are read.
+   */
+  timezone: TemporalTimezone;
 }
 
 /**
@@ -20,7 +24,7 @@ export function useKeyboardEventCreation(
   getCreationPlaceholder: (
     params: GetKeyboardCreationPlaceholderParams,
   ) => CreationPlaceholderFields,
-): (() => void) | undefined {
+): ((event?: Event) => void) | undefined {
   const store = useSchedulerStoreContext();
   const creationConfig = useStore(store, schedulerEventSelectors.creationConfig);
 
@@ -28,10 +32,16 @@ export function useKeyboardEventCreation(
     return undefined;
   }
 
-  return () => {
-    store.setOccurrencePlaceholder({
-      type: 'creation',
-      ...getCreationPlaceholder({ creationConfig }),
-    });
+  return (event?: Event) => {
+    store.setOccurrencePlaceholder(
+      {
+        type: 'creation',
+        ...getCreationPlaceholder({
+          creationConfig,
+          timezone: schedulerOtherSelectors.displayTimezone(store.state),
+        }),
+      },
+      event,
+    );
   };
 }

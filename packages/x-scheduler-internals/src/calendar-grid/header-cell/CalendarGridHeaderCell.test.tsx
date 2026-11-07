@@ -1,17 +1,21 @@
 import * as React from 'react';
-import { spy } from 'sinon';
 import { screen } from '@mui/internal-test-utils';
 import { CalendarGrid } from '@mui/x-scheduler-internals/calendar-grid';
-import { adapter, createSchedulerRenderer, describeConformance } from 'test/utils/scheduler';
+import {
+  adapter,
+  createSchedulerRenderer,
+  describeConformance,
+  processDay,
+} from 'test/utils/scheduler';
 import { EventCalendarProvider } from '@mui/x-scheduler-internals/event-calendar-provider';
-import { processDate } from '@mui/x-scheduler-internals/process-date';
+import { vi, describe, it, expect } from 'vitest';
 
 describe('<CalendarGrid.HeaderCell />', () => {
   const { render } = createSchedulerRenderer();
 
   const day = adapter.now('default');
 
-  describeConformance(<CalendarGrid.HeaderCell date={processDate(day, adapter)} />, () => ({
+  describeConformance(<CalendarGrid.HeaderCell date={processDay(day, adapter)} />, () => ({
     refInstanceof: window.HTMLDivElement,
     render(node) {
       return render(
@@ -26,12 +30,12 @@ describe('<CalendarGrid.HeaderCell />', () => {
 
   describe('keyboard interactions', () => {
     it('should delegate Enter keypress to the child button', async () => {
-      const onClick = spy();
+      const onClick = vi.fn();
       const { user } = render(
         <EventCalendarProvider events={[]}>
           <CalendarGrid.Root>
             <CalendarGrid.HeaderRow>
-              <CalendarGrid.HeaderCell date={processDate(day, adapter)}>
+              <CalendarGrid.HeaderCell date={processDay(day, adapter)}>
                 <button type="button" onClick={onClick}>
                   Click me
                 </button>
@@ -45,7 +49,7 @@ describe('<CalendarGrid.HeaderCell />', () => {
       await user.click(header);
       await user.keyboard('{Enter}');
 
-      expect(onClick.calledOnce).to.equal(true);
+      expect(onClick.mock.calls.length).to.equal(1);
     });
 
     it('should not throw when Enter is pressed without a child button', async () => {
@@ -53,7 +57,7 @@ describe('<CalendarGrid.HeaderCell />', () => {
         <EventCalendarProvider events={[]}>
           <CalendarGrid.Root>
             <CalendarGrid.HeaderRow>
-              <CalendarGrid.HeaderCell date={processDate(day, adapter)}>
+              <CalendarGrid.HeaderCell date={processDay(day, adapter)}>
                 Monday
               </CalendarGrid.HeaderCell>
             </CalendarGrid.HeaderRow>

@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { createRenderer, screen } from '@mui/internal-test-utils';
-import { RenderProp, useComponentRenderer } from './useComponentRenderer';
+import { describe, it, expect } from 'vitest';
+import type { RenderProp } from './useComponentRenderer';
+import { useComponentRenderer } from './useComponentRenderer';
 
 describe('useComponentRenderer', () => {
   const { render } = createRenderer();

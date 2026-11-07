@@ -1,0 +1,51 @@
+{
+  "props": {
+    "children": { "type": { "name": "node" } },
+    "classes": { "type": { "name": "object" }, "additionalInfo": { "cssApi": true } },
+    "slotProps": { "type": { "name": "object" }, "default": "{}" },
+    "slots": {
+      "type": { "name": "object" },
+      "default": "{}",
+      "additionalInfo": { "slotsApi": true }
+    },
+    "sx": {
+      "type": {
+        "name": "union",
+        "description": "Array&lt;func<br>&#124;&nbsp;object<br>&#124;&nbsp;bool&gt;<br>&#124;&nbsp;func<br>&#124;&nbsp;object"
+      },
+      "additionalInfo": { "sx": true }
+    }
+  },
+  "name": "ChatMessageError",
+  "imports": [
+    "import { ChatMessageError } from '@mui/x-chat/ChatMessageError';",
+    "import { ChatMessageError } from '@mui/x-chat';"
+  ],
+  "slots": [
+    {
+      "name": "root",
+      "description": "The root element of the per-message error primitive.\nRendered with `role=\"alert\"` so screen readers announce the error.",
+      "class": "MuiChatMessageError-root"
+    }
+  ],
+  "classes": [
+    {
+      "key": "message",
+      "className": "MuiChatMessageError-message",
+      "description": "Styles applied to the message text element.",
+      "isGlobal": false
+    },
+    {
+      "key": "retryButton",
+      "className": "MuiChatMessageError-retryButton",
+      "description": "Styles applied to the retry button.",
+      "isGlobal": false
+    }
+  ],
+  "spread": true,
+  "themeDefaultProps": null,
+  "muiName": "MuiChatMessageError",
+  "filename": "/packages/x-chat/src/ChatMessageError/ChatMessageError.tsx",
+  "inheritance": null,
+  "demos": "<ul><li><a href=\"/x/react-chat/behavior/error-handling/\">Chat - Error handling</a></li></ul>"
+}

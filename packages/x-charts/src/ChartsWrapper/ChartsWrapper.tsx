@@ -2,11 +2,12 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import useForkRef from '@mui/utils/useForkRef';
-import { styled, type SxProps, type Theme } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
+import type { SxProps, Theme } from '@mui/material/styles';
 import { shouldForwardProp } from '@mui/system/createStyled';
 import { useChartRootRef } from '../hooks/useChartRootRef';
-import { type Direction } from '../ChartsLegend';
-import { type Position } from '../models';
+import type { Direction } from '../ChartsLegend';
+import type { Position } from '../models';
 import { useStore } from '../internals/store/useStore';
 import {
   selectorChartPropsHeight,
@@ -35,7 +36,13 @@ export interface ChartsWrapperProps extends React.HTMLAttributes<HTMLDivElement>
    * @default `false` if the `height` prop is set. And `true` otherwise.
    */
   extendVertically?: boolean;
+  /**
+   * The content of the component.
+   */
   children: React.ReactNode;
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx?: SxProps<Theme>;
 }
 
@@ -227,11 +234,14 @@ const ChartsWrapper = React.forwardRef<HTMLDivElement, ChartsWrapperProps>(
   },
 );
 
-ChartsWrapper.propTypes = {
+ChartsWrapper.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * The content of the component.
+   */
   children: PropTypes.node,
   /**
    * If `true`, the chart wrapper set `height: 100%`.
@@ -256,6 +266,9 @@ ChartsWrapper.propTypes = {
     horizontal: PropTypes.oneOf(['center', 'end', 'start']),
     vertical: PropTypes.oneOf(['bottom', 'middle', 'top']),
   }),
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx: PropTypes.oneOfType([
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
     PropTypes.func,

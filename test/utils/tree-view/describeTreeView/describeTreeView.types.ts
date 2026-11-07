@@ -1,12 +1,13 @@
-import * as React from 'react';
-import { TreeViewAnyStore, TreeViewPublicAPI } from '@mui/x-tree-view/internals/models';
-import { TreeViewItemId } from '@mui/x-tree-view/models';
-import { TreeItemProps } from '@mui/x-tree-view/TreeItem';
-import {
+import type * as React from 'react';
+import type { TreeViewAnyStore, TreeViewPublicAPI } from '@mui/x-tree-view/internals/models';
+import type { TreeViewItemId } from '@mui/x-tree-view/models';
+import type { TreeItemProps } from '@mui/x-tree-view/TreeItem';
+import type {
   TreeViewSlotProps,
   TreeViewSlots,
   UseTreeViewStoreParameters,
 } from '@mui/x-tree-view/internals';
+import type { MuiRenderResult } from '@mui/internal-test-utils';
 
 export type DescribeTreeViewTestRunner<TStore extends TreeViewAnyStore> = (
   params: DescribeTreeViewTestRunnerParams<TStore>,
@@ -18,6 +19,10 @@ export interface TreeViewItemIdTreeElement {
 }
 
 export interface DescribeTreeViewRendererUtils {
+  /**
+   * A userEvent instance for simulating real user interactions.
+   */
+  user: MuiRenderResult['user'];
   /**
    * Returns the `root` slot of the Tree View.
    * @returns {HTMLElement} `root` slot of the Tree View.
@@ -126,7 +131,8 @@ export type DescribeTreeViewRenderer<TStore extends TreeViewAnyStore> = <
      * If `true`, the Tree View will be wrapped with an error boundary.
      */
     withErrorBoundary?: boolean;
-  } & UseTreeViewStoreParameters<TStore> & {
+  } & UseTreeViewStoreParameters<TStore> &
+    Omit<React.HTMLAttributes<HTMLUListElement>, 'children'> & {
       slots?: TreeViewSlots & {
         item?: React.ElementType<TreeItemProps>;
       };

@@ -1,6 +1,7 @@
 import { CalendarGrid } from '@mui/x-scheduler-internals/calendar-grid';
 import { adapter, createSchedulerRenderer, describeConformance } from 'test/utils/scheduler';
 import { EventCalendarProvider } from '@mui/x-scheduler-internals/event-calendar-provider';
+import { describe } from 'vitest';
 
 describe('<CalendarGrid.DayRow />', () => {
   const { render } = createSchedulerRenderer();
@@ -8,7 +9,10 @@ describe('<CalendarGrid.DayRow />', () => {
   const day = adapter.now('default');
 
   describeConformance(
-    <CalendarGrid.DayRow start={adapter.startOfDay(day)} end={adapter.endOfDay(day)} />,
+    <CalendarGrid.DayRow
+      start={adapter.getTime(adapter.startOfDay(day))}
+      end={adapter.getTime(adapter.endOfDay(day))}
+    />,
     () => ({
       refInstanceof: window.HTMLDivElement,
       render(node) {

@@ -74,6 +74,7 @@ const columns = [
   {
     field: 'slot',
     headerName: 'Slot',
+    rowHeader: true,
     width: 240,
     renderCell: (params) => (
       <ComponentTag value={params.value} plan={params.row.plan} />
@@ -122,6 +123,13 @@ const rows = [
     slot: 'columnMenuAggregationItem',
     defaultComponent: 'GridColumnMenuAggregationItem',
     displayOrder: 23,
+    plan: 'Premium',
+  },
+  {
+    id: 12,
+    slot: 'columnMenuComputedColumnItem',
+    defaultComponent: 'GridColumnMenuComputedColumnItem',
+    displayOrder: 24,
     plan: 'Premium',
   },
   {

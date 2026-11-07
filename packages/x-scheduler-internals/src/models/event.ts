@@ -1,12 +1,13 @@
-import type { TemporalSupportedObject, TemporalTimezone } from '../base-ui-copy/types';
-import {
+import type { TemporalSupportedObject, TemporalTimezone } from '@base-ui/react/internals/temporal';
+import type {
   SchedulerProcessedEventRecurrenceRule,
   SchedulerEventRecurrenceRule,
 } from './recurringEvent';
 import type { SchedulerOccurrencePlaceholderExternalDragData } from './dragAndDrop';
 import type { SchedulerResourceId } from './resource';
+import type { BaseTemporal } from '../internals/utils/base-temporal';
 
-export type { TemporalTimezone } from '../base-ui-copy/types';
+export type { TemporalTimezone } from '@base-ui/react/internals/temporal';
 
 /**
  * Base shape for processed scheduler events.
@@ -46,12 +47,6 @@ interface SchedulerProcessedEventBase {
      * */
     timezone: TemporalTimezone;
     /**
-     * Recurrence projected to the display timezone so the UI reflects
-     * what the user actually experiences (e.g. displayed weekdays).
-     * Must be converted back to the dataTimezone representation when persisted.
-     */
-    rrule?: SchedulerProcessedEventRecurrenceRule;
-    /**
      * Exception dates projected to the display timezone for UI purposes.
      * Must be converted back to the dataTimezone representation when persisted.
      */
@@ -65,9 +60,9 @@ interface SchedulerProcessedEventBase {
   allDay?: boolean;
 
   /**
-   * The id of the resource this event is associated with.
+   * The id(s) of the resource(s) this event is associated with.
    */
-  resource?: SchedulerResourceId | null;
+  resource?: SchedulerResourceId | SchedulerResourceId[] | null;
 
   /**
    * A custom class name to apply to the event element.
@@ -110,7 +105,8 @@ export interface SchedulerProcessedEvent extends SchedulerProcessedEventBase {
      * */
     timezone: TemporalTimezone;
     /**
-     * The recurrence rule for the event.
+     * The recurrence rule for the event, expressed in the event's timezone (RFC 5545 evaluates
+     * it as local time in the DTSTART timezone). The event dialog reads and writes it there.
      * If not defined, the event will have only one occurrence.
      */
     rrule?: SchedulerProcessedEventRecurrenceRule;
@@ -206,10 +202,10 @@ export interface SchedulerEvent {
    */
   timezone?: TemporalTimezone;
   /**
-   * The id of the resource this event is associated with.
+   * The id(s) of the resource(s) this event is associated with.
    * @default null
    */
-  resource?: SchedulerResourceId | null;
+  resource?: SchedulerResourceId | SchedulerResourceId[] | null;
   /**
    * The recurrence rule for the event.
    * It can be provided either as a string (RFC5545 RRULE format)
@@ -290,8 +286,7 @@ export interface SchedulerEventOccurrencePlaceholder extends SchedulerProcessedE
  * Includes both real event occurrences and temporary placeholder occurrences.
  */
 export type SchedulerRenderableEventOccurrence =
-  | SchedulerEventOccurrence
-  | SchedulerEventOccurrencePlaceholder;
+  SchedulerEventOccurrence | SchedulerEventOccurrencePlaceholder;
 
 export type SchedulerEventId = string | number;
 
@@ -317,13 +312,15 @@ interface SchedulerOccurrencePlaceholderBase {
    */
   surfaceType: EventSurfaceType;
   /**
-   * The new start date and time of the event occurrence.
+   * The new start of the event occurrence, as a timestamp in milliseconds.
+   * Its date and time are read in the display timezone.
    */
-  start: TemporalSupportedObject;
+  start: number;
   /**
-   * The new end date and time of the event occurrence.
+   * The new end of the event occurrence, as a timestamp in milliseconds.
+   * Its date and time are read in the display timezone.
    */
-  end: TemporalSupportedObject;
+  end: number;
   /**
    * The id of the resource onto which to drop the event.
    * If null, the event will be dropped outside of any resource.
@@ -365,6 +362,12 @@ export interface SchedulerOccurrencePlaceholderInternalDragOrResize extends Sche
    * The data of the event to use when dropping the event outside of the Event Calendar or the Event Timeline Premium.
    */
   originalOccurrence: SchedulerEventOccurrence;
+  /**
+   * The id of the resource row the occurrence was dragged from, if the drag source exposes it.
+   * Used to replace only that entry in a multi-resource event's `resource` array on drop,
+   * instead of overwriting the whole array with the destination resource.
+   */
+  sourceResourceId: SchedulerResourceId | null;
 }
 
 export interface SchedulerOccurrencePlaceholderExternalDrag extends SchedulerOccurrencePlaceholderBase {
@@ -416,6 +419,18 @@ export interface SchedulerProcessedDate {
 }
 
 /**
+ * A day of a view: a cell, a column or a row, starting at the first instant of its date.
+ */
+export interface SchedulerProcessedDay extends SchedulerProcessedDate {
+  /**
+   * The date of the day in the display timezone, which the day list is built in: consumers compare
+   * its day number, from `getDayNumber()`, with the day numbers of instants in that timezone, from
+   * `toLocalDayNumber()`.
+   */
+  plainDate: BaseTemporal.PlainDate;
+}
+
+/**
  * Properties to pass to the methods that update an event (recurring or not).
  * The `id`, `start` and `end` properties are required in order to identify the event to update and the new dates.
  * All other properties are optional and can be skipped if not modified.
@@ -459,15 +474,15 @@ export type SchedulerEventPasteProperties = Partial<
 export type EventSurfaceType = 'day-grid' | 'time-grid' | 'timeline';
 
 export type SchedulerEventModelStructure<TEvent extends object> = {
-  [key in keyof SchedulerEvent]?: {
-    getter: (event: TEvent) => SchedulerEvent[key];
+  [K in keyof SchedulerEvent]?: {
+    getter: (event: TEvent) => SchedulerEvent[K];
     /**
      * Setter for the event property.
      * If not provided, the property won't be editable.
      */
     setter?: (
       event: TEvent | Partial<TEvent>,
-      value: SchedulerEvent[key],
+      value: SchedulerEvent[K],
     ) => TEvent | Partial<TEvent>;
   };
 };
@@ -483,4 +498,26 @@ export interface SchedulerEventCreationConfig {
    * @default 30
    */
   duration: number;
+  /**
+   * Whether newly created events can be assigned more than one resource.
+   * Decides the picker for every newly created event — even one whose creation placeholder
+   * already carries a resource, e.g. the Event Timeline pre-selecting the row it was created
+   * in, which only seeds an entry and doesn't get to pick the mode — and for existing events
+   * only when their own `resource` is `null` or not set. An existing event whose `resource`
+   * is already a string or an array always keeps that shape regardless of this setting.
+   *
+   * When not set, the mode is inferred from the `events` prop: the first event with a
+   * `resource` value determines it (a string means single, an array means multiple), and
+   * data with no resource at all defaults to multiple.
+   */
+  canHaveMultipleResources?: boolean;
+}
+
+export interface SchedulerEventDeletionConfig {
+  /**
+   * Whether a confirmation dialog is shown before deleting an event.
+   * Recurring events handled by the recurring scope dialog are not asked twice.
+   * @default true
+   */
+  confirmation: boolean;
 }

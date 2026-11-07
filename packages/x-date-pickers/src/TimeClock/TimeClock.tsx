@@ -12,11 +12,13 @@ import { convertValueToMeridiem, createIsAfterIgnoreDatePart } from '../internal
 import { useViews } from '../internals/hooks/useViews';
 import type { PickerSelectionState } from '../internals/hooks/usePicker';
 import { useMeridiemMode } from '../internals/hooks/date-helpers-hooks';
-import { PickerOwnerState, PickerValidDate, TimeView } from '../models';
+import type { PickerOwnerState, PickerValidDate, TimeView } from '../models';
 import { PickerViewRoot } from '../internals/components/PickerViewRoot';
-import { getTimeClockUtilityClass, TimeClockClasses } from './timeClockClasses';
-import { Clock, ClockProps } from './Clock';
-import { TimeClockProps } from './TimeClock.types';
+import type { TimeClockClasses } from './timeClockClasses';
+import { getTimeClockUtilityClass } from './timeClockClasses';
+import type { ClockProps } from './Clock';
+import { Clock } from './Clock';
+import type { TimeClockProps } from './TimeClock.types';
 import { getHourNumbers, getMinutesNumbers } from './ClockNumbers';
 import { useControlledValue } from '../internals/hooks/useControlledValue';
 import { singleItemValueManager } from '../internals/utils/valueManagers';
@@ -280,7 +282,7 @@ export const TimeClock = React.forwardRef(function TimeClock(
 
         let viewRange: [number, number];
         if (ampm) {
-          if (viewValue > 12) {
+          if (meridiemMode === 'pm') {
             viewRange = [12, 23];
           } else {
             viewRange = [0, 11];
@@ -416,7 +418,7 @@ export const TimeClock = React.forwardRef(function TimeClock(
   );
 }) as TimeClockComponent;
 
-TimeClock.propTypes = {
+TimeClock.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -442,6 +444,9 @@ TimeClock.propTypes = {
    * Override or extend the styles applied to the component.
    */
   classes: PropTypes.object,
+  /**
+   * A CSS class name applied to the root element.
+   */
   className: PropTypes.string,
   /**
    * The default selected value.
@@ -534,6 +539,9 @@ TimeClock.propTypes = {
    * @returns {boolean} If `true` the time will be disabled.
    */
   shouldDisableTime: PropTypes.func,
+  /**
+   * If `true`, displays arrow buttons to switch between the views.
+   */
   showViewSwitcher: PropTypes.bool,
   /**
    * The props used for each component slot.

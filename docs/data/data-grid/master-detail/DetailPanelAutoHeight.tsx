@@ -6,14 +6,16 @@ import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import DeleteIcon from '@mui/icons-material/Delete';
-import {
-  DataGridPro,
+import type {
   GridColDef,
   DataGridProProps,
+  GridRenderCellParams,
+} from '@mui/x-data-grid-pro';
+import {
+  DataGridPro,
   useGridApiContext,
   GridActionsCellItem,
   GridActionsCell,
-  GridRenderCellParams,
 } from '@mui/x-data-grid-pro';
 import {
   randomId,
@@ -81,7 +83,13 @@ function DetailPanelContent({ row: rowProp }: { row: Customer }) {
 
   const columns = React.useMemo<GridColDef<Customer['products'][number]>[]>(
     () => [
-      { field: 'name', headerName: 'Product', flex: 1, editable: true },
+      {
+        field: 'name',
+        headerName: 'Product',
+        flex: 1,
+        editable: true,
+        rowHeader: true,
+      },
       {
         field: 'quantity',
         headerName: 'Quantity',

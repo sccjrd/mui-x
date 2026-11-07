@@ -1,10 +1,10 @@
-import {
-  DataGrid,
+import type {
   GridColDef,
   GridValueGetter,
   GridValueSetter,
   GridValueParser,
 } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
 
 type Row = (typeof defaultRows)[number];
 
@@ -46,6 +46,7 @@ const columns: GridColDef[] = [
   {
     field: 'fullName',
     headerName: 'Full name',
+    rowHeader: true,
     width: 160,
     editable: true,
     valueGetter: getFullName,

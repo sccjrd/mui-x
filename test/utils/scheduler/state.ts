@@ -1,12 +1,9 @@
-import {
-  EventCalendarParameters,
-  EventCalendarStore,
-} from '@mui/x-scheduler-internals/use-event-calendar';
-import {
-  EventTimelinePremiumParameters,
-  EventTimelinePremiumStore,
-} from '@mui/x-scheduler-internals-premium/use-event-timeline-premium';
+import type { EventCalendarParameters } from '@mui/x-scheduler-internals/use-event-calendar';
+import { EventCalendarStore } from '@mui/x-scheduler-internals/use-event-calendar';
+import type { EventTimelinePremiumStoreParameters } from '@mui/x-scheduler-internals-premium/use-event-timeline-premium';
+import { EventTimelinePremiumStore } from '@mui/x-scheduler-internals-premium/use-event-timeline-premium';
 import { adapter } from './adapters';
+import { EventTimelinePremiumStoreWithFeatures } from './storeClasses';
 import { ResourceBuilder } from './resource-builder';
 
 export const DEFAULT_EVENT_CALENDAR_STATE = new EventCalendarStore({ events: [] }, adapter).state;
@@ -30,8 +27,8 @@ export const getEventTimelinePremiumStateFromParameters = <
   TEvent extends object,
   TResource extends object,
 >(
-  parameters: EventTimelinePremiumParameters<TEvent, TResource>,
+  parameters: EventTimelinePremiumStoreParameters<TEvent, TResource>,
 ) => {
-  const state = new EventTimelinePremiumStore(parameters, adapter).state;
+  const state = new EventTimelinePremiumStoreWithFeatures(parameters, adapter).state;
   return state;
 };

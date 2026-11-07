@@ -2,16 +2,27 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { SxProps, Theme } from '@mui/system';
-import { ComposerLabel, type ComposerLabelProps } from '@mui/x-chat-headless';
+import type { SxProps, Theme } from '@mui/system';
+import { ComposerLabel } from '@mui/x-chat-headless';
+import type { ComposerLabelProps, ComposerLabelSlots } from '@mui/x-chat-headless';
 import { styled, createUseThemeProps } from '../internals/zero-styled';
-import { useChatComposerUtilityClasses, type ChatComposerClasses } from './chatComposerClasses';
+import { mergeSlotProps } from '../internals/mergeSlotProps';
+import { useChatComposerUtilityClasses } from './chatComposerClasses';
+import type { ChatComposerClasses } from './chatComposerClasses';
 
 const useThemeProps = createUseThemeProps('MuiChatComposerLabel');
 
+export interface ChatComposerLabelSlots extends ComposerLabelSlots {}
+
 export interface ChatComposerLabelProps extends ComposerLabelProps {
   className?: string;
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx?: SxProps<Theme>;
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes?: Partial<ChatComposerClasses>;
 }
 
@@ -39,23 +50,25 @@ const ChatComposerLabel = React.forwardRef<HTMLLabelElement, ChatComposerLabelPr
         ref={ref}
         {...other}
         slots={{
-          label: slots?.label ?? ChatComposerLabelStyled,
           ...slots,
+          label: slots?.label ?? ChatComposerLabelStyled,
         }}
         slotProps={{
           ...slotProps,
-          label: {
-            className: clsx(classes.label, className),
-            sx,
-            ...slotProps?.label,
-          } as any,
+          label: mergeSlotProps(
+            {
+              className: clsx(classes.label, className),
+              sx,
+            },
+            slotProps?.label,
+          ) as any,
         }}
       />
     );
   },
 );
 
-ChatComposerLabel.propTypes = {
+ChatComposerLabel.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -65,6 +78,9 @@ ChatComposerLabel.propTypes = {
    * omitted, so the default is consistent with the textarea's `aria-label`.
    */
   children: PropTypes.node,
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes: PropTypes.object,
   className: PropTypes.string,
   /**
@@ -74,8 +90,19 @@ ChatComposerLabel.propTypes = {
    * clicking the label focuses the input and screen readers announce it on focus.
    */
   htmlFor: PropTypes.string,
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
   slotProps: PropTypes.object,
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
   slots: PropTypes.object,
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx: PropTypes.oneOfType([
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
     PropTypes.func,

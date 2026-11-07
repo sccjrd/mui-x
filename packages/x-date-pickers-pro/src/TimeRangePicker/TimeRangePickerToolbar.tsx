@@ -4,33 +4,33 @@ import PropTypes from 'prop-types';
 import clsx from 'clsx';
 import { styled, useThemeProps } from '@mui/material/styles';
 import composeClasses from '@mui/utils/composeClasses';
-import { PickerValidDate } from '@mui/x-date-pickers/models';
-import {
-  PickersToolbar,
-  PickersToolbarButton,
+import type { PickerValidDate } from '@mui/x-date-pickers/models';
+import type {
   BaseToolbarProps,
   ExportedBaseToolbarProps,
   PickerVariant,
   TimeViewWithMeridiem,
+  PickerRangeValue,
+  PickerToolbarOwnerState,
+} from '@mui/x-date-pickers/internals';
+import {
+  PickersToolbar,
+  PickersToolbarButton,
   PickersToolbarText,
   getMeridiem,
   formatMeridiem,
   pickersToolbarClasses,
   pickersToolbarTextClasses,
-  PickerRangeValue,
   MULTI_SECTION_CLOCK_SECTION_WIDTH,
   useToolbarOwnerState,
-  PickerToolbarOwnerState,
 } from '@mui/x-date-pickers/internals';
 import {
   usePickerAdapter,
   usePickerContext,
   usePickerTranslations,
 } from '@mui/x-date-pickers/hooks';
-import {
-  TimeRangePickerToolbarClasses,
-  getTimeRangePickerToolbarUtilityClass,
-} from './timeRangePickerToolbarClasses';
+import type { TimeRangePickerToolbarClasses } from './timeRangePickerToolbarClasses';
+import { getTimeRangePickerToolbarUtilityClass } from './timeRangePickerToolbarClasses';
 import { usePickerRangePositionContext } from '../hooks';
 
 const useUtilityClasses = (
@@ -50,6 +50,9 @@ const useUtilityClasses = (
 
 export interface TimeRangePickerToolbarProps
   extends Omit<BaseToolbarProps, 'toolbarFormat'>, ExportedTimeRangePickerToolbarProps {
+  /**
+   * 12h/24h view for hour selection clock.
+   */
   ampm: boolean;
 }
 
@@ -191,11 +194,14 @@ function TimeRangePickerToolbarTimeElement(props: TimeRangePickerToolbarTimeElem
   );
 }
 
-TimeRangePickerToolbarTimeElement.propTypes = {
+TimeRangePickerToolbarTimeElement.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * 12h/24h view for hour selection clock.
+   */
   ampm: PropTypes.bool.isRequired,
   onViewChange: PropTypes.func.isRequired,
   separatorClasses: PropTypes.string.isRequired,
@@ -279,16 +285,22 @@ const TimeRangePickerToolbar = React.forwardRef(function TimeRangePickerToolbar(
   );
 });
 
-TimeRangePickerToolbar.propTypes = {
+TimeRangePickerToolbar.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * 12h/24h view for hour selection clock.
+   */
   ampm: PropTypes.bool.isRequired,
   /**
    * Override or extend the styles applied to the component.
    */
   classes: PropTypes.object,
+  /**
+   * A CSS class name applied to the root element.
+   */
   className: PropTypes.string,
   /**
    * If `true`, show the toolbar even in desktop mode.
@@ -303,6 +315,10 @@ TimeRangePickerToolbar.propTypes = {
     PropTypes.func,
     PropTypes.object,
   ]),
+  /**
+   * The id of the toolbar title element.
+   * The picker uses it to label its popup.
+   */
   titleId: PropTypes.string,
   /**
    * Toolbar value placeholder—it is displayed when the value is empty.

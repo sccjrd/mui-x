@@ -4,7 +4,8 @@ import useId from '@mui/utils/useId';
 import { forwardRef } from '@mui/x-internals/forwardRef';
 import { useComponentRenderer } from '@mui/x-internals/useComponentRenderer';
 import type { RenderProp } from '@mui/x-data-grid-pro/internals';
-import { type GridSlotProps, useGridSelector } from '@mui/x-data-grid-pro';
+import { useGridSelector } from '@mui/x-data-grid-pro';
+import type { GridSlotProps } from '@mui/x-data-grid-pro';
 import { useGridApiContext } from '../../hooks/utils/useGridApiContext';
 import { useGridRootProps } from '../../hooks/utils/useGridRootProps';
 import { gridChartsPanelOpenSelector } from '../../hooks/features/chartsIntegration/gridChartsIntegrationSelectors';
@@ -62,7 +63,6 @@ const ChartsPanelTrigger = forwardRef<HTMLButtonElement, ChartsPanelTriggerProps
         ...rootProps.slotProps?.baseButton,
         id: buttonId,
         // TODO: Hook up the panel/trigger IDs to the charts configuration panel
-        'aria-haspopup': 'true',
         'aria-expanded': open ? 'true' : undefined,
         'aria-controls': open ? panelId : undefined,
         onClick: handleClick,
@@ -77,7 +77,7 @@ const ChartsPanelTrigger = forwardRef<HTMLButtonElement, ChartsPanelTriggerProps
   },
 );
 
-ChartsPanelTrigger.propTypes = {
+ChartsPanelTrigger.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -86,18 +86,42 @@ ChartsPanelTrigger.propTypes = {
    * A function to customize rendering of the component.
    */
   className: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
+  /**
+   * If `true`, the button is disabled.
+   */
   disabled: PropTypes.bool,
+  /**
+   * The id of the button element.
+   */
   id: PropTypes.string,
   /**
    * A function to customize rendering of the component.
    */
   render: PropTypes.oneOfType([PropTypes.element, PropTypes.func]),
+  /**
+   * The ARIA role of the button element.
+   */
   role: PropTypes.string,
+  /**
+   * The size of the button.
+   */
   size: PropTypes.oneOf(['large', 'medium', 'small']),
+  /**
+   * Element placed before the children.
+   */
   startIcon: PropTypes.node,
   style: PropTypes.object,
+  /**
+   * The `tabIndex` of the button element.
+   */
   tabIndex: PropTypes.number,
+  /**
+   * The title of the button element.
+   */
   title: PropTypes.string,
+  /**
+   * @ignore
+   */
   touchRippleRef: PropTypes.any,
 } as any;
 

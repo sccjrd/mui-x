@@ -6,7 +6,6 @@ import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 import MenuItem from '@mui/material/MenuItem';
 import { ScatterChartPro } from '@mui/x-charts-pro/ScatterChartPro';
-
 import { BarChartPro } from '@mui/x-charts-pro/BarChartPro';
 import { LineChartPro } from '@mui/x-charts-pro/LineChartPro';
 import { Heatmap } from '@mui/x-charts-pro/Heatmap';
@@ -14,7 +13,7 @@ import { FunnelChart } from '@mui/x-charts-pro/FunnelChart';
 import { useChartProApiRef } from '@mui/x-charts-pro/hooks';
 import { RadarChartPro } from '@mui/x-charts-pro/RadarChartPro';
 import { PieChartPro } from '@mui/x-charts-pro/PieChartPro';
-import { Unstable_SankeyChart } from '@mui/x-charts-pro/SankeyChart';
+import { SankeyChart } from '@mui/x-charts-pro/SankeyChart';
 import { data } from './randomData';
 import { heatmapData } from './heatmapData';
 
@@ -75,7 +74,14 @@ export default function PrintChart() {
             <MenuItem value="sankey">Sankey</MenuItem>
           </Select>
         </FormControl>
-        <Button onClick={() => apiRef.current.exportAsPrint()} variant="contained">
+        <Button
+          onClick={() =>
+            apiRef.current.exportAsPrint().catch((error) => {
+              console.error(error);
+            })
+          }
+          variant="contained"
+        >
           Print
         </Button>
       </Stack>
@@ -182,9 +188,7 @@ function Chart({ apiRef, type }) {
       );
 
     case 'sankey':
-      return (
-        <Unstable_SankeyChart apiRef={apiRef} height={300} series={sankeySeries} />
-      );
+      return <SankeyChart apiRef={apiRef} height={300} series={sankeySeries} />;
 
     default:
       throw new Error(`Unknown chart type: ${type}`);

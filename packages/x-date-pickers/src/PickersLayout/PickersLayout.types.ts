@@ -1,17 +1,17 @@
-import * as React from 'react';
-import { SxProps, Theme } from '@mui/material/styles';
-import { SlotComponentProps } from '@mui/utils/types';
-import { PickersActionBar, PickersActionBarProps } from '../PickersActionBar';
-import { BaseToolbarProps, ExportedBaseToolbarProps } from '../internals/models/props/toolbar';
-import { ExportedBaseTabsProps } from '../internals/models/props/tabs';
-import { PickersLayoutClasses } from './pickersLayoutClasses';
-import { PickersShortcutsProps } from '../PickersShortcuts';
-import {
+import type * as React from 'react';
+import type { SxProps, Theme } from '@mui/material/styles';
+import type { SlotComponentProps, WithDataAttributes } from '@mui/utils/types';
+import type { PickersActionBar, PickersActionBarProps } from '../PickersActionBar';
+import type { BaseToolbarProps, ExportedBaseToolbarProps } from '../internals/models/props/toolbar';
+import type { ExportedBaseTabsProps } from '../internals/models/props/tabs';
+import type { PickersLayoutClasses } from './pickersLayoutClasses';
+import type { PickersShortcutsProps } from '../PickersShortcuts';
+import type {
   ExportedPickersShortcutProps,
   PickersShortcuts,
 } from '../PickersShortcuts/PickersShortcuts';
-import { PickerOwnerState } from '../models';
-import { PickerValidValue } from '../internals/models';
+import type { PickerOwnerState } from '../models';
+import type { PickerValidValue } from '../internals/models';
 
 export interface ExportedPickersLayoutSlots<TValue extends PickerValidValue> {
   /**
@@ -46,6 +46,11 @@ export interface PickerLayoutOwnerState extends PickerOwnerState {
    * This flag is used to adjust the layout accordingly.
    */
   hasShortcuts: boolean;
+  /**
+   * Whether the layout displays the toolbar or not.
+   * This flag is used to adjust the layout accordingly.
+   */
+  hasToolbar: boolean;
 }
 
 export interface ExportedPickersLayoutSlotProps<TValue extends PickerValidValue> {
@@ -60,7 +65,7 @@ export interface ExportedPickersLayoutSlotProps<TValue extends PickerValidValue>
   /**
    * Props passed down to the layoutRoot component.
    */
-  layout?: Partial<PickersLayoutProps<TValue>>;
+  layout?: WithDataAttributes<Partial<PickersLayoutProps<TValue>>>;
 }
 
 export interface PickersLayoutSlots<
@@ -83,18 +88,24 @@ export interface PickersLayoutSlotProps<
   /**
    * Props passed down to the tabs component.
    */
-  tabs?: ExportedBaseTabsProps;
+  tabs?: WithDataAttributes<ExportedBaseTabsProps>;
   /**
    * Props passed down to the toolbar component.
    */
-  toolbar?: ExportedBaseToolbarProps;
+  toolbar?: WithDataAttributes<ExportedBaseToolbarProps>;
 }
 
 export interface PickersLayoutProps<TValue extends PickerValidValue> extends Omit<
   React.HTMLAttributes<HTMLDivElement>,
   'children' | 'className'
 > {
+  /**
+   * A CSS class name applied to the root element.
+   */
   className?: string;
+  /**
+   * The content rendered in the content area of the layout.
+   */
   children?: React.ReactNode;
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.

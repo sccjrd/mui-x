@@ -1,20 +1,17 @@
 'use client';
 import * as React from 'react';
 import type { RefObject } from '@mui/x-internals/types';
-import { warnOnce } from '@mui/x-internals/warning';
+import { errorOnce } from '@mui/x-internals/warning';
 import useEventCallback from '@mui/utils/useEventCallback';
 import useEnhancedEffect from '@mui/utils/useEnhancedEffect';
 import { isDeepEqual } from '@mui/x-internals/isDeepEqual';
 import { useGridEvent, useGridEventPriority } from '../../utils/useGridEvent';
 import type { GridEventListener } from '../../../models/events/gridEventListener';
-import {
-  GridEditModes,
-  GridCellModes,
-  type GridEditingState,
-  type GridEditCellProps,
-} from '../../../models/gridEditRowModel';
+import { GridEditModes, GridCellModes } from '../../../models/gridEditRowModel';
+import type { GridEditingState, GridEditCellProps } from '../../../models/gridEditRowModel';
 import type { GridPrivateApiCommunity } from '../../../models/api/gridApiCommunity';
 import type { DataGridProcessedProps } from '../../../models/props/DataGridProps';
+import { getPublicApiRef } from '../../../utils/getPublicApiRef';
 import type {
   GridCellEditingApi,
   GridStopCellEditModeParams,
@@ -28,14 +25,17 @@ import type {
 import { useGridApiMethod } from '../../utils/useGridApiMethod';
 import { gridEditRowsStateSelector } from './gridEditingSelectors';
 import type { GridRowId } from '../../../models/gridRows';
-import { isPrintableKey, isPasteShortcut } from '../../../utils/keyboardUtils';
+import { isPrintableKey, isPasteShortcut, isImeKeyDown } from '../../../utils/keyboardUtils';
+import { isEventFromPreMountedEditor } from '../../../utils/cellEditor';
 import { gridRowsLookupSelector } from '../rows/gridRowsSelector';
 import { deepClone } from '../../../utils/utils';
 import {
-  type GridCellEditStartParams,
-  type GridCellEditStopParams,
   GridCellEditStartReasons,
   GridCellEditStopReasons,
+} from '../../../models/params/gridEditCellParams';
+import type {
+  GridCellEditStartParams,
+  GridCellEditStopParams,
 } from '../../../models/params/gridEditCellParams';
 import { getDefaultCellValue } from './utils';
 import type { GridUpdateRowParams } from '../../../models/gridDataSource';
@@ -134,9 +134,8 @@ export const useGridCellEditing = (
   const handleCellKeyDown = React.useCallback<GridEventListener<'cellKeyDown'>>(
     (params, event) => {
       if (params.cellMode === GridCellModes.Edit) {
-        // Wait until IME is settled for Asian languages like Japanese and Chinese
-        // TODO: to replace at one point. See https://github.com/mui/material-ui/pull/39713#discussion_r1381678957.
-        if (event.which === 229) {
+        // Wait until the IME composition ends.
+        if (isImeKeyDown(event)) {
           return;
         }
 
@@ -158,6 +157,11 @@ export const useGridCellEditing = (
           apiRef.current.publishEvent('cellEditStop', newParams, event);
         }
       } else if (params.isEditable) {
+        // The composition starts edit mode instead, see `handleCellCompositionStart`.
+        if (isEventFromPreMountedEditor(event) && isImeKeyDown(event)) {
+          return;
+        }
+
         let reason: GridCellEditStartReasons | undefined;
 
         const canStartEditing = apiRef.current.unstable_applyPipeProcessors(
@@ -189,6 +193,23 @@ export const useGridCellEditing = (
     [apiRef],
   );
 
+  const handleCellCompositionStart = React.useCallback<GridEventListener<'cellCompositionStart'>>(
+    (params, event) => {
+      if (params.cellMode !== GridCellModes.View || !params.isEditable) {
+        return;
+      }
+      if (apiRef.current.getCellMode(params.id, params.field) !== GridCellModes.View) {
+        return;
+      }
+      const newParams: GridCellEditStartParams = {
+        ...params,
+        reason: GridCellEditStartReasons.compositionStart,
+      };
+      apiRef.current.publishEvent('cellEditStart', newParams, event);
+    },
+    [apiRef],
+  );
+
   const handleCellEditStart = React.useCallback<GridEventListener<'cellEditStart'>>(
     (params) => {
       const { id, field, reason } = params;
@@ -198,7 +219,8 @@ export const useGridCellEditing = (
       if (
         reason === GridCellEditStartReasons.printableKeyDown ||
         reason === GridCellEditStartReasons.deleteKeyDown ||
-        reason === GridCellEditStartReasons.pasteKeyDown
+        reason === GridCellEditStartReasons.pasteKeyDown ||
+        reason === GridCellEditStartReasons.compositionStart
       ) {
         startCellEditModeParams.deleteValue = true;
       }
@@ -253,6 +275,7 @@ export const useGridCellEditing = (
   useGridEvent(apiRef, 'cellDoubleClick', runIfEditModeIsCell(handleCellDoubleClick));
   useGridEvent(apiRef, 'cellFocusOut', runIfEditModeIsCell(handleCellFocusOut));
   useGridEvent(apiRef, 'cellKeyDown', runIfEditModeIsCell(handleCellKeyDown));
+  useGridEvent(apiRef, 'cellCompositionStart', runIfEditModeIsCell(handleCellCompositionStart));
 
   useGridEvent(apiRef, 'cellEditStart', runIfEditModeIsCell(handleCellEditStart));
   useGridEvent(apiRef, 'cellEditStop', runIfEditModeIsCell(handleCellEditStop));
@@ -275,6 +298,7 @@ export const useGridCellEditing = (
     if (onCellModesModelChange && isNewModelDifferentFromProp) {
       onCellModesModelChange(newModel, {
         api: apiRef.current,
+        apiRef: getPublicApiRef(apiRef),
       });
     }
 
@@ -344,15 +368,19 @@ export const useGridCellEditing = (
     async (params) => {
       const { id, field, deleteValue, initialValue } = params;
 
+      const column = apiRef.current.getColumn(field);
+      if (!column) {
+        return;
+      }
+
       const value = apiRef.current.getCellValue(id, field);
       let newValue = value;
       if (deleteValue) {
-        newValue = getDefaultCellValue(apiRef.current.getColumn(field));
+        newValue = getDefaultCellValue(column);
       } else if (initialValue) {
         newValue = initialValue;
       }
 
-      const column = apiRef.current.getColumn(field);
       const shouldProcessEditCellProps = !!column.preProcessEditCellProps && deleteValue;
 
       let newProps: GridEditCellProps = {
@@ -458,20 +486,22 @@ export const useGridCellEditing = (
         }
       } else if (processRowUpdate) {
         const handleError = (errorThrown: any) => {
-          prevCellModesModel.current[id][field].mode = GridCellModes.Edit;
-          // Revert the mode in the cellModesModel prop back to "edit"
-          updateFieldInCellModesModel(id, field, { mode: GridCellModes.Edit });
+          // The row might have been deleted
+          if (prevCellModesModel.current[id]?.[field]) {
+            prevCellModesModel.current[id][field].mode = GridCellModes.Edit;
+            // Revert the mode in the cellModesModel prop back to "edit"
+            updateFieldInCellModesModel(id, field, { mode: GridCellModes.Edit });
+          }
 
           if (onProcessRowUpdateError) {
             onProcessRowUpdateError(errorThrown);
-          } else {
-            warnOnce(
+          } else if (process.env.NODE_ENV !== 'production') {
+            errorOnce(
               [
                 'MUI X: A call to `processRowUpdate()` threw an error which was not handled because `onProcessRowUpdateError()` is missing.',
                 'To handle the error pass a callback to the `onProcessRowUpdateError()` prop, for example `<DataGrid onProcessRowUpdateError={(error) => ...} />`.',
                 'For more detail, see https://mui.com/x/react-data-grid/editing/persistence/.',
-              ],
-              'error',
+              ].join('\n'),
             );
           }
         };
@@ -479,7 +509,9 @@ export const useGridCellEditing = (
         try {
           Promise.resolve(processRowUpdate(rowUpdate, row, { rowId: id }))
             .then((finalRowUpdate) => {
-              apiRef.current.updateRows([finalRowUpdate]);
+              if (apiRef.current.getRow(id)) {
+                apiRef.current.updateRows([finalRowUpdate]);
+              }
               finishCellEditMode();
             })
             .catch(handleError);
@@ -487,7 +519,9 @@ export const useGridCellEditing = (
           handleError(errorThrown);
         }
       } else {
-        apiRef.current.updateRows([rowUpdate]);
+        if (apiRef.current.getRow(id)) {
+          apiRef.current.updateRows([rowUpdate]);
+        }
         finishCellEditMode();
       }
     },
@@ -503,6 +537,9 @@ export const useGridCellEditing = (
       throwIfNotInMode(id, field, GridCellModes.Edit);
 
       const column = apiRef.current.getColumn(field);
+      if (!column) {
+        return false;
+      }
       const row = apiRef.current.getRow(id)!;
 
       let parsedValue = value;
@@ -561,7 +598,7 @@ export const useGridCellEditing = (
       }
 
       const { value } = editingState[id][field];
-      return column.valueSetter
+      return column?.valueSetter
         ? column.valueSetter(value, row, column, apiRef)
         : { ...row, [field]: value };
     },
@@ -582,7 +619,9 @@ export const useGridCellEditing = (
   useGridApiMethod(apiRef, editingApi, 'public');
   useGridApiMethod(apiRef, editingPrivateApi, 'private');
 
-  React.useEffect(() => {
+  // Apply the controlled model before the browser inserts the typed character.
+  // With a passive effect, the edit state is created too late, and the editor ignores the first key.
+  useEnhancedEffect(() => {
     if (cellModesModelProp) {
       updateCellModesModel(cellModesModelProp);
     }

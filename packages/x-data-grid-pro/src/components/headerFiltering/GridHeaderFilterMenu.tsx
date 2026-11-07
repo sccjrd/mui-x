@@ -2,16 +2,10 @@ import * as React from 'react';
 import PropTypes from 'prop-types';
 import capitalize from '@mui/utils/capitalize';
 import HTMLElementType from '@mui/utils/HTMLElementType';
-import {
-  useGridRootProps,
-  useGridApiContext,
-  GridMenu,
-  type GridFilterOperator,
-  type GridFilterItem,
-  type GridColDef,
-} from '@mui/x-data-grid';
+import { useGridRootProps, useGridApiContext, GridMenu } from '@mui/x-data-grid';
+import type { GridFilterOperator, GridFilterItem, GridColDef } from '@mui/x-data-grid';
 
-interface GridHeaderFilterMenuProps {
+export interface GridHeaderFilterMenuProps {
   field: GridColDef['field'];
   applyFilterChanges: (item: GridFilterItem) => void;
   operators: GridFilterOperator<any, any, any>[];
@@ -20,8 +14,8 @@ interface GridHeaderFilterMenuProps {
   id: string;
   labelledBy: string;
   target: HTMLElement | null;
-  showClearItem: boolean;
-  clearFilterItem: () => void;
+  showClearItem?: boolean;
+  clearFilterItem?: () => void;
 }
 
 function GridHeaderFilterMenu({
@@ -55,7 +49,7 @@ function GridHeaderFilterMenu({
             key="filter-menu-clear-filter"
             iconStart={<rootProps.slots.columnMenuClearIcon fontSize="small" />}
             onClick={() => {
-              clearFilterItem();
+              clearFilterItem?.();
               hideMenu();
             }}
           >
@@ -92,13 +86,13 @@ function GridHeaderFilterMenu({
   );
 }
 
-GridHeaderFilterMenu.propTypes = {
+GridHeaderFilterMenu.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
   applyFilterChanges: PropTypes.func.isRequired,
-  clearFilterItem: PropTypes.func.isRequired,
+  clearFilterItem: PropTypes.func,
   field: PropTypes.string.isRequired,
   id: PropTypes /* @typescript-to-proptypes-ignore */.string,
   item: PropTypes.shape({
@@ -123,6 +117,7 @@ GridHeaderFilterMenu.propTypes = {
         className: PropTypes.string,
         clearButton: PropTypes.node,
         disabled: PropTypes.bool,
+        disableDebounce: PropTypes.bool,
         focusElementRef: PropTypes.oneOfType([
           PropTypes.func,
           PropTypes.shape({
@@ -161,7 +156,7 @@ GridHeaderFilterMenu.propTypes = {
       value: PropTypes.string.isRequired,
     }),
   ).isRequired,
-  showClearItem: PropTypes.bool.isRequired,
+  showClearItem: PropTypes.bool,
   target: HTMLElementType,
 } as any;
 

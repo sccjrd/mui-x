@@ -3,7 +3,8 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
-import { DataGridPro, DataGridProProps, GridColDef } from '@mui/x-data-grid-pro';
+import type { DataGridProProps, GridColDef } from '@mui/x-data-grid-pro';
+import { DataGridPro } from '@mui/x-data-grid-pro';
 import {
   randomEmail,
   randomInt,
@@ -12,7 +13,7 @@ import {
   randomTraderName,
   randomId,
 } from '@mui/x-data-grid-generator';
-import { DataGridProps, GridRowId } from '@mui/x-data-grid';
+import type { DataGridProps, GridRowId } from '@mui/x-data-grid';
 
 type Products = Awaited<ReturnType<typeof getProducts>>;
 
@@ -78,7 +79,7 @@ function DetailPanelContent({ row: rowProp }: { row: Customer }) {
             density="compact"
             loading={isLoading}
             columns={[
-              { field: 'name', headerName: 'Product', flex: 1 },
+              { field: 'name', headerName: 'Product', flex: 1, rowHeader: true },
               {
                 field: 'quantity',
                 headerName: 'Quantity',

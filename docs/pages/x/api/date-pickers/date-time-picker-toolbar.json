@@ -1,6 +1,9 @@
 {
   "props": {
+    "ampm": { "type": { "name": "bool" } },
+    "ampmInClock": { "type": { "name": "bool" } },
     "classes": { "type": { "name": "object" }, "additionalInfo": { "cssApi": true } },
+    "className": { "type": { "name": "string" } },
     "hidden": { "type": { "name": "bool" }, "default": "`true` for Desktop, `false` for Mobile." },
     "sx": {
       "type": {
@@ -9,6 +12,7 @@
       },
       "additionalInfo": { "sx": true }
     },
+    "titleId": { "type": { "name": "string" } },
     "toolbarFormat": { "type": { "name": "string" } },
     "toolbarPlaceholder": { "type": { "name": "node" }, "default": "\"––\"" },
     "toolbarTitle": { "type": { "name": "node" } }
@@ -78,6 +82,5 @@
   "muiName": "MuiDateTimePickerToolbar",
   "filename": "/packages/x-date-pickers/src/DateTimePicker/DateTimePickerToolbar.tsx",
   "inheritance": null,
-  "demos": "<ul><li><a href=\"/x/react-date-pickers/custom-components/\">Custom slots and subcomponents</a></li></ul>",
-  "cssComponent": false
+  "demos": "<ul><li><a href=\"/x/react-date-pickers/custom-components/\">Custom slots and subcomponents</a></li></ul>"
 }

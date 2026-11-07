@@ -1,9 +1,31 @@
 {
-  "props": {},
+  "props": {
+    "classes": { "type": { "name": "object" }, "additionalInfo": { "cssApi": true } },
+    "slotProps": { "type": { "name": "object" }, "default": "{}" },
+    "slots": {
+      "type": { "name": "object" },
+      "default": "{}",
+      "additionalInfo": { "slotsApi": true }
+    },
+    "sx": {
+      "type": {
+        "name": "union",
+        "description": "Array&lt;func<br>&#124;&nbsp;object<br>&#124;&nbsp;bool&gt;<br>&#124;&nbsp;func<br>&#124;&nbsp;object"
+      },
+      "additionalInfo": { "sx": true }
+    }
+  },
   "name": "ChatConversationSubtitle",
   "imports": [
     "import { ChatConversationSubtitle } from '@mui/x-chat/ChatConversation';",
     "import { ChatConversationSubtitle } from '@mui/x-chat';"
+  ],
+  "slots": [
+    {
+      "name": "subtitle",
+      "description": "The component that renders the subtitle.",
+      "class": "MuiChatConversationSubtitle-subtitle"
+    }
   ],
   "classes": [
     {
@@ -31,12 +53,6 @@
       "isGlobal": false
     },
     {
-      "key": "subtitle",
-      "className": "MuiChatConversationSubtitle-subtitle",
-      "description": "Styles applied to the conversation subtitle element.",
-      "isGlobal": false
-    },
-    {
       "key": "title",
       "className": "MuiChatConversationSubtitle-title",
       "description": "Styles applied to the conversation title element.",
@@ -46,6 +62,5 @@
   "muiName": "MuiChatConversationSubtitle",
   "filename": "/packages/x-chat/src/ChatConversation/ChatConversationSubtitle.tsx",
   "inheritance": null,
-  "demos": "<ul><li><a href=\"/x/react-chat/multi-conversation/conversation-header/\">Chat - Conversation Header</a></li></ul>",
-  "cssComponent": false
+  "demos": "<ul><li><a href=\"/x/react-chat/material/thread/\">Chat - Thread</a></li>\n<li><a href=\"/x/react-chat/multi-conversation/conversation-header/\">Chat - Conversation header</a></li></ul>"
 }

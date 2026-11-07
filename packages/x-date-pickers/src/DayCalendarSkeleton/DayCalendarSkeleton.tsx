@@ -3,14 +3,13 @@ import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
 import Skeleton from '@mui/material/Skeleton';
-import { styled, useThemeProps, Theme } from '@mui/material/styles';
-import { SxProps } from '@mui/system';
+import type { Theme } from '@mui/material/styles';
+import { styled, useThemeProps } from '@mui/material/styles';
+import type { SxProps } from '@mui/system';
 import composeClasses from '@mui/utils/composeClasses';
 import { DAY_SIZE, DAY_MARGIN } from '../internals/constants/dimensions';
-import {
-  DayCalendarSkeletonClasses,
-  getDayCalendarSkeletonUtilityClass,
-} from './dayCalendarSkeletonClasses';
+import type { DayCalendarSkeletonClasses } from './dayCalendarSkeletonClasses';
+import { getDayCalendarSkeletonUtilityClass } from './dayCalendarSkeletonClasses';
 
 type HTMLDivProps = React.JSX.IntrinsicElements['div'];
 
@@ -23,6 +22,9 @@ export interface DayCalendarSkeletonProps extends HTMLDivProps {
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
   sx?: SxProps<Theme>;
+  /**
+   * @ignore
+   */
   ref?: React.Ref<HTMLDivElement>;
 }
 
@@ -113,7 +115,7 @@ function DayCalendarSkeleton(inProps: DayCalendarSkeletonProps) {
   );
 }
 
-DayCalendarSkeleton.propTypes = {
+DayCalendarSkeleton.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |

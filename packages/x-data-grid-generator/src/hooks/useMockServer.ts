@@ -1,24 +1,23 @@
 'use client';
 import * as React from 'react';
 import { LRUCache } from 'lru-cache';
-import {
-  getGridDefaultColumnTypes,
-  type GridGetRowsResponse,
-  type GridRowId,
-  type GridRowModel,
-  type GridColDef,
-  type GridInitialState,
-  type GridColumnVisibilityModel,
+import { getGridDefaultColumnTypes } from '@mui/x-data-grid-premium';
+import type {
+  GridGetRowsResponse,
+  GridRowId,
+  GridRowModel,
+  GridColDef,
+  GridInitialState,
+  GridColumnVisibilityModel,
 } from '@mui/x-data-grid-premium';
 import { extrapolateSeed, deepFreeze } from './useDemoData';
 import { getCommodityColumns } from '../columns/commodities.columns';
 import { getEmployeeColumns } from '../columns/employees.columns';
 import type { GridColDefGenerator } from '../services/gridColDefGenerator';
-import { getRealGridData, type GridDemoData } from '../services/real-data-service';
-import {
-  addTreeDataOptionsToDemoData,
-  type AddPathToDemoDataOptions,
-} from '../services/tree-data-generator';
+import { getRealGridData } from '../services/real-data-service';
+import type { GridDemoData } from '../services/real-data-service';
+import { addTreeDataOptionsToDemoData } from '../services/tree-data-generator';
+import type { AddPathToDemoDataOptions } from '../services/tree-data-generator';
 import {
   loadServerRows,
   processTreeDataRows,
@@ -34,6 +33,10 @@ const dataCache = new LRUCache<string, GridDemoData>({
   max: 10,
   ttl: 60 * 5 * 1e3, // 5 minutes
 });
+
+export function clearMockServerCache() {
+  dataCache.clear();
+}
 
 export const BASE_URL = 'https://mui.com/x/api/data-grid';
 
@@ -59,6 +62,7 @@ interface UseMockServerOptions {
   maxColumns?: number;
   visibleFields?: string[];
   editable?: boolean;
+  multiSelect?: boolean;
   treeData?: AddPathToDemoDataOptions;
   derivedColumns?: boolean;
 }
@@ -71,7 +75,7 @@ interface GridMockServerData {
 
 interface ColumnsOptions extends Pick<
   UseMockServerOptions,
-  'dataSet' | 'editable' | 'maxColumns' | 'visibleFields' | 'derivedColumns'
+  'dataSet' | 'editable' | 'maxColumns' | 'visibleFields' | 'derivedColumns' | 'multiSelect'
 > {}
 
 const GET_DEFAULT_DATASET_OPTIONS: UseMockServerOptions = {
@@ -97,6 +101,9 @@ const getColumnsFromOptions = (options: ColumnsOptions): GridColDefGenerator[] |
       throw new Error('MUI X: Unknown dataset');
   }
 
+  if (!options.multiSelect) {
+    columns = columns.filter((col) => col.type !== 'multiSelect');
+  }
   if (options.visibleFields) {
     columns = columns.map((col) => ({ ...col, hide: !options.visibleFields?.includes(col.field) }));
   }
@@ -160,6 +167,23 @@ const getInitialState = (columns: GridColDefGenerator[], groupingField?: string)
   return { columns: { columnVisibilityModel } };
 };
 
+// The key must include every option that changes the generated rows.
+const getCacheKey = (options: UseMockServerOptions, index: number) => {
+  const treeDataKey =
+    (options.treeData?.maxDepth ?? 1) > 1
+      ? `${options.treeData?.maxDepth}-${options.treeData?.averageChildren ?? 2}-${options.treeData?.groupingField ?? ''}`
+      : 'false';
+  return JSON.stringify([
+    options.dataSet,
+    options.rowLength,
+    index,
+    options.maxColumns,
+    Boolean(options.multiSelect),
+    Boolean(options.derivedColumns),
+    treeDataKey,
+  ]);
+};
+
 const defaultColDef = getGridDefaultColumnTypes();
 
 function sendEmptyResponse<T>() {
@@ -196,6 +220,7 @@ export const useMockServer = <T extends GridGetRowsResponse>(
       maxColumns: options.maxColumns,
       visibleFields: options.visibleFields,
       derivedColumns: options.derivedColumns,
+      multiSelect: options.multiSelect,
     });
   }, [
     options.dataSet,
@@ -203,6 +228,7 @@ export const useMockServer = <T extends GridGetRowsResponse>(
     options.maxColumns,
     options.visibleFields,
     options.derivedColumns,
+    options.multiSelect,
   ]);
 
   const initialState = React.useMemo(
@@ -240,13 +266,9 @@ export const useMockServer = <T extends GridGetRowsResponse>(
     return undefined;
   }, [isTreeData]);
 
-  React.useEffect(() => {
-    const treeDataKey =
-      (options.treeData?.maxDepth ?? 1) > 1
-        ? `${options.treeData?.maxDepth}-${options.treeData?.averageChildren ?? 2}-${options.treeData?.groupingField ?? ''}`
-        : 'false';
-    const cacheKey = `${options.dataSet}-${options.rowLength}-${index}-${options.maxColumns}-treeData:${treeDataKey}`;
+  const cacheKey = getCacheKey(options, index);
 
+  React.useEffect(() => {
     // Cache to allow fast switch between the JavaScript and TypeScript version
     // of the demos.
     if (dataCache.has(cacheKey)) {
@@ -308,9 +330,8 @@ export const useMockServer = <T extends GridGetRowsResponse>(
     options.treeData?.groupingField,
     options.treeData?.averageChildren,
     options.dataSet,
-    options.maxColumns,
     options.derivedColumns,
-    index,
+    cacheKey,
   ]);
 
   const fetchRows = React.useCallback(
@@ -477,7 +498,6 @@ export const useMockServer = <T extends GridGetRowsResponse>(
         // keep the path from the original row if the updated row's path is `undefined`
         newRows[rowIndex] = { ...updatedRow, path: updatedRow.path || newRows[rowIndex].path };
         const newData = { ...dataRef.current, rows: newRows } as GridDemoData;
-        const cacheKey = `${options.dataSet}-${options.rowLength}-${index}-${options.maxColumns}`;
         dataCache.set(cacheKey, newData!);
         setTimeout(() => {
           if (verbose) {
@@ -488,15 +508,7 @@ export const useMockServer = <T extends GridGetRowsResponse>(
         dataRef.current = newData;
       });
     },
-    [
-      index,
-      options.dataSet,
-      options.maxColumns,
-      options.rowLength,
-      serverOptions?.maxDelay,
-      serverOptions?.minDelay,
-      serverOptions?.verbose,
-    ],
+    [cacheKey, serverOptions?.maxDelay, serverOptions?.minDelay, serverOptions?.verbose],
   );
 
   return {

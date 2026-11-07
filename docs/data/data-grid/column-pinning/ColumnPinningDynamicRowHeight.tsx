@@ -4,12 +4,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import PrintIcon from '@mui/icons-material/Print';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import {
-  DataGridPro,
-  GridColDef,
-  GridRowsProp,
-  useGridApiRef,
-} from '@mui/x-data-grid-pro';
+import type { GridColDef, GridRowsProp } from '@mui/x-data-grid-pro';
+import { DataGridPro, useGridApiRef } from '@mui/x-data-grid-pro';
 import {
   randomCreatedDate,
   randomTraderName,
@@ -23,7 +19,13 @@ export default function ColumnPinningDynamicRowHeight() {
 
   const columns: GridColDef[] = React.useMemo(
     () => [
-      { field: 'name', headerName: 'Name', width: 160, editable: true },
+      {
+        field: 'name',
+        headerName: 'Name',
+        width: 160,
+        editable: true,
+        rowHeader: true,
+      },
       { field: 'email', headerName: 'Email', width: 200, editable: true },
       { field: 'age', headerName: 'Age', type: 'number', editable: true },
       {

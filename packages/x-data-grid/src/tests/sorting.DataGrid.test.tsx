@@ -1,18 +1,22 @@
 import * as React from 'react';
-import { type RefObject } from '@mui/x-internals/types';
+import type { RefObject } from '@mui/x-internals/types';
 import { createRenderer, fireEvent, screen, act } from '@mui/internal-test-utils';
 import {
   DataGrid,
-  type DataGridProps,
-  type GridSortModel,
   useGridApiRef,
-  type GridApi,
-  type GridColDef,
   gridStringOrNumberComparator,
-  type GridInitialState,
+  GridColumnHeaderSortIcon,
+} from '@mui/x-data-grid';
+import type {
+  DataGridProps,
+  GridSortModel,
+  GridApi,
+  GridColDef,
+  GridInitialState,
 } from '@mui/x-data-grid';
 import { getColumnValues, getColumnHeaderCell } from 'test/utils/helperFn';
-import { spy } from 'sinon';
+import { vi, describe, it, expect } from 'vitest';
+import { koKR } from '@mui/x-data-grid/locales';
 
 const isJSDOM = /jsdom/.test(window.navigator.userAgent);
 
@@ -40,6 +44,162 @@ describe('<DataGrid /> - Sorting', () => {
     ],
     columns: [{ field: 'brand' }, { field: 'isPublished', type: 'boolean' }],
   };
+
+  it('should identify the column in each sort button label', async () => {
+    const { user } = render(
+      <div style={{ width: 300, height: 300 }}>
+        <DataGrid
+          {...baselineProps}
+          columns={[{ field: 'brand', headerName: 'Brand' }, { field: 'isPublished' }]}
+        />
+      </div>,
+    );
+
+    const brandSort = screen.getByLabelText('Sort Brand in ascending order', {
+      selector: 'button',
+    });
+    expect(
+      screen.getByLabelText('Sort isPublished in ascending order', { selector: 'button' }),
+    ).not.to.equal(brandSort);
+    await user.hover(getColumnHeaderCell(0));
+    await user.click(brandSort);
+    expect(getColumnValues(0)).to.deep.equal(['Adidas', 'Nike', 'Puma']);
+    expect(getColumnHeaderCell(0)).to.have.attribute('aria-sort', 'ascending');
+    expect(brandSort).to.have.attribute('aria-label', 'Sort Brand in descending order');
+    await user.click(brandSort);
+    expect(getColumnHeaderCell(0)).to.have.attribute('aria-sort', 'descending');
+    expect(brandSort).to.have.attribute('aria-label', 'Remove sorting from Brand');
+    await user.click(brandSort);
+    expect(getColumnValues(0)).to.deep.equal(['Nike', 'Adidas', 'Puma']);
+    expect(brandSort).to.have.attribute('aria-label', 'Sort Brand in ascending order');
+  });
+
+  it.each(['columns prop', 'updateColumns'])(
+    'should update the sort label after a header rename via %s',
+    (method) => {
+      let apiRef: RefObject<GridApi | null>;
+      function TestCase(props: Partial<DataGridProps>) {
+        apiRef = useGridApiRef();
+        return (
+          <div style={{ width: 300, height: 300 }}>
+            <DataGrid {...baselineProps} apiRef={apiRef} {...props} />
+          </div>
+        );
+      }
+
+      const { setProps } = render(<TestCase columns={[{ field: 'brand', headerName: 'Brand' }]} />);
+      const columns = [{ field: 'brand', headerName: 'Maker' }];
+      if (method === 'columns prop') {
+        setProps({ columns });
+      } else {
+        act(() => apiRef.current!.updateColumns(columns));
+      }
+
+      expect(getColumnHeaderCell(0)).to.have.text('Maker');
+      expect(
+        screen.getByLabelText('Sort Maker in ascending order', { selector: 'button' }),
+      ).not.to.equal(null);
+    },
+  );
+
+  it('should use the built-in translation for each sorting action', async () => {
+    const { user } = render(
+      <div style={{ width: 300, height: 300 }}>
+        <DataGrid
+          {...baselineProps}
+          columns={[{ field: 'brand', headerName: '브랜드' }]}
+          localeText={koKR.components.MuiDataGrid.defaultProps.localeText}
+        />
+      </div>,
+    );
+
+    const button = screen.getByLabelText('브랜드 오름차순 정렬', { selector: 'button' });
+    await user.hover(getColumnHeaderCell(0));
+    await user.click(button);
+    expect(button).to.have.attribute('aria-label', '브랜드 내림차순 정렬');
+    await user.click(button);
+    expect(button).to.have.attribute('aria-label', '브랜드 정렬 해제');
+  });
+
+  it('should support localized sort button labels without changing the tooltip', async () => {
+    const { user } = render(
+      <div style={{ width: 300, height: 300 }}>
+        <DataGrid
+          {...baselineProps}
+          localeText={{
+            columnHeaderSortIconLabel: 'Trier',
+            columnHeaderSortIconAriaLabel: (columnName, direction) =>
+              `Trier ${columnName} (${direction})`,
+          }}
+          slotProps={{ baseTooltip: { enterDelay: 0 } }}
+        />
+      </div>,
+    );
+
+    const button = screen.getByLabelText('Trier brand (asc)', { selector: 'button' });
+    await user.hover(getColumnHeaderCell(0));
+    await user.hover(button);
+    expect(await screen.findByRole('tooltip')).to.have.text('Trier');
+  });
+
+  it('should describe the next direction in the column sorting order', async () => {
+    const { user } = render(
+      <div style={{ width: 300, height: 300 }}>
+        <DataGrid
+          {...baselineProps}
+          columns={[{ field: 'brand', sortingOrder: ['desc', 'asc'] }]}
+        />
+      </div>,
+    );
+    const button = screen.getByLabelText('Sort brand in descending order', { selector: 'button' });
+    await user.hover(getColumnHeaderCell(0));
+    await user.click(button);
+    expect(getColumnHeaderCell(0)).to.have.attribute('aria-sort', 'descending');
+    expect(button).to.have.attribute('aria-label', 'Sort brand in ascending order');
+    await user.click(button);
+    expect(button).to.have.attribute('aria-label', 'Sort brand in descending order');
+  });
+
+  it('should use the field when a custom sort icon omits the column name', async () => {
+    const { user } = render(
+      <div style={{ width: 300, height: 300 }}>
+        <DataGrid
+          {...baselineProps}
+          columns={[{ field: 'brand', headerName: 'Brand' }]}
+          slots={{
+            columnHeaderSortIcon: ({ field, direction, sortingOrder, onClick }) => (
+              <GridColumnHeaderSortIcon
+                field={field}
+                direction={direction}
+                sortingOrder={sortingOrder}
+                onClick={onClick}
+              />
+            ),
+          }}
+        />
+      </div>,
+    );
+
+    const button = screen.getByLabelText('Sort brand in ascending order', { selector: 'button' });
+    await user.hover(getColumnHeaderCell(0));
+    await user.click(button);
+    expect(getColumnHeaderCell(0)).to.have.attribute('aria-sort', 'ascending');
+    expect(button).to.have.attribute('aria-label', 'Sort brand in descending order');
+  });
+
+  it('should preserve an explicit sort button label', () => {
+    render(
+      <div style={{ width: 300, height: 300 }}>
+        <DataGrid
+          {...baselineProps}
+          columns={[{ field: 'brand' }]}
+          slotProps={{ columnHeaderSortIcon: { 'aria-label': 'Custom sort label' } }}
+        />
+      </div>,
+    );
+
+    expect(screen.getByLabelText('Custom sort label', { selector: 'button' })).not.to.equal(null);
+  });
 
   it('should keep the initial order', () => {
     const cols = [{ field: 'id' }];
@@ -153,7 +313,7 @@ describe('<DataGrid /> - Sorting', () => {
   // See https://github.com/mui/mui-x/issues/12271
   it('should not keep the sort item with `item.sort = null`', () => {
     let apiRef: RefObject<GridApi | null>;
-    const onSortModelChange = spy();
+    const onSortModelChange = vi.fn();
     function TestCase() {
       apiRef = useGridApiRef();
       const cols = [{ field: 'id' }];
@@ -178,16 +338,16 @@ describe('<DataGrid /> - Sorting', () => {
     // Trigger a `asc` sort
     fireEvent.click(header);
     expect(getColumnValues(0)).to.deep.equal(['0', '5', '10']);
-    expect(onSortModelChange.callCount).to.equal(1);
-    expect(onSortModelChange.lastCall.firstArg).to.deep.equal([{ field: 'id', sort: 'asc' }]);
+    expect(onSortModelChange.mock.calls.length).to.equal(1);
+    expect(onSortModelChange.mock.lastCall?.[0]).to.deep.equal([{ field: 'id', sort: 'asc' }]);
 
     // Clear the sort using `apiRef`
     act(() => apiRef.current?.sortColumn('id', null));
     expect(getColumnValues(0)).to.deep.equal(['10', '0', '5']);
-    expect(onSortModelChange.callCount).to.equal(2);
+    expect(onSortModelChange.mock.calls.length).to.equal(2);
 
     // Confirm that the sort item is cleared and not passed to `onSortModelChange`
-    expect(onSortModelChange.lastCall.firstArg).to.deep.equal([]);
+    expect(onSortModelChange.mock.lastCall?.[0]).to.deep.equal([]);
   });
 
   it('should always set correct `aria-sort` attribute', () => {
@@ -693,7 +853,7 @@ describe('<DataGrid /> - Sorting', () => {
       { id: 1, brand: 'Adidas' },
       { id: 2, brand: 'Puma' },
     ];
-    const onSortModelChange = spy();
+    const onSortModelChange = vi.fn();
 
     function Demo(props: Omit<DataGridProps, 'columns'>) {
       return (
@@ -713,8 +873,8 @@ describe('<DataGrid /> - Sorting', () => {
 
     setProps({ columns: [{ field: 'id' }] });
     expect(getColumnValues(0)).to.deep.equal(['0', '1', '2']);
-    expect(onSortModelChange.callCount).to.equal(2);
-    expect(onSortModelChange.lastCall.firstArg).to.deep.equal([]);
+    expect(onSortModelChange.mock.calls.length).to.equal(2);
+    expect(onSortModelChange.mock.lastCall?.[0]).to.deep.equal([]);
   });
 
   // See https://github.com/mui/mui-x/issues/9204
@@ -726,7 +886,7 @@ describe('<DataGrid /> - Sorting', () => {
       { id: 2, brand: 'Puma' },
     ];
 
-    const onSortModelChange = spy();
+    const onSortModelChange = vi.fn();
 
     function Demo(props: Omit<DataGridProps, 'columns'>) {
       return (
@@ -746,7 +906,7 @@ describe('<DataGrid /> - Sorting', () => {
 
     setProps({ columns: [{ field: 'id' }], sortModel: [{ field: 'id', sort: 'desc' }] });
     expect(getColumnValues(0)).to.deep.equal(['2', '1', '0']);
-    expect(onSortModelChange.callCount).to.equal(0);
+    expect(onSortModelChange.mock.calls.length).to.equal(0);
   });
 
   describe('getSortComparator', () => {

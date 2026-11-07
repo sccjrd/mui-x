@@ -1,5 +1,6 @@
-import { AdapterFormats } from '@mui/x-date-pickers/models';
-import { DescribeGregorianAdapterTestSuite } from './describeGregorianAdapter.types';
+import type { AdapterFormats } from '@mui/x-date-pickers/models';
+import { it, expect } from 'vitest';
+import type { DescribeGregorianAdapterTestSuite } from './describeGregorianAdapter.types';
 
 const expectedWeekdayShortFormat = (adapterLib: string) => {
   switch (adapterLib) {

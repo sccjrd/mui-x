@@ -2,6 +2,7 @@ import {
   DEFAULT_EVENT_CALENDAR_STATE,
   getEventCalendarStateFromParameters,
 } from 'test/utils/scheduler';
+import { describe, it, expect } from 'vitest';
 import { eventCalendarPreferenceSelectors } from './eventCalendarPreferenceSelectors';
 import {
   DEFAULT_EVENT_CALENDAR_PREFERENCES,
@@ -27,10 +28,11 @@ describe('eventCalendarPreferenceSelectors', () => {
   });
 
   describe('ampm', () => {
-    it('should return the default ampm preference when none is set in the state', () => {
+    it('should follow the hour cycle of the date locale when none is set in the state', () => {
       const state = getEventCalendarStateFromParameters({ events: [] });
-      const ampm = eventCalendarPreferenceSelectors.ampm(state);
-      expect(ampm).to.equal(DEFAULT_EVENT_CALENDAR_PREFERENCES.ampm);
+      expect(eventCalendarPreferenceSelectors.ampm(state)).to.equal(true);
+      const frenchState = getEventCalendarStateFromParameters({ events: [], dateLocale: 'fr-FR' });
+      expect(eventCalendarPreferenceSelectors.ampm(frenchState)).to.equal(false);
     });
 
     it('should return the custom ampm preference when it is set in the state (false)', () => {

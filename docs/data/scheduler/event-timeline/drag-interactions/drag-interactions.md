@@ -6,20 +6,20 @@ githubLabel: 'scope: scheduler'
 components: EventTimelinePremium
 ---
 
-# Event Timeline - Drag Interaction
+# Event Timeline - Drag Interactions
 
-<p class="description">Re-schedule or resize your events using drag and drop.</p>
+<p class="description">Reschedule or resize your events using drag-and-drop interactions.</p>
 
 {{"component": "@mui/internal-core-docs/ComponentLinkHeader", "design": false}}
 
-Events can be moved to a different time slot by dragging them, and resized by dragging their start or end edge.
-Both behaviors are enabled by default:
+You can move events to a different time slot by dragging them, and resize them by dragging their start or end edge.
+Both are enabled by default:
 
 {{"demo": "BasicDragAndDrop.js", "bg": "inline", "defaultCodeOpen": false}}
 
 ## Disable event dragging
 
-Use the `areEventsDraggable` property to prevent dragging events to another point in time:
+Use the `areEventsDraggable` property to prevent dragging events to a different time slot:
 
 ```tsx
 <EventTimelinePremium areEventsDraggable={false} />
@@ -47,14 +47,16 @@ Set the `areEventsResizable` property to `"start"` or `"end"` to enable resizing
 :::
 
 :::info
-Currently the editing form is not customizable, but in the future you'll be able to apply the same logic there.
+Disabling resizing doesn't prevent changing the dates from the event dialog.
+To prevent it there too, leave `EventDialogDateTimeSection` out of the [`eventDialogGeneralTab` slot](/x/react-scheduler/components/event-dialog/#reordering-and-omitting-sections).
+This removes the date, time, and all-day fields for every event, including new ones.
 :::
 
 ## Only disable on some events
 
 ### Per event
 
-Use the `draggable` property on the event model to prevent an event from being dragged to another point in time:
+Use the `draggable` property on the event model to prevent an event from being dragged to a different time slot:
 
 ```ts
 const event = {
@@ -74,7 +76,7 @@ const event = {
 
 ### Per resource
 
-Use the `areEventsDraggable` property on the resource model to prevent dragging a resource's events to another point in time:
+Use the `areEventsDraggable` property on the resource model to prevent dragging a resource's events to a different time slot:
 
 ```ts
 const resource = {
@@ -94,7 +96,7 @@ const resource = {
 
 ### Priority order
 
-The priority order for determining if an event is draggable or resizable is:
+The priority order for drag and resize behavior is:
 
 1. The `draggable` and `resizable` properties assigned to the event
 
@@ -120,7 +122,7 @@ The priority order for determining if an event is draggable or resizable is:
 ```
 
 :::success
-If one of the properties is not defined on the resource, it checks for the closest ancestor with this property defined.
+If a property isn't defined on the resource, the closest ancestor resource with that property defined takes precedence.
 :::
 
 3. The `areEventsDraggable` and `areEventsResizable` props assigned to the Event Timeline
@@ -150,8 +152,8 @@ function App() {
 
 ## External drag and drop
 
-You can enable dragging events from and to the outside of the Event Timeline using the `canDragEventsFromTheOutside` and `canDropEventsToTheOutside` props.
-When `canDragEventsFromTheOutside` is `true`, you can drop events created with `StandaloneEvent` inside the Event Timeline.
-When `canDropEventsToTheOutside` is `true`, you can drop events from within the Event Timeline outside of it.
+Use the `canDragEventsFromTheOutside` and `canDropEventsToTheOutside` props to drag events between the Event Timeline and external containers.
+When `canDragEventsFromTheOutside` is `true`, you can drop events created with `StandaloneEvent` into the Event Timeline.
+When `canDropEventsToTheOutside` is `true`, you can drag events out of the Event Timeline.
 
 {{"demo": "ExternalDragAndDrop.js", "bg": "inline", "defaultCodeOpen": false}}

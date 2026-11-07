@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { LineChartPro } from '@mui/x-charts-pro/LineChartPro';
-
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
@@ -8,8 +7,7 @@ import ToggleButton from '@mui/material/ToggleButton';
 import { ScatterChartPro } from '@mui/x-charts-pro/ScatterChartPro';
 import { BarChartPro } from '@mui/x-charts-pro/BarChartPro';
 import { BarChartPremium } from '@mui/x-charts-premium/BarChartPremium';
-import { Unstable_CandlestickChart as CandlestickChart } from '@mui/x-charts-premium/CandlestickChart';
-
+import { CandlestickChart } from '@mui/x-charts-premium/CandlestickChart';
 import {
   dateAxisFormatter,
   usUnemploymentRate,

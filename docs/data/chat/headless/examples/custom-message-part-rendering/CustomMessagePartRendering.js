@@ -8,7 +8,6 @@ import {
   MessageList,
   getDefaultMessagePartRenderer,
 } from '@mui/x-chat/headless';
-
 import { createEchoAdapter } from 'docs/data/chat/headless/examples/shared/demoUtils';
 import {
   demoLocaleText,
@@ -124,7 +123,7 @@ export default function CustomMessagePartRendering() {
         slotProps={{
           root: {
             style: {
-              height: 520,
+              height: 500,
               display: 'grid',
               gridTemplateRows: 'auto minmax(0, 1fr) auto',
               gap: 14,
@@ -171,12 +170,12 @@ export default function CustomMessagePartRendering() {
                 <Message.Root
                   messageId={id}
                   slotProps={{
-                    root: demoSlotProps.messageRoot,
+                    root: demoSlotProps.message,
                   }}
                 >
                   <Message.Avatar
                     slotProps={{
-                      avatar: demoSlotProps.messageAvatar,
+                      avatar: demoSlotProps.avatar,
                       image: demoSlotProps.messageAvatarImage,
                     }}
                   />
@@ -187,7 +186,7 @@ export default function CustomMessagePartRendering() {
                   />
                   <Message.Meta
                     slotProps={{
-                      meta: demoSlotProps.messageMeta,
+                      meta: demoSlotProps.meta,
                     }}
                   />
                 </Message.Root>
@@ -197,7 +196,7 @@ export default function CustomMessagePartRendering() {
         />
         <Composer.Root
           slotProps={{
-            root: demoSlotProps.composerRoot,
+            root: demoSlotProps.composer,
           }}
         >
           <Composer.TextArea
@@ -211,7 +210,7 @@ export default function CustomMessagePartRendering() {
             <Composer.SendButton
               data-variant="primary"
               slotProps={{
-                sendButton: demoSlotProps.composerSendButton,
+                sendButton: demoSlotProps.send,
               }}
             >
               Send

@@ -1,15 +1,18 @@
-import { DataGrid, GridColDef, GridColumnGroupingModel } from '@mui/x-data-grid';
+import type { GridColDef, GridColumnGroupingModel } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
 
 const columns: GridColDef[] = [
   { field: 'id', headerName: 'ID', width: 90 },
   {
     field: 'firstName',
     headerName: 'First name',
+    rowHeader: true,
     width: 150,
   },
   {
     field: 'lastName',
     headerName: 'Last name',
+    rowHeader: true,
     width: 150,
   },
   {

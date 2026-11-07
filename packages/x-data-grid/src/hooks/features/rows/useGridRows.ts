@@ -106,6 +106,7 @@ export const useGridRows = (
 
   const lastUpdateMs = React.useRef(Date.now());
   const lastRowCount = React.useRef(props.rowCount);
+  const lastGetRowId = React.useRef(props.getRowId);
   const timeout = useTimeout();
 
   // Get overridable methods from configuration
@@ -235,17 +236,18 @@ You need to upgrade to DataGridPro or DataGridPremium component to unlock this f
   );
 
   const updateNestedRows = React.useCallback<GridRowProPrivateApi['updateNestedRows']>(
-    (updates, groupKeys) => {
+    (updates, groupKeys, options) => {
       const nonPinnedRowsUpdates = computeRowsUpdates(apiRef, updates, props.getRowId);
 
       const cache = updateCacheWithNewRows({
         updates: nonPinnedRowsUpdates,
         getRowId: props.getRowId,
         previousCache: apiRef.current.caches.rows,
-        groupKeys: groupKeys ?? [],
+        groupKeys,
+        replaceChildrenOf: options?.replaceChildrenOf,
       });
 
-      throttledRowsChange({ cache, throttle: false });
+      throttledRowsChange({ cache, throttle: options?.throttle ?? false });
     },
     [props.getRowId, throttledRowsChange, apiRef],
   );
@@ -637,9 +639,19 @@ You need to upgrade to DataGridPro or DataGridPremium component to unlock this f
       lastRowCount.current = props.rowCount;
     }
 
+    let isGetRowIdPropUpdated = false;
+    if (props.getRowId !== lastGetRowId.current) {
+      isGetRowIdPropUpdated = true;
+      lastGetRowId.current = props.getRowId;
+    }
+
     const currentRows = props.dataSource ? gridDataRowsSelector(apiRef) : props.rows;
-    const areNewRowsAlreadyInState =
-      apiRef.current.caches.rows.rowsBeforePartialUpdates === currentRows;
+    // Data source rows live in the state, not in props: there is never a new set to apply, and
+    // `gridDataRowsSelector` returns a new array each time so the identity check never holds.
+    // Only a new `getRowId` needs a rebuild, to re-key them.
+    const areNewRowsAlreadyInState = props.dataSource
+      ? !isGetRowIdPropUpdated
+      : apiRef.current.caches.rows.rowsBeforePartialUpdates === currentRows;
     const isNewLoadingAlreadyInState =
       apiRef.current.caches.rows.loadingPropBeforePartialUpdates === props.loading;
     const isNewRowCountAlreadyInState =

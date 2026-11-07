@@ -17,6 +17,12 @@
     "description": ""
   },
   {
+    "name": "gridCellFormulaResultSelector",
+    "returnType": "FormulaResult | null",
+    "category": "Formulas",
+    "description": "Get the evaluated result of one formula cell, or `null` when the cell does\nnot hold a formula. Presence in the lookup is the masking criterion — a\nformula evaluating to `null` still returns a result entry."
+  },
+  {
     "name": "gridColumnDefinitionsSelector",
     "returnType": "GridStateColDef[]",
     "category": "Columns",
@@ -81,6 +87,36 @@
     "returnType": "number",
     "category": "Visible Columns",
     "description": "Get the summed width of all the visible columns."
+  },
+  {
+    "name": "gridComputedColumnDefinitionSelector",
+    "returnType": "GridComputedColumnDefinition | null",
+    "category": "Computed columns",
+    "description": "Get the definition of one computed column, or `null` when the field is not a computed column."
+  },
+  {
+    "name": "gridComputedColumnsPanelOpenSelector",
+    "returnType": "boolean",
+    "category": "Computed columns",
+    "description": "Get whether the sidebar currently shows the computed columns panel."
+  },
+  {
+    "name": "gridComputedColumnsRevisionSelector",
+    "returnType": "number",
+    "category": "Computed columns",
+    "description": "Get the revision of the computed results.\nIt changes whenever the computed cells must read their value again."
+  },
+  {
+    "name": "gridComputedColumnsSelector",
+    "returnType": "GridComputedColumnsModel",
+    "category": "Computed columns",
+    "description": "Get the computed columns model."
+  },
+  {
+    "name": "gridComputedColumnsStateSelector",
+    "returnType": "GridComputedColumnsState",
+    "category": "Computed columns",
+    "description": "Get the computed columns state."
   },
   {
     "name": "gridDataRowIdsSelector",
@@ -204,6 +240,13 @@
     "description": ""
   },
   { "name": "gridFocusStateSelector", "returnType": "GridFocusState", "description": "" },
+  {
+    "name": "gridFormulaLookupSelector",
+    "returnType": "GridFormulaLookup",
+    "category": "Formulas",
+    "description": "Get the evaluated formula results as a lookup, keyed by row id and field."
+  },
+  { "name": "gridFormulaStateSelector", "returnType": "GridFormulaState", "description": "" },
   {
     "name": "gridHeaderFilteringEditFieldSelector",
     "returnType": "string | null",

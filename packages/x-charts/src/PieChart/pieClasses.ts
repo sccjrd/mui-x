@@ -1,7 +1,7 @@
 import generateUtilityClass from '@mui/utils/generateUtilityClass';
 import composeClasses from '@mui/utils/composeClasses';
 import generateUtilityClasses from '@mui/utils/generateUtilityClasses';
-import { type SeriesId } from '../models/seriesType/common';
+import type { SeriesId } from '../models/seriesType/common';
 
 export interface PieClasses {
   /** Styles applied to the root element. */
@@ -23,12 +23,33 @@ export interface PieClasses {
 export type PieClassKey = keyof PieClasses;
 
 export interface PieArcOwnerState {
+  /**
+   * The id of the series the element belongs to.
+   */
   seriesId: SeriesId;
+  /**
+   * The index of the data point in the series.
+   */
   dataIndex: number;
+  /**
+   * The color of the element.
+   */
   color: string;
+  /**
+   * If `true`, the element is faded.
+   */
   isFaded: boolean;
+  /**
+   * If `true`, the element is highlighted.
+   */
   isHighlighted: boolean;
+  /**
+   * If `true`, the element has keyboard focus.
+   */
   isFocused: boolean;
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes?: Partial<PieClasses>;
 }
 
@@ -47,7 +68,13 @@ export const pieClasses: PieClasses = generateUtilityClasses('MuiPieChart', [
 ]);
 
 export const useUtilityClasses = (options?: {
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes?: Partial<PieClasses>;
+  /**
+   * If `true`, animations are skipped.
+   */
   skipAnimation?: boolean;
 }) => {
   const { classes, skipAnimation } = options ?? {};

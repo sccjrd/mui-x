@@ -2,6 +2,7 @@
   "props": {
     "autoFocus": { "type": { "name": "bool" }, "default": "false" },
     "classes": { "type": { "name": "object" }, "additionalInfo": { "cssApi": true } },
+    "className": { "type": { "name": "string" } },
     "dateSeparator": { "type": { "name": "string" }, "default": "\"–\"" },
     "defaultValue": { "type": { "name": "arrayOf", "description": "Array&lt;object&gt;" } },
     "direction": {
@@ -128,6 +129,5 @@
   "forwardsRefTo": "HTMLDivElement",
   "filename": "/packages/x-date-pickers-pro/src/MultiInputDateRangeField/MultiInputDateRangeField.tsx",
   "inheritance": null,
-  "demos": "<ul><li><a href=\"/x/react-date-pickers/date-range-field/\">Date Range Field <a href=\"/x/introduction/licensing/#pro-plan\" title=\"Pro plan\"><span class=\"plan-pro\"></span></a></a></li>\n<li><a href=\"/x/react-date-pickers/fields/\">Fields component</a></li></ul>",
-  "cssComponent": false
+  "demos": "<ul><li><a href=\"/x/react-date-pickers/date-range-field/\">Date Range Field <a href=\"/x/introduction/licensing/#pro-plan\" title=\"Pro plan\"><span class=\"plan-pro\"></span></a></a></li>\n<li><a href=\"/x/react-date-pickers/fields/\">Fields component</a></li></ul>"
 }

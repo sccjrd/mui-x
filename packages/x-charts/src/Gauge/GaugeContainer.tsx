@@ -2,11 +2,13 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import { styled } from '@mui/material/styles';
-import { ChartsSurface, type ChartsSurfaceProps } from '../ChartsSurface';
-import { GaugeProvider, type GaugeProviderProps } from './GaugeProvider';
+import { ChartsSurface } from '../ChartsSurface';
+import type { ChartsSurfaceProps } from '../ChartsSurface';
+import { GaugeProvider } from './GaugeProvider';
+import type { GaugeProviderProps } from './GaugeProvider';
 import { ChartsProvider } from '../context/ChartsProvider';
-import { type MergeSignaturesProperty } from '../internals/plugins/models';
-import { type ChartCorePluginSignatures } from '../internals/plugins/corePlugins';
+import type { MergeSignaturesProperty } from '../internals/plugins/models';
+import type { ChartCorePluginSignatures } from '../internals/plugins/corePlugins';
 import { defaultizeMargin } from '../internals/defaultizeMargin';
 
 export interface GaugeContainerProps
@@ -18,6 +20,9 @@ export interface GaugeContainerProps
     >,
     Omit<GaugeProviderProps, 'children'>,
     Omit<React.SVGProps<SVGSVGElement>, 'width' | 'height'> {
+  /**
+   * The content of the component.
+   */
   children?: React.ReactNode;
 }
 
@@ -93,11 +98,14 @@ const GaugeContainer = React.forwardRef(function GaugeContainer(
   );
 });
 
-GaugeContainer.propTypes = {
+GaugeContainer.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * The content of the component.
+   */
   children: PropTypes.node,
   className: PropTypes.string,
   /**
@@ -176,6 +184,9 @@ GaugeContainer.propTypes = {
    * @default 0
    */
   startAngle: PropTypes.number,
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx: PropTypes.oneOfType([
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
     PropTypes.func,

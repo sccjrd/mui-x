@@ -1,11 +1,18 @@
 'use client';
 import * as React from 'react';
 import { useStore } from '@base-ui/utils/store';
-import { useRenderElement, BaseUIComponentProps } from '@mui/x-scheduler-internals/base-ui-copy';
+import type { BaseUIComponentProps } from '@base-ui/react/internals/types';
+import { useRenderElement } from '@base-ui/react/internals/useRenderElement';
 import { useAdapterContext } from '@mui/x-scheduler-internals/use-adapter-context';
-import { useElementPositionInCollection } from '@mui/x-scheduler-internals/internals';
-import { schedulerNowSelectors } from '@mui/x-scheduler-internals/scheduler-selectors';
-import { processDate } from '@mui/x-scheduler-internals/process-date';
+import {
+  createProcessedDate,
+  useElementPositionInCollection,
+  isStartMinuteOutsideAxisWindow,
+} from '@mui/x-scheduler-internals/internals';
+import {
+  schedulerNowSelectors,
+  schedulerOtherSelectors,
+} from '@mui/x-scheduler-internals/scheduler-selectors';
 import { useEventTimelinePremiumStoreContext } from '../../use-event-timeline-premium-store-context';
 import { eventTimelinePremiumPresetSelectors } from '../../event-timeline-premium-selectors';
 import { TimelineGridCurrentTimeIndicatorCssVars } from './TimelineGridCurrentTimeIndicatorCssVars';
@@ -27,25 +34,27 @@ export const TimelineGridCurrentTimeIndicator = React.forwardRef(
     } = componentProps;
 
     const store = useEventTimelinePremiumStoreContext();
-    const now = useStore(store, schedulerNowSelectors.nowUpdatedEveryMinute);
-    const presetConfig = useStore(store, eventTimelinePremiumPresetSelectors.config);
+    const nowTimestamp = useStore(store, schedulerNowSelectors.nowTimestamp);
+    const displayTimezone = useStore(store, schedulerOtherSelectors.displayTimezone);
+    const config = useStore(store, eventTimelinePremiumPresetSelectors.config);
 
-    const processedNow = React.useMemo(() => processDate(now, adapter), [adapter, now]);
-
-    const endForCalc = React.useMemo(
-      () => processDate(adapter.addMinutes(now, 1), adapter),
-      [adapter, now],
+    const processedNow = React.useMemo(
+      () => createProcessedDate(adapter, nowTimestamp, displayTimezone),
+      [adapter, nowTimestamp, displayTimezone],
     );
 
     const { position } = useElementPositionInCollection({
+      // Only the position is read, which depends on the start alone.
       start: processedNow,
-      end: endForCalc,
-      collectionStart: presetConfig.start,
-      collectionEnd: presetConfig.end,
+      end: processedNow,
+      collection: config,
+      durationMs: config.durationMs,
     });
 
     const isOutOfRange =
-      adapter.isBefore(now, presetConfig.start) || adapter.isAfter(now, presetConfig.end);
+      nowTimestamp < config.start ||
+      nowTimestamp > config.end ||
+      isStartMinuteOutsideAxisWindow(config, processedNow.minutesInDay);
 
     return useRenderElement('div', componentProps, {
       ref: [forwardedRef],

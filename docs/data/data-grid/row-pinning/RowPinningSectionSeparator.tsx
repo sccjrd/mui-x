@@ -3,11 +3,11 @@ import FormControl from '@mui/material/FormControl';
 import RadioGroup from '@mui/material/RadioGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Radio from '@mui/material/Radio';
-import {
-  DataGridPro,
-  type GridPinnedRowsProp,
-  type GridColDef,
-  type DataGridProProps,
+import { DataGridPro } from '@mui/x-data-grid-pro';
+import type {
+  GridPinnedRowsProp,
+  GridColDef,
+  DataGridProProps,
 } from '@mui/x-data-grid-pro';
 import {
   randomCity,
@@ -58,7 +58,7 @@ export default function RowPinningSectionSeparator() {
 }
 
 const columns: GridColDef[] = [
-  { field: 'name', headerName: 'Name', width: 150 },
+  { field: 'name', headerName: 'Name', width: 150, rowHeader: true },
   { field: 'city', headerName: 'City', width: 150 },
   { field: 'username', headerName: 'Username' },
   { field: 'email', headerName: 'Email', width: 200 },

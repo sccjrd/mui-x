@@ -7,13 +7,17 @@ import {
   EventBuilder,
   ResourceBuilder,
   withinMonthView,
-  dateLocaleFr,
+  setSystemTimezone,
 } from 'test/utils/scheduler';
 import { EventCalendar, eventCalendarClasses } from '@mui/x-scheduler/event-calendar';
+import type { EventCalendarPreferences } from '@mui/x-scheduler/models';
 import { EventCalendarStore } from '@mui/x-scheduler-internals/use-event-calendar';
+import type { SchedulerUserFacingErrorDescriptor } from '@mui/x-scheduler-internals/internals';
 import { SchedulerStoreContext } from '@mui/x-scheduler-internals/use-scheduler-store-context';
+import { vi, describe, it, expect } from 'vitest';
 import { ErrorContainer } from '../internals/components/error-container';
 import { SharedComponentsStyledContext } from '../internals/components/SharedComponentsStyledContext';
+import { EVENT_CALENDAR_DEFAULT_LOCALE_TEXT } from '../internals/constants/defaultLocaleText';
 import {
   changeTo24HoursFormat,
   changeTo12HoursFormat,
@@ -36,6 +40,56 @@ describe('EventCalendar', () => {
     .span('2025-05-27T16:00:00Z', '2025-05-27T17:00:00Z')
     .build();
 
+  it('should announce the primary resource of the event', () => {
+    const sport = ResourceBuilder.new().id('sport').title('Sport').build();
+    const other = ResourceBuilder.new().id('other').title('Other').build();
+    const running = EventBuilder.new()
+      .title('Running')
+      .span('2025-05-26T07:30:00Z', '2025-05-26T08:15:00Z')
+      .resources([sport, other])
+      .build();
+
+    render(<EventCalendar events={[running]} resources={[sport, other]} />);
+
+    expect(
+      screen.getByRole('button', {
+        name: 'Running, 7:30 AM to 8:15 AM, Monday, May 26, 2025, Resource: Sport',
+      }),
+    ).not.to.equal(null);
+  });
+
+  it('should keep the resource color indicator out of the accessibility tree', () => {
+    const sport = ResourceBuilder.new().id('sport').title('Sport').build();
+    const running = EventBuilder.new()
+      .title('Running')
+      .span('2025-05-26T07:30:00Z', '2025-05-26T08:15:00Z')
+      .resource(sport)
+      .build();
+
+    render(<EventCalendar events={[running]} resources={[sport]} defaultView="month" />);
+
+    const indicators = document.querySelectorAll(`.${eventCalendarClasses.eventColorIndicator}`);
+    expect(indicators.length).to.be.greaterThan(0);
+    indicators.forEach((indicator) => {
+      expect(indicator).to.have.attribute('aria-hidden', 'true');
+      expect(indicator).not.to.have.attribute('role');
+      expect(indicator).not.to.have.attribute('aria-label');
+    });
+  });
+
+  it('should translate the event accessible name through localeText', () => {
+    render(
+      <EventCalendar
+        events={[event1]}
+        localeText={{ eventAriaLabelTimeRange: (start, end) => `de ${start} a ${end}` }}
+      />,
+    );
+
+    expect(
+      screen.getByRole('button', { name: 'Running, de 7:30 AM a 8:15 AM, Monday, May 26, 2025' }),
+    ).not.to.equal(null);
+  });
+
   // TODO: Move in a test file specific to the TimeGrid component.
   it('should render events in the correct column', () => {
     render(<EventCalendar events={[event1, event2]} />);
@@ -49,11 +103,18 @@ describe('EventCalendar', () => {
     expect(mondayEvent.textContent).to.equal('Running 7:30 AM');
     expect(tuesdayEvent.textContent).to.equal('Weekly4:00 PM - 5:00 PM');
 
-    expect(mondayEvent.getAttribute('aria-labelledby')).to.include('header-cell-1');
-    expect(tuesdayEvent.getAttribute('aria-labelledby')).to.include('header-cell-2');
+    expect(mondayEvent).to.have.attribute(
+      'aria-label',
+      'Running, 7:30 AM to 8:15 AM, Monday, May 26, 2025',
+    );
+    expect(tuesdayEvent).to.have.attribute(
+      'aria-label',
+      'Weekly, 4:00 PM to 5:00 PM, Tuesday, May 27, 2025',
+    );
+    expect(mondayEvent).not.to.have.attribute('aria-labelledby');
 
-    expect(screen.getByRole('columnheader', { name: /Monday 26/i })).not.to.equal(null);
-    expect(screen.getByRole('columnheader', { name: /Tuesday 27/i })).not.to.equal(null);
+    expect(screen.getByRole('columnheader', { name: /Monday, May 26/i })).not.to.equal(null);
+    expect(screen.getByRole('columnheader', { name: /Tuesday, May 27/i })).not.to.equal(null);
   });
 
   it('should allow to show / hide resources using the UI', async () => {
@@ -161,17 +222,85 @@ describe('EventCalendar', () => {
     },
   );
 
+  describe('current day', () => {
+    // Browsers cannot change their timezone through process.env.TZ.
+    it.skipIf(!isJSDOM).each([
+      { view: 'month', viewLabel: '30', currentColumnCount: 0 },
+      { view: 'week', viewLabel: 'Friday, December 30', currentColumnCount: 1 },
+      { view: 'agenda', viewLabel: 'Friday, December 30', currentColumnCount: 0 },
+    ] as const)(
+      'should mark the current day of the display timezone in the $view view, whatever the timezone of the system',
+      ({ view, viewLabel, currentColumnCount }) => {
+        // Pacific/Apia skipped December 30th, 2011. On a system there, `adapter.isSameDay()` reads
+        // December 30th and 31st as the same day in the other timezones.
+        setSystemTimezone('Pacific/Apia');
+        // It's still December 30th at 21:00 in New York, but December 31st in UTC and in Apia.
+        const now = new Date('2011-12-31T02:00:00Z');
+        vi.setSystemTime(now);
+        render(
+          <EventCalendar
+            events={[]}
+            view={view}
+            visibleDate={now}
+            displayTimezone="America/New_York"
+          />,
+        );
+
+        // The mini calendar of the side panel marks the current day too.
+        const currentLabels = Array.from(document.querySelectorAll('[aria-current="date"]')).map(
+          (element) => element.getAttribute('aria-label') ?? element.textContent,
+        );
+        expect(currentLabels).to.deep.equal(['Friday, December 30, 2011', viewLabel]);
+        expect(
+          document.querySelectorAll(`.${eventCalendarClasses.dayTimeGridColumn}[data-current]`),
+        ).to.have.length(currentColumnCount);
+      },
+    );
+  });
+
   describe('Preferences Menu', () => {
+    it('should call onPreferencesChange and apply the change when preferences are controlled', async () => {
+      const onPreferencesChange = vi.fn();
+      function ControlledCalendar() {
+        const [preferences, setPreferences] = React.useState<Partial<EventCalendarPreferences>>({
+          showWeekends: true,
+        });
+        return (
+          <EventCalendar
+            events={[]}
+            preferences={preferences}
+            onPreferencesChange={(next, eventDetails) => {
+              onPreferencesChange(next, eventDetails);
+              setPreferences(next);
+            }}
+          />
+        );
+      }
+
+      const { user } = render(<ControlledCalendar />);
+
+      expect(screen.getByRole('columnheader', { name: /Sunday, May 25/i })).not.to.equal(null);
+
+      await openPreferencesMenu(user);
+      await toggleShowWeekends(user);
+      await user.keyboard('{Escape}');
+      await waitFor(() => expect(screen.queryByRole('menu')).to.equal(null));
+
+      expect(onPreferencesChange.mock.calls.length).to.equal(1);
+      expect(onPreferencesChange.mock.lastCall?.[0]).to.deep.equal({ showWeekends: false });
+      expect(screen.queryByRole('columnheader', { name: /Sunday, May 25/i })).to.equal(null);
+    });
+
     it('should allow to show / hide the weekends using the UI in the week view', async () => {
       const { user } = render(<EventCalendar events={[]} />);
 
       // Weekends should be visible by default
-      expect(screen.getByRole('columnheader', { name: /Sunday 25/i })).not.to.equal(null);
-      expect(screen.getByRole('columnheader', { name: /Saturday 31/i })).not.to.equal(null);
+      expect(screen.getByRole('columnheader', { name: /Sunday, May 25/i })).not.to.equal(null);
+      expect(screen.getByRole('columnheader', { name: /Saturday, May 31/i })).not.to.equal(null);
 
       // Wait for component to fully render before opening preferences menu
       await waitFor(() =>
-        expect(screen.queryByRole('button', { name: /settings/i })).not.to.equal(null),
+        expect(screen.queryByRole('button', { name: /preferences/i })).not.to.equal(null),
       );
 
       // Hide the weekends
@@ -182,8 +311,8 @@ describe('EventCalendar', () => {
       // Wait for menu to close
       await waitFor(() => expect(screen.queryByRole('menu')).to.equal(null));
 
-      expect(screen.queryByRole('columnheader', { name: /Sunday 25/i })).to.equal(null);
-      expect(screen.queryByRole('columnheader', { name: /Saturday 31/i })).to.equal(null);
+      expect(screen.queryByRole('columnheader', { name: /Sunday, May 25/i })).to.equal(null);
+      expect(screen.queryByRole('columnheader', { name: /Saturday, May 31/i })).to.equal(null);
 
       // Show the weekends again
       await openPreferencesMenu(user);
@@ -191,8 +320,8 @@ describe('EventCalendar', () => {
       await user.keyboard('{Escape}');
       await waitFor(() => expect(screen.queryByRole('menu')).to.equal(null));
 
-      expect(screen.getByRole('columnheader', { name: /Sunday 25/i })).not.to.equal(null);
-      expect(screen.getByRole('columnheader', { name: /Saturday 31/i })).not.to.equal(null);
+      expect(screen.getByRole('columnheader', { name: /Sunday, May 25/i })).not.to.equal(null);
+      expect(screen.getByRole('columnheader', { name: /Saturday, May 31/i })).not.to.equal(null);
     });
 
     it('should allow to show / hide the weekends using the UI in the month view', async () => {
@@ -233,8 +362,8 @@ describe('EventCalendar', () => {
       const { user } = render(<EventCalendar events={[]} defaultView="agenda" />);
 
       // Weekends should be visible by default
-      expect(screen.getByLabelText(/Saturday 31/i)).not.to.equal(null);
-      expect(screen.getByLabelText(/Sunday 1/i)).not.to.equal(null);
+      expect(screen.getByLabelText('Saturday, May 31')).not.to.equal(null);
+      expect(screen.getByLabelText('Sunday, June 1')).not.to.equal(null);
 
       // Hide the weekends
       await openPreferencesMenu(user);
@@ -242,8 +371,8 @@ describe('EventCalendar', () => {
       await user.keyboard('{Escape}');
       await waitFor(() => expect(screen.queryByRole('menu')).to.equal(null));
 
-      expect(screen.queryByLabelText(/Saturday 31/i)).to.equal(null);
-      expect(screen.queryByLabelText(/Sunday 1/i)).to.equal(null);
+      expect(screen.queryByLabelText('Saturday, May 31')).to.equal(null);
+      expect(screen.queryByLabelText('Sunday, June 1')).to.equal(null);
 
       // Show the weekends again
       await openPreferencesMenu(user);
@@ -251,8 +380,8 @@ describe('EventCalendar', () => {
       await user.keyboard('{Escape}');
       await waitFor(() => expect(screen.queryByRole('menu')).to.equal(null));
 
-      expect(screen.getByLabelText(/Saturday 31/i)).not.to.equal(null);
-      expect(screen.getByLabelText(/Sunday 1/i)).not.to.equal(null);
+      expect(screen.getByLabelText('Saturday, May 31')).not.to.equal(null);
+      expect(screen.getByLabelText('Sunday, June 1')).not.to.equal(null);
     });
 
     it('should allow to show / hide the week number using the UI in the month view', async () => {
@@ -282,7 +411,7 @@ describe('EventCalendar', () => {
     });
 
     it('should allow to change the time format using the UI in the week view', async () => {
-      const { user } = render(<EventCalendar events={[]} />);
+      const { user } = render(<EventCalendar events={[event1]} />);
 
       // 12 hours format should be visible by default
       await waitFor(() => expect(screen.queryAllByText(/AM|PM/).length).to.be.above(0));
@@ -294,6 +423,11 @@ describe('EventCalendar', () => {
       await waitFor(() => expect(screen.queryByRole('menu')).to.equal(null));
 
       await waitFor(() => expect(screen.queryAllByText(/AM|PM/).length).to.equal(0));
+
+      expect(screen.getByRole('button', { name: /^Running,/ })).to.have.attribute(
+        'aria-label',
+        'Running, 07:30 to 08:15, Monday, May 26, 2025',
+      );
 
       // Show 12 hours format again
       await openPreferencesMenu(user);
@@ -317,6 +451,10 @@ describe('EventCalendar', () => {
       await waitFor(() => expect(screen.queryByRole('menu')).to.equal(null));
 
       await waitFor(() => expect(screen.queryAllByText(/AM|PM/).length).to.equal(0));
+      expect(screen.getByRole('button', { name: /^Running,/ })).to.have.attribute(
+        'aria-label',
+        'Running, 07:30 to 08:15, Monday, May 26, 2025',
+      );
 
       // Show 12 hours format again
       await openPreferencesMenu(user);
@@ -359,7 +497,7 @@ describe('EventCalendar', () => {
       );
 
       // Empty days should be visible by default
-      expect(screen.getByLabelText(/Sunday 1/i)).not.to.equal(null);
+      expect(screen.getByLabelText('Sunday, June 1')).not.to.equal(null);
 
       // Hide empty days
       await openPreferencesMenu(user);
@@ -367,7 +505,7 @@ describe('EventCalendar', () => {
       await user.keyboard('{Escape}');
       await waitFor(() => expect(screen.queryByRole('menu')).to.equal(null));
 
-      expect(screen.queryByLabelText(/Sunday 1/i)).to.equal(null);
+      expect(screen.queryByLabelText('Sunday, June 1')).to.equal(null);
 
       // Show empty days again
       await openPreferencesMenu(user);
@@ -375,27 +513,42 @@ describe('EventCalendar', () => {
       await user.keyboard('{Escape}');
       await waitFor(() => expect(screen.queryByRole('menu')).to.equal(null));
 
-      expect(screen.getByLabelText(/Sunday 1/i)).not.to.equal(null);
+      expect(screen.getByLabelText('Sunday, June 1')).not.to.equal(null);
     });
   });
 
   describe('dateLocale', () => {
-    it('should render day headers in French when dateLocale is set to fr', () => {
-      render(<EventCalendar events={[]} dateLocale={dateLocaleFr} />);
+    it('should render day headers in French when dateLocale is fr-FR', () => {
+      render(<EventCalendar events={[]} dateLocale="fr-FR" />);
 
       // In French, Monday is "lundi" and week starts on Monday by default
       expect(screen.getByRole('columnheader', { name: /lundi 26/i })).not.to.equal(null);
       expect(screen.getByRole('columnheader', { name: /mardi 27/i })).not.to.equal(null);
     });
 
-    it('should render month view headers in French when dateLocale is set to fr', () => {
-      render(<EventCalendar events={[]} defaultView="month" dateLocale={dateLocaleFr} />);
+    it('should render month view headers in French when dateLocale is fr-FR', () => {
+      render(<EventCalendar events={[]} defaultView="month" dateLocale="fr-FR" />);
 
       const monthView = withinMonthView();
 
       // In French, Monday is "lundi"
       // eslint-disable-next-line testing-library/prefer-screen-queries -- scoped query within month view (mini calendar also has column headers)
       expect(monthView.getByRole('columnheader', { name: /lundi/i })).not.to.equal(null);
+    });
+
+    it('should render the calendar header with a standalone month name in Polish when dateLocale is pl-PL', () => {
+      render(
+        <EventCalendar
+          events={[]}
+          defaultVisibleDate={new Date('2026-06-01T00:00:00Z')}
+          dateLocale="pl-PL"
+        />,
+      );
+
+      const header = document.querySelector(`.${eventCalendarClasses.headerToolbar}`);
+      const headerLabel = header?.querySelector('[aria-live="polite"]');
+      expect(headerLabel).not.to.equal(null);
+      expect(headerLabel).to.have.text('czerwiec 2026');
     });
   });
 
@@ -441,19 +594,164 @@ describe('EventCalendar', () => {
     });
   });
 
+  describe('classes property', () => {
+    it('should apply the responsiveTypographyContainer class to the responsive container', () => {
+      render(
+        <EventCalendar events={[]} classes={{ responsiveTypographyContainer: 'custom-class' }} />,
+      );
+
+      const element = document.querySelector('.custom-class');
+      expect(element).not.to.equal(null);
+      expect(
+        element?.classList.contains(eventCalendarClasses.responsiveTypographyContainer),
+      ).to.equal(true);
+    });
+  });
+
+  describe('onEventEditingStart', () => {
+    it('should be called with the occurrence when activating an event and still open the built-in dialog', async () => {
+      const onEventEditingStart = vi.fn();
+      const { user } = render(
+        <EventCalendar events={[event1]} onEventEditingStart={onEventEditingStart} />,
+      );
+
+      const eventButton = screen.getByRole('button', { name: /Running/i });
+      await user.click(eventButton);
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.to.equal(null);
+      });
+      expect(onEventEditingStart.mock.calls.length).to.equal(1);
+      expect(onEventEditingStart.mock.lastCall?.[0].id).to.equal(event1.id);
+      expect(onEventEditingStart.mock.lastCall?.[1].reason).to.equal('edit');
+      expect(onEventEditingStart.mock.lastCall?.[1].trigger).to.equal(eventButton);
+    });
+
+    it('should keep the built-in dialog closed when the handler cancels', async () => {
+      const onEventEditingStart = vi.fn((_occurrence, eventDetails) => eventDetails.cancel());
+      const { user } = render(
+        <EventCalendar events={[event1]} onEventEditingStart={onEventEditingStart} />,
+      );
+
+      await user.click(screen.getByRole('button', { name: /Running/i }));
+
+      expect(onEventEditingStart.mock.calls.length).to.equal(1);
+      expect(screen.queryByRole('dialog')).to.equal(null);
+    });
+
+    it('should keep the built-in dialog closed when the handler cancels a keyboard activation', async () => {
+      const onEventEditingStart = vi.fn((_occurrence, eventDetails) => eventDetails.cancel());
+      const { user } = render(
+        <EventCalendar events={[event1]} onEventEditingStart={onEventEditingStart} />,
+      );
+
+      const eventButton = screen.getByRole('button', { name: /Running/i });
+      eventButton.focus();
+      expect(eventButton).to.equal(document.activeElement);
+      await user.keyboard('{Enter}');
+
+      expect(onEventEditingStart.mock.calls.length).to.equal(1);
+      expect(screen.queryByRole('dialog')).to.equal(null);
+    });
+
+    it('should keep the built-in dialog closed when the handler cancels an event creation', async () => {
+      const onEventEditingStart = vi.fn((_occurrence, eventDetails) => eventDetails.cancel());
+      const { user } = render(
+        <EventCalendar events={[]} defaultView="month" onEventEditingStart={onEventEditingStart} />,
+      );
+
+      await user.click(withinMonthView().getAllByRole('gridcell')[10]);
+
+      expect(onEventEditingStart.mock.calls.length).to.equal(1);
+      expect(onEventEditingStart.mock.lastCall?.[1].reason).to.equal('creation');
+      expect(onEventEditingStart.mock.lastCall?.[1].event.type).to.equal('click');
+      const draft = onEventEditingStart.mock.lastCall?.[1].occurrence;
+      expect(draft.allDay).to.equal(true);
+      expect(draft.displayTimezone.start.timestamp).to.be.lessThan(
+        draft.displayTimezone.end.timestamp,
+      );
+      expect(onEventEditingStart.mock.lastCall?.[1].trigger).to.equal(
+        withinMonthView().getAllByRole('gridcell')[10],
+      );
+      expect(screen.queryByRole('dialog')).to.equal(null);
+    });
+
+    it('should report a `view` reason when the whole calendar is read-only', async () => {
+      const onEventEditingStart = vi.fn();
+      const { user } = render(
+        <EventCalendar events={[event1]} readOnly onEventEditingStart={onEventEditingStart} />,
+      );
+
+      await user.click(screen.getByRole('button', { name: /Running/i }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.to.equal(null);
+      });
+      expect(onEventEditingStart.mock.calls.length).to.equal(1);
+      expect(onEventEditingStart.mock.lastCall?.[1].reason).to.equal('view');
+    });
+
+    it('should report a `view` reason when the event belongs to a read-only resource', async () => {
+      const readOnlyResource = ResourceBuilder.new().areEventsReadOnly().build();
+      const lockedEvent = EventBuilder.new()
+        .title('Locked')
+        .span('2025-05-26T07:30:00Z', '2025-05-26T08:15:00Z')
+        .resource(readOnlyResource)
+        .build();
+      const onEventEditingStart = vi.fn();
+      const { user } = render(
+        <EventCalendar
+          events={[lockedEvent]}
+          resources={[readOnlyResource]}
+          onEventEditingStart={onEventEditingStart}
+        />,
+      );
+
+      await user.click(screen.getByRole('button', { name: /Locked/i }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.to.equal(null);
+      });
+      expect(onEventEditingStart.mock.lastCall?.[1].reason).to.equal('view');
+    });
+
+    it('should keep the built-in view-only dialog closed when the handler cancels a read-only activation', async () => {
+      const readOnlyEvent = EventBuilder.new()
+        .title('Locked')
+        .span('2025-05-26T07:30:00Z', '2025-05-26T08:15:00Z')
+        .readOnly()
+        .build();
+      const onEventEditingStart = vi.fn((_occurrence, eventDetails) => eventDetails.cancel());
+      const { user } = render(
+        <EventCalendar events={[readOnlyEvent]} onEventEditingStart={onEventEditingStart} />,
+      );
+
+      await user.click(screen.getByRole('button', { name: /Locked/i }));
+
+      expect(onEventEditingStart.mock.calls.length).to.equal(1);
+      expect(onEventEditingStart.mock.lastCall?.[1].reason).to.equal('view');
+      expect(screen.queryByRole('dialog')).to.equal(null);
+    });
+  });
+
   describe('ErrorContainer', () => {
-    function renderErrorContainer(initialErrors: Error[]) {
+    function renderErrorContainer(
+      initialErrors: SchedulerUserFacingErrorDescriptor[],
+      localeText = EVENT_CALENDAR_DEFAULT_LOCALE_TEXT,
+    ) {
       const store = new EventCalendarStore({ events: [] }, adapter);
       store.set(
         'errors',
-        initialErrors.map((error, index) => ({ error, key: String(index) })),
+        initialErrors.map((error, index) => ({ ...error, key: String(index) })),
       );
 
       return {
         store,
         ...render(
           <SchedulerStoreContext.Provider value={store as any}>
-            <SharedComponentsStyledContext.Provider value={{ classes: eventCalendarClasses }}>
+            <SharedComponentsStyledContext.Provider
+              value={{ classes: eventCalendarClasses, localeText }}
+            >
               <ErrorContainer />
             </SharedComponentsStyledContext.Provider>
           </SchedulerStoreContext.Provider>,
@@ -461,16 +759,39 @@ describe('EventCalendar', () => {
       };
     }
 
+    const notLoaded = EVENT_CALENDAR_DEFAULT_LOCALE_TEXT.eventNotLoadedError;
+    const failure = EVENT_CALENDAR_DEFAULT_LOCALE_TEXT.somethingWentWrongError;
+
     it('should render multiple alerts when state.errors contains multiple errors', () => {
-      renderErrorContainer([new Error('First error'), new Error('Second error')]);
+      renderErrorContainer([{ code: 'eventNotLoadedError' }, { code: 'somethingWentWrongError' }]);
 
       expect(document.querySelectorAll(`.${eventCalendarClasses.errorAlert}`).length).to.equal(2);
-      expect(screen.getByText('First error')).not.to.equal(null);
-      expect(screen.getByText('Second error')).not.to.equal(null);
+      expect(screen.getByText(notLoaded)).not.to.equal(null);
+      expect(screen.getByText(failure)).not.to.equal(null);
+    });
+
+    it('should render the message of each code from the localeText', () => {
+      renderErrorContainer(
+        [
+          { code: 'somethingWentWrongError' },
+          { code: 'readOnlyEventMovedError', params: { title: 'Standup' } },
+        ],
+        {
+          ...EVENT_CALENDAR_DEFAULT_LOCALE_TEXT,
+          somethingWentWrongError: 'Algo salió mal.',
+          readOnlyEventMovedError: (title) => `No se puede mover "${title}".`,
+        },
+      );
+
+      expect(screen.getByText('Algo salió mal.')).not.to.equal(null);
+      expect(screen.getByText('No se puede mover "Standup".')).not.to.equal(null);
     });
 
     it('should remove only the dismissed alert and keep the others', async () => {
-      const { user } = renderErrorContainer([new Error('First error'), new Error('Second error')]);
+      const { user } = renderErrorContainer([
+        { code: 'eventNotLoadedError' },
+        { code: 'somethingWentWrongError' },
+      ]);
 
       const closeButtons = screen.getAllByRole('button', { name: /close/i });
       expect(closeButtons.length).to.equal(2);
@@ -480,26 +801,44 @@ describe('EventCalendar', () => {
       await waitFor(() => {
         expect(document.querySelectorAll(`.${eventCalendarClasses.errorAlert}`).length).to.equal(1);
       });
-      expect(screen.queryByText('First error')).to.equal(null);
-      expect(screen.getByText('Second error')).not.to.equal(null);
+      expect(screen.queryByText(notLoaded)).to.equal(null);
+      expect(screen.getByText(failure)).not.to.equal(null);
     });
 
-    it('should re-display the same Error instance after dismiss when pushed again with a new key', async () => {
-      const sharedError = new Error('Shared error');
-      const { store, user } = renderErrorContainer([sharedError]);
+    it('should re-display the same error after dismiss when pushed again with a new key', async () => {
+      const { store, user } = renderErrorContainer([{ code: 'somethingWentWrongError' }]);
 
       await user.click(screen.getByRole('button', { name: /close/i }));
       await waitFor(() => {
-        expect(screen.queryByText('Shared error')).to.equal(null);
+        expect(screen.queryByText(failure)).to.equal(null);
       });
 
       await act(async () => {
-        store.set('errors', [{ error: sharedError, key: 'fresh' }]);
+        store.set('errors', [{ code: 'somethingWentWrongError', key: 'fresh' }]);
       });
 
       await waitFor(() => {
-        expect(screen.getByText('Shared error')).not.to.equal(null);
+        expect(screen.getByText(failure)).not.to.equal(null);
       });
+    });
+  });
+
+  describe('data source', () => {
+    // Lazy loading is Premium-only, so `dataSource` is not part of the community props.
+    it('should keep rendering the events prop when a dataSource is passed through JavaScript', () => {
+      const dataSource = {
+        getEvents: () => new Promise<never[]>(() => {}),
+        persistEvents: async () => ({ success: true }),
+      };
+
+      expect(() => {
+        render(<EventCalendar events={[event1]} {...({ dataSource } as any)} />);
+      }).toErrorDev('React does not recognize the `dataSource` prop on a DOM element.');
+
+      expect(screen.getByRole('button', { name: /Running/i })).not.to.equal(null);
+      expect(document.querySelectorAll(`.${eventCalendarClasses.eventSkeleton}`).length).to.equal(
+        0,
+      );
     });
   });
 });

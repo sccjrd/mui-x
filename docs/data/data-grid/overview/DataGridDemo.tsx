@@ -1,5 +1,6 @@
 import Box from '@mui/material/Box';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import type { GridColDef } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
 
 const columns: GridColDef<(typeof rows)[number]>[] = [
   { field: 'id', headerName: 'ID', width: 90 },
@@ -25,6 +26,7 @@ const columns: GridColDef<(typeof rows)[number]>[] = [
   {
     field: 'fullName',
     headerName: 'Full name',
+    rowHeader: true,
     description: 'This column has a value getter and is not sortable.',
     sortable: false,
     width: 160,

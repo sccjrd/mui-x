@@ -1,8 +1,10 @@
-import { Symbol, JSDocTagInfo, Type, InterfaceDeclaration, isPropertySignature } from 'typescript';
+import type { Symbol, JSDocTagInfo, Type, InterfaceDeclaration } from 'typescript';
+import { isPropertySignature } from 'typescript';
 import { EOL } from 'os';
 import { kebabCase } from 'es-toolkit/string';
 import path from 'path';
 import { renderMarkdown } from '@mui/internal-markdown';
+import type { DocumentedInterfaces } from './utils';
 import {
   getSymbolDescription,
   getSymbolJSDocTags,
@@ -10,10 +12,9 @@ import {
   stringifySymbol,
   writePrettifiedFile,
   resolveExportSpecifier,
-  DocumentedInterfaces,
   escapeCell,
 } from './utils';
-import {
+import type {
   XTypeScriptProjects,
   XTypeScriptProject,
   XProjectNames,
@@ -405,26 +406,15 @@ export async function buildInterfacesDocumentationPage(
     await writePrettifiedFile(
       path.resolve(apiPagesDirectory, `${slug}.js`),
       `import * as React from 'react';
-    import InterfaceApiPage from 'docs/src/modules/components/InterfaceApiPage';
-    import layoutConfig from 'docs/src/modules/utils/dataGridLayoutConfig';
-    import { mapApiPageTranslations } from '@mui/internal-core-docs/mapApiPageTranslations';
-    import jsonPageContent from './${slug}.json';
-  
-    export default function Page(props) {
-      const { descriptions } = props;
-      return <InterfaceApiPage {...layoutConfig} descriptions={descriptions} pageContent={jsonPageContent} />;
-    }
-    
-    export async function getStaticProps() {
-      const req = require.context(
-        '${importTranslationPagesDirectory}/',
-        false,
-        /\\.\\/${slug}.*.json$/,
-      );
-      const descriptions = mapApiPageTranslations(req);
-      return { props: { descriptions } };
-    };
-    `.replace(/\r?\n/g, EOL),
+import InterfaceApiPage from 'docs/src/modules/components/InterfaceApiPage';
+import layoutConfig from 'docs/src/modules/utils/dataGridLayoutConfig';
+import descriptions from '${importTranslationPagesDirectory}/${slug}.json';
+import jsonPageContent from './${slug}.json';
+
+export default function Page() {
+  return <InterfaceApiPage {...layoutConfig} descriptions={descriptions} pageContent={jsonPageContent} />;
+}
+`.replace(/\r?\n/g, EOL),
     );
 
     // eslint-disable-next-line no-console

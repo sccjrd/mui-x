@@ -9,11 +9,10 @@ import Stack from '@mui/material/Stack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ForwardIcon from '@mui/icons-material/Forward';
 import ReplyIcon from '@mui/icons-material/Reply';
+import type { GridColDef, GridRowParams } from '@mui/x-data-grid-pro';
 import {
   DataGridPro,
-  GridColDef,
   useGridApiContext,
-  GridRowParams,
   GRID_DETAIL_PANEL_TOGGLE_FIELD,
   useGridSelector,
   gridDimensionsSelector,
@@ -71,7 +70,7 @@ function DetailPanelContent({ row: rowProp }: { row: Email }) {
 }
 
 const columns: GridColDef[] = [
-  { field: 'name', headerName: 'From' },
+  { field: 'name', headerName: 'From', rowHeader: true },
   { field: 'email', headerName: 'Email', width: 200 },
   { field: 'subject', headerName: 'Subject', width: 300 },
   { field: 'date', type: 'date', headerName: 'Date' },

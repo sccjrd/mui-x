@@ -1,6 +1,8 @@
 import { adapter, ResourceBuilder } from 'test/utils/scheduler';
 import { createRenderer } from '@mui/internal-test-utils/createRenderer';
 import { EMPTY_OBJECT } from '@base-ui/utils/empty';
+import { disposeSymbol } from '@mui/x-internals/disposable';
+import { describe, it, expect } from 'vitest';
 import { schedulerRecurringEventsPlugin } from '../../internals/plugins/schedulerRecurringEventsPlugin';
 import { EventTimelinePremiumStore } from '../EventTimelinePremiumStore';
 
@@ -12,26 +14,42 @@ describe('Core - EventTimelinePremiumStore', () => {
     createRenderer({ clockConfig: new Date(2012, 4, 3, 14, 30, 15, 743) });
 
     it('should initialize default state', () => {
-      const store = new EventTimelinePremiumStore(DEFAULT_PARAMS, adapter);
+      const store = new EventTimelinePremiumStore(
+        {
+          ...DEFAULT_PARAMS,
+          storeFeatures: { recurringEvents: schedulerRecurringEventsPlugin },
+        },
+        adapter,
+      );
 
       const expectedState = {
         adapter,
+        dateLocale: 'en-US',
+        areDependenciesEnabled: false,
         areEventsDraggable: true,
         areEventsResizable: true,
         canDragEventsFromTheOutside: false,
         canDropEventsToTheOutside: false,
         copiedEvent: null,
+        selection: null,
+        dependencyCreation: null,
+        dependencyEditor: null,
+        dependenciesFeature: null,
+        dependencyModelList: [],
+        dependencyModelLookup: new Map(),
         eventColor: 'teal',
         eventCreation: true,
+        eventDeletion: { confirmation: true },
         eventIdList: [],
         eventModelList: [],
         eventModelLookup: new Map(),
         eventModelStructure: undefined,
         displayTimezone: 'default',
-        editedEventId: null,
-        nowUpdatedEveryMinute: adapter.now('default'),
+        editingOccurrence: null,
+        nowTimestamp: Date.now(),
         occurrencePlaceholder: null,
-        pendingUpdateRecurringEventParameters: null,
+        pendingDeleteConfirmation: null,
+        pendingRecurringEventOperation: null,
         preferences: EMPTY_OBJECT,
         processedEventLookup: new Map(),
         processedResourceLookup: new Map([
@@ -55,9 +73,11 @@ describe('Core - EventTimelinePremiumStore', () => {
         resourceModelStructure: undefined,
         showCurrentTimeIndicator: true,
         preset: 'dayAndHour',
+        presetConfig: EMPTY_OBJECT,
         presets: ['dayAndHour', 'dayAndMonth', 'dayAndWeek', 'monthAndYear', 'year'],
         visibleDate: adapter.startOfDay(adapter.now('default')),
         visibleResources: {},
+        collapsedResources: {},
         isLoading: false,
         errors: [],
         hasInitialized: false,
@@ -97,6 +117,22 @@ describe('Core - EventTimelinePremiumStore', () => {
         adapter,
       );
       expect(store.state.shouldEventRequireResource).to.equal(false);
+    });
+
+    it('should store the `presetConfig` parameter in the state', () => {
+      const presetConfig = { dayAndHour: { startTime: 8, endTime: 20 } };
+      const store = new EventTimelinePremiumStore({ ...DEFAULT_PARAMS, presetConfig }, adapter);
+
+      expect(store.state.presetConfig).to.equal(presetConfig);
+    });
+
+    it('should sync `presetConfig` when parameters update', () => {
+      const store = new EventTimelinePremiumStore(DEFAULT_PARAMS, adapter);
+      expect(store.state.presetConfig).to.equal(EMPTY_OBJECT);
+
+      const presetConfig = { dayAndHour: { startTime: 8, endTime: 20 } };
+      store.updateStateFromParameters({ ...DEFAULT_PARAMS, presetConfig }, adapter);
+      expect(store.state.presetConfig).to.equal(presetConfig);
     });
 
     it('should sort the presets array into the canonical zoom order regardless of input order', () => {
@@ -173,10 +209,10 @@ describe('Core - EventTimelinePremiumStore', () => {
         ),
       ).to.throw(/is not part of the `presets` prop/i);
 
-      // Dispose the store's pending timers; otherwise the `nowUpdatedEveryMinute` interval
+      // Dispose the store's pending timers; otherwise the `nowTimestamp` interval
       // would fire later, re-trigger the subscribe listener against the intentionally invalid
       // state left by this test, and leak an unhandled error into the test run.
-      store.disposeEffect()();
+      store[disposeSymbol]();
     });
   });
 });

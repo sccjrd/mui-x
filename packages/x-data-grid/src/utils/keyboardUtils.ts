@@ -49,6 +49,16 @@ export function isCopyShortcut(event: KeyboardEvent): boolean {
   );
 }
 
+// Checks if the keyboard event corresponds to the select-all shortcut (CTRL+A or CMD+A) across different localization keyboards.
+export function isSelectAllShortcut(event: React.KeyboardEvent): boolean {
+  return (
+    (event.ctrlKey || event.metaKey) &&
+    String.fromCharCode(event.keyCode) === 'A' &&
+    !event.shiftKey &&
+    !event.altKey
+  );
+}
+
 export function isUndoShortcut(event: React.KeyboardEvent): boolean {
   return (
     (event.ctrlKey || event.metaKey) &&
@@ -83,4 +93,13 @@ export function isRedoShortcut(event: React.KeyboardEvent): boolean {
       (String.fromCharCode(event.keyCode) === 'Y' && !event.shiftKey)) &&
     !event.altKey
   );
+}
+
+/**
+ * Tells if the keydown event belongs to an IME composition.
+ * Some browsers send it before `compositionstart` with `isComposing: false`, so check `keyCode` 229.
+ * See https://developer.mozilla.org/en-US/docs/Web/API/Element/keydown_event#keydown_events_with_ime
+ */
+export function isImeKeyDown(event: React.KeyboardEvent): boolean {
+  return event.nativeEvent?.isComposing || event.key === 'Process' || event.keyCode === 229;
 }

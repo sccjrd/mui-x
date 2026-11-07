@@ -1,9 +1,32 @@
 {
-  "props": {},
+  "props": {
+    "children": { "type": { "name": "node" } },
+    "classes": { "type": { "name": "object" }, "additionalInfo": { "cssApi": true } },
+    "slotProps": { "type": { "name": "object" }, "default": "{}" },
+    "slots": {
+      "type": { "name": "object" },
+      "default": "{}",
+      "additionalInfo": { "slotsApi": true }
+    },
+    "sx": {
+      "type": {
+        "name": "union",
+        "description": "Array&lt;func<br>&#124;&nbsp;object<br>&#124;&nbsp;bool&gt;<br>&#124;&nbsp;func<br>&#124;&nbsp;object"
+      },
+      "additionalInfo": { "sx": true }
+    }
+  },
   "name": "ChatConversation",
   "imports": [
     "import { ChatConversation } from '@mui/x-chat/ChatConversation';",
     "import { ChatConversation } from '@mui/x-chat';"
+  ],
+  "slots": [
+    {
+      "name": "root",
+      "description": "The component that renders the root.",
+      "class": "MuiChatConversation-root"
+    }
   ],
   "classes": [
     {
@@ -25,12 +48,6 @@
       "isGlobal": false
     },
     {
-      "key": "root",
-      "className": "MuiChatConversation-root",
-      "description": "Styles applied to the conversation root element.",
-      "isGlobal": false
-    },
-    {
       "key": "subtitle",
       "className": "MuiChatConversation-subtitle",
       "description": "Styles applied to the conversation subtitle element.",
@@ -48,6 +65,5 @@
   "muiName": "MuiChatConversation",
   "filename": "/packages/x-chat/src/ChatConversation/ChatConversation.tsx",
   "inheritance": null,
-  "demos": "<ul><li><a href=\"/x/react-chat/multi-conversation/conversation-header/\">Chat - Conversation Header</a></li></ul>",
-  "cssComponent": false
+  "demos": "<ul><li><a href=\"/x/react-chat/basics/conversation/\">Chat - Conversation</a></li>\n<li><a href=\"/x/react-chat/material/thread/\">Chat - Thread</a></li>\n<li><a href=\"/x/react-chat/multi-conversation/conversation-header/\">Chat - Conversation header</a></li></ul>"
 }

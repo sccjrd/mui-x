@@ -1,18 +1,17 @@
 import { platform } from 'node:os';
-import {
-  chromium,
-  webkit,
-  firefox,
-  devices,
-  type Page,
-  type Browser,
-  type BrowserContext,
-  type BrowserContextOptions,
-  type BrowserType,
-  type WebError,
-  type Locator,
+import { chromium, webkit, firefox, devices } from '@playwright/test';
+import type {
+  Page,
+  Browser,
+  BrowserContext,
+  BrowserContextOptions,
+  BrowserType,
+  WebError,
+  Locator,
 } from '@playwright/test';
 import { pickersSectionListClasses } from '@mui/x-date-pickers/PickersSectionList';
+import { pickersOutlinedInputClasses } from '@mui/x-date-pickers/PickersTextField';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 
 function sleep(timeoutMS: number): Promise<void> {
   return new Promise((resolve) => {
@@ -47,32 +46,6 @@ function waitFor(callback: () => Promise<void>): Promise<void> {
     timeoutId = setTimeout(handleTimeout, 1000);
     intervalId = setTimeout(checkCallback, 50);
   });
-}
-
-/**
- * Attempts page.goto with retries
- *
- * @remarks The server and runner can be started up simultaneously
- * @param page
- * @param url
- */
-async function attemptGoto(page: Page, url: string): Promise<boolean> {
-  const maxAttempts = 10;
-  const retryTimeoutMS = 250;
-
-  let didNavigate = false;
-  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    try {
-      // eslint-disable-next-line no-await-in-loop
-      await page.goto(url);
-      didNavigate = true;
-    } catch (error) {
-      // eslint-disable-next-line no-await-in-loop
-      await sleep(retryTimeoutMS);
-    }
-  }
-
-  return didNavigate;
 }
 
 // Pick the new/fake "now" for you test pages.
@@ -128,12 +101,7 @@ async function initializeEnvironment(
     const __DateNow = Date.now;
     Date.now = () => __DateNow() + __DateNowOffset;
   }`);
-  const isServerRunning = await attemptGoto(page, `${baseUrl}#no-dev`);
-  if (!isServerRunning) {
-    throw new Error(
-      `Unable to navigate to ${baseUrl} after multiple attempts. Did you forget to run \`pnpm test:e2e:server\` and \`pnpm test:e2e:build\`?`,
-    );
-  }
+  await page.goto(`${baseUrl}#no-dev`);
   return { browser, context, page };
 }
 
@@ -265,6 +233,37 @@ async function initializeEnvironment(
         },
       );
 
+      // this test sometimes fails on webkit for some reason
+      it.skipIf(browserType.name() === 'webkit' && process.env.CIRCLECI)(
+        'should reorder rows by dropping the row reorder cell on another row',
+        async () => {
+          await renderFixture('DataGridPro/RowReorder');
+
+          const readRowOrder = () =>
+            page.evaluate(() =>
+              Array.from(
+                document.querySelectorAll('[role="gridcell"][data-field="brand"]'),
+                (cell) => cell.textContent,
+              ),
+            );
+
+          await waitFor(async () => {
+            expect(await readRowOrder()).to.deep.equal(['Nike', 'Adidas', 'Puma']);
+          });
+
+          const nikeReorderCell = page.locator(
+            '[role="row"][data-rowindex="0"] [data-field="__reorder__"] [draggable]',
+          );
+          const pumaRow = page.locator('[role="row"][data-rowindex="2"]');
+          // Drop into the lower half of the last row, so the dragged row lands below it.
+          await nikeReorderCell.dragTo(pumaRow, { targetPosition: { x: 20, y: 45 } });
+
+          await waitFor(async () => {
+            expect(await readRowOrder()).to.deep.equal(['Adidas', 'Puma', 'Nike']);
+          });
+        },
+      );
+
       // https://github.com/mui/mui-x/pull/9117
       it('should not trigger sorting after resizing', async () => {
         await renderFixture('DataGridPro/NotResize');
@@ -281,11 +280,10 @@ async function initializeEnvironment(
         await page.mouse.up();
 
         expect(
-          await page.evaluate(
-            () =>
-              document
-                .querySelector('.MuiDataGrid-columnHeader--sorted')!
-                .getAttribute('data-field')!,
+          await page.evaluate(() =>
+            document
+              .querySelector('.MuiDataGrid-columnHeader--sorted')!
+              .getAttribute('data-field')!,
           ),
         ).to.equal('brand');
       });
@@ -356,22 +354,35 @@ async function initializeEnvironment(
           const dateTimeInput = page.locator(
             '[role="gridcell"][data-field="lastConnection"] input',
           );
-          if (browserType.name() === 'firefox') {
-            // firefox seems to break the section jumping if the section is edited without firstly clearing it
-            dateTimeInput.press('Backspace');
-            await dateTimeInput.type('01/31/2025');
-            // only reliable way on firefox to move to time section is via arrow key
-            await dateTimeInput.press('ArrowRight');
-            await dateTimeInput.type('4:5');
-            await dateTimeInput.press('ArrowRight');
-            await dateTimeInput.type('p');
-          } else {
-            await dateTimeInput.type('01/31/2025,4:5:p');
-          }
+          await dateTimeInput.fill('2025-01-31T16:05');
 
           await page.keyboard.press('Enter');
 
-          expect(page.getByText('1/31/2025, 4:05:00 PM')).not.to.equal(null);
+          await page.getByText('1/31/2025, 4:05:00 PM').waitFor();
+        },
+      );
+
+      // https://github.com/mui/mui-x/issues/23414
+      // Chromium clears the typing buffer of a date section whenever the value of the input
+      // is written programmatically. Applying the new value after `onValueChange` deferred the
+      // state update past the change event, so React reverted the input and rewrote it on the
+      // next render, and every keystroke started a new buffer instead of extending the previous
+      // one. Only the year is asserted, because the order of the day and month sections follows
+      // the system locale on Chromium.
+      it.skipIf(browserType.name() !== 'chromium')(
+        'should keep the typing buffer of a date section between keystrokes',
+        async () => {
+          await renderFixture('DataGrid/KeyboardEditDateWithValueChange');
+
+          await page.dblclick('[role="gridcell"][data-field="birthday"]');
+          const input = page.locator('[role="gridcell"][data-field="birthday"] input');
+
+          // Fill the first two sections to move the focus to the year section.
+          await page.keyboard.type('0611');
+          // Each of these keystrokes fires a change event and must extend the year buffer.
+          await page.keyboard.type('1986');
+
+          expect(await input.inputValue()).to.match(/^1986-/);
         },
       );
 
@@ -610,7 +621,7 @@ async function initializeEnvironment(
         await page.evaluate(() => {
           const virtualScroller = document.querySelector('.MuiDataGrid-virtualScroller')!;
           virtualScroller.addEventListener('scroll', () => {
-            // @ts-ignore
+            // @ts-expect-error Playwright exposes storeScrollPosition on the browser window for this test.
             window.storeScrollPosition(virtualScroller.scrollTop);
           });
         });
@@ -660,7 +671,6 @@ async function initializeEnvironment(
           await page.getByRole('button', { name: 'Choose date' }).click();
           await page.waitForSelector('[role="dialog"]', { state: 'detached' });
 
-          await page.locator(`.${pickersSectionListClasses.root}`).click();
           await page.getByRole(`spinbutton`, { name: 'Month' }).fill('04');
           await page.getByRole(`spinbutton`, { name: 'Day' }).fill('11');
           await page.getByRole(`spinbutton`, { name: 'Year' }).fill('2022');
@@ -674,7 +684,6 @@ async function initializeEnvironment(
 
           const input = page.getByRole('textbox', { includeHidden: true });
 
-          await page.locator(`.${pickersSectionListClasses.root}`).click();
           await page.getByRole(`spinbutton`, { name: 'Month' }).fill('04');
           await page.getByRole(`spinbutton`, { name: 'Day' }).fill('11');
           await page.getByRole(`spinbutton`, { name: 'Year' }).fill('2022');
@@ -695,7 +704,14 @@ async function initializeEnvironment(
 
           const input = page.getByRole('textbox', { includeHidden: true });
 
-          await page.locator(`.${pickersSectionListClasses.root}`).click();
+          // The hidden `<input>` is the surface under test here, so we focus
+          // it directly. With the current focus-delegation design, the focus
+          // moves through to the first section on the first focus; the
+          // subsequent `fill()` then sees `focused === true` in React state
+          // and skips the re-entrant section-selection that would otherwise
+          // race with the value setter. Tracked for refactor in
+          // https://github.com/mui/mui-x/issues/22592.
+          await input.focus();
           await input.fill('02/12/2020');
 
           expect(
@@ -723,7 +739,6 @@ async function initializeEnvironment(
           const daySection = page.getByRole(`spinbutton`, { name: 'Day' });
           const yearSection = page.getByRole(`spinbutton`, { name: 'Year' });
 
-          await page.locator(`.${pickersSectionListClasses.root}`).click();
           await monthSection.fill('04');
           await daySection.fill('11');
           await yearSection.fill('2022');
@@ -756,6 +771,47 @@ async function initializeEnvironment(
           await page.getByRole('button', { name: 'Clear' }).click();
 
           expect(await page.evaluate(() => document.activeElement?.textContent)).to.equal('MM');
+        });
+
+        it('should keep the selected section when clicking the blank space after the last section', async () => {
+          // Needs trusted input: Chromium delegates the focus to the nearest
+          // section without the `preventDefault` on mousedown.
+          await renderFixture('DatePicker/BasicDesktopDatePicker');
+
+          await page.getByRole('spinbutton', { name: 'Day' }).click();
+
+          const container = (await page
+            .locator(`.${pickersSectionListClasses.root}`)
+            .boundingBox())!;
+          const year = (await page.getByRole('spinbutton', { name: 'Year' }).boundingBox())!;
+          // Without blank space to click, the assertion below would pass vacuously.
+          expect(container.x + container.width).to.be.greaterThan(year.x + year.width + 16);
+
+          await page.mouse.click(
+            container.x + container.width - 2,
+            container.y + container.height / 2,
+          );
+
+          expect(await page.evaluate(() => document.activeElement?.textContent)).to.equal('DD');
+        });
+
+        it('should keep the selected section when clicking the padding of the field', async () => {
+          // Needs trusted input: the browser blurs the section without the
+          // `preventDefault` on mousedown, so the field flashes.
+          await renderFixture('DatePicker/BasicDesktopDatePicker');
+
+          await page.getByRole('spinbutton', { name: 'Day' }).click();
+
+          const root = (await page.locator(`.${pickersOutlinedInputClasses.root}`).boundingBox())!;
+          const container = (await page
+            .locator(`.${pickersSectionListClasses.root}`)
+            .boundingBox())!;
+          // Without padding to click, the assertion below would pass vacuously.
+          expect(container.x).to.be.greaterThan(root.x + 8);
+
+          await page.mouse.click(root.x + 4, root.y + root.height / 2);
+
+          expect(await page.evaluate(() => document.activeElement?.textContent)).to.equal('DD');
         });
 
         it('should correctly select a day in a calendar with "AdapterMomentJalaali"', async () => {

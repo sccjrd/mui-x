@@ -1,10 +1,10 @@
 'use client';
 import * as React from 'react';
-import { type SxProps, type Theme } from '@mui/material/styles';
-import { type SlotComponentPropsFromProps } from '@mui/x-internals/types';
+import type { SxProps, Theme } from '@mui/material/styles';
+import type { SlotComponentPropsFromProps } from '@mui/x-internals/types';
 import { ChartsLoadingOverlay } from './ChartsLoadingOverlay';
 import { useSeries } from '../hooks/useSeries';
-import { type SeriesId } from '../models/seriesType/common';
+import type { SeriesId } from '../models/seriesType/common';
 import { ChartsNoDataOverlay } from './ChartsNoDataOverlay';
 import type {
   LoadingOverlayPropsOverrides,
@@ -24,9 +24,11 @@ export function useNoData() {
       const seriesItem = series[seriesId];
 
       // These prevent a type error when building the package.
-      // @ts-ignore, sankey type is not declared in the base package
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- Sankey is added by Premium augmentation, absent when building the community package.
+      // @ts-ignore Sankey is added by Premium augmentation, absent when building the community package.
       if (seriesItem.type === 'sankey') {
-        // @ts-ignore, sankey type is not declared in the base package
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- Sankey data is added by Premium augmentation, absent in the community build.
+        // @ts-ignore Sankey data is added by Premium augmentation, absent in the community build.
         return seriesItem.data.links.length === 0;
       }
 
@@ -36,6 +38,9 @@ export function useNoData() {
 }
 
 export type CommonOverlayProps = React.SVGAttributes<SVGTextElement> & {
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx?: SxProps<Theme>;
 };
 

@@ -11,7 +11,7 @@ import type { GridLocaleTextApi } from './gridLocaleTextApi';
 import type { GridParamsApi, GridParamsPrivateApi } from './gridParamsApi';
 import type { GridPreferencesPanelApi } from './gridPreferencesPanelApi';
 import type { GridPrintExportApi } from './gridPrintExportApi';
-import type { GridRowApi, GridRowProPrivateApi } from './gridRowApi';
+import type { GridRowApi, GridRowProPrivateApi, GridRowSpanningPrivateApi } from './gridRowApi';
 import type { GridRowsMetaApi, GridRowsMetaPrivateApi } from './gridRowsMetaApi';
 import type { GridRowSelectionApi } from './gridRowSelectionApi';
 import type { GridSortApi } from './gridSortApi';
@@ -40,6 +40,7 @@ import type {
 import type { DataGridProcessedProps } from '../props/DataGridProps';
 import type { GridColumnResizeApi } from '../../hooks/features/columnResize';
 import type { GridPivotingPrivateApiCommunity } from '../../hooks/features/pivoting/gridPivotingInterfaces';
+import type { GridInfiniteLoaderPrivateApi } from './gridInfiniteLoaderApi';
 
 export interface GridApiCommon<
   GridState extends GridStateCommunity = GridStateCommunity,
@@ -81,7 +82,7 @@ export interface GridPrivateOnlyApiCommon<
 >
   extends
     GridCorePrivateApi<Api, PrivateApi, Props>,
-    GridStatePrivateApi<PrivateApi['state']>,
+    GridStatePrivateApi<Api['state'], Api>,
     GridPipeProcessingPrivateApi,
     GridStrategyProcessingApi,
     GridColumnSpanningPrivateApi,
@@ -93,8 +94,10 @@ export interface GridPrivateOnlyApiCommon<
     GridHeaderFilteringPrivateApi,
     GridVirtualizationPrivateApi,
     GridRowProPrivateApi,
+    GridRowSpanningPrivateApi,
     GridParamsPrivateApi,
-    GridPivotingPrivateApiCommunity {
+    GridPivotingPrivateApiCommunity,
+    GridInfiniteLoaderPrivateApi {
   virtualizer: Virtualizer;
 }
 

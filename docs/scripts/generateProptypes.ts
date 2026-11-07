@@ -7,13 +7,21 @@ import {
   injectPropTypesInFile,
 } from '@mui/internal-scripts/typescript-to-proptypes';
 import { fixBabelGeneratorIssues, fixLineEndings } from '@mui/internal-docs-utils';
-import { createXTypeScriptProjects, XTypeScriptProject } from './createXTypeScriptProjects';
+import type { XTypeScriptProject } from './createXTypeScriptProjects';
+import { createXTypeScriptProjects } from './createXTypeScriptProjects';
 import { resolvePrettierConfigPath } from './utils';
 
 const COMPONENTS_WITHOUT_PROPTYPES = [
   'AnimatedBarElement',
   /* RadarDataProvider is disabled because many `any` were being generated. More info: https://github.com/mui/mui-x/pull/17968 */
   'RadarDataProvider',
+  /* The compact views are internal for now: exported only for experiments, no public propTypes yet. */
+  '/StandaloneCompactDayView.tsx',
+  '/StandaloneCompactThreeDayView.tsx',
+  '/StandaloneCompactWeekView.tsx',
+  '/StandaloneCompactDayViewPremium.tsx',
+  '/StandaloneCompactThreeDayViewPremium.tsx',
+  '/StandaloneCompactWeekViewPremium.tsx',
 ];
 
 /**
@@ -164,6 +172,10 @@ async function generateProptypes(project: XTypeScriptProject, sourceFile: string
       if (propsToNotResolve.includes(name)) {
         return false;
       }
+      // The scheduler features are opaque values imported from their entry points.
+      if (name === 'features' && project.name === 'x-scheduler-premium') {
+        return false;
+      }
 
       if (isDateObject(name)) {
         return false;
@@ -189,6 +201,11 @@ async function generateProptypes(project: XTypeScriptProject, sourceFile: string
     target: sourceContent,
     options: {
       disablePropTypesTypeChecking: true,
+      // Annotate the generated propTypes with `/* remove-proptypes */` so
+      // babel-plugin-transform-react-remove-prop-types wraps them in a
+      // production guard even for components it cannot detect on its own
+      // (components returning portals, arrays, or a render callback result).
+      ensureBabelPluginTransformReactRemovePropTypesIntegration: true,
       comment: [
         '----------------------------- Warning --------------------------------',
         '| These PropTypes are generated from the TypeScript type definitions |',

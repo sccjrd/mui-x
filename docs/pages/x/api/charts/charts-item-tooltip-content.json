@@ -1,5 +1,14 @@
 {
-  "props": { "classes": { "type": { "name": "object" }, "additionalInfo": { "cssApi": true } } },
+  "props": {
+    "classes": { "type": { "name": "object" }, "additionalInfo": { "cssApi": true } },
+    "sx": {
+      "type": {
+        "name": "union",
+        "description": "Array&lt;func<br>&#124;&nbsp;object<br>&#124;&nbsp;bool&gt;<br>&#124;&nbsp;func<br>&#124;&nbsp;object"
+      },
+      "additionalInfo": { "sx": true }
+    }
+  },
   "name": "ChartsItemTooltipContent",
   "imports": [
     "import { ChartsItemTooltipContent } from '@mui/x-charts/ChartsTooltip';",
@@ -72,6 +81,5 @@
   "muiName": "MuiChartsItemTooltipContent",
   "filename": "/packages/x-charts/src/ChartsTooltip/ChartsItemTooltipContent.tsx",
   "inheritance": null,
-  "demos": "<ul><li><a href=\"/x/react-charts/tooltip/\">Charts - Tooltip</a></li></ul>",
-  "cssComponent": false
+  "demos": "<ul><li><a href=\"/x/react-charts/tooltip/\">Charts - Tooltip</a></li></ul>"
 }

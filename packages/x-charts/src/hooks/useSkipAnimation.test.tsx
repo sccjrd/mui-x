@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { createRenderer, screen } from '@mui/internal-test-utils';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ChartsProvider } from '../context/ChartsProvider';
 import { useSkipAnimation } from './useSkipAnimation';
 
@@ -30,13 +31,13 @@ describe('useSkipAnimation', () => {
   const oldMatchMedia = window.matchMedia;
 
   beforeEach(() => {
-    // @ts-expect-error
+    // @ts-expect-error Remove the required matchMedia method before installing the test implementation.
     delete window?.matchMedia;
     window.matchMedia = createMatchMedia(false);
   });
 
   afterEach(() => {
-    // @ts-expect-error
+    // @ts-expect-error Remove the required matchMedia method before restoring the original implementation.
     delete window?.matchMedia;
     window.matchMedia = oldMatchMedia;
   });

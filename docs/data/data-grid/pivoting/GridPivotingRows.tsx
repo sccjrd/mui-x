@@ -1,12 +1,11 @@
 import * as React from 'react';
-import {
-  DataGridPremium,
+import type {
   GridColDef,
   GridRowModel,
   GridPivotModel,
   GridInitialState,
-  GridSidebarValue,
 } from '@mui/x-data-grid-premium';
+import { DataGridPremium, GridSidebarValue } from '@mui/x-data-grid-premium';
 import { pivotHeightlightStyles } from './pivotHighlightStyles';
 
 const rows: GridRowModel[] = [
@@ -85,7 +84,7 @@ const rows: GridRowModel[] = [
 ];
 
 const columns: GridColDef[] = [
-  { field: 'product', headerName: 'Product' },
+  { field: 'product', headerName: 'Product', rowHeader: true },
   { field: 'size', headerName: 'Size' },
   { field: 'region', headerName: 'Region' },
   { field: 'quarter', headerName: 'Quarter' },

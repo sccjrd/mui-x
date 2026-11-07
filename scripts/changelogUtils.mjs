@@ -21,6 +21,12 @@ import { $ } from 'execa';
 const REPO = 'mui-x';
 
 /**
+ * @type {Set<string>}
+ * Bot logins whose commits are excluded from the changelog and contributor attribution
+ */
+const IGNORED_BOT_LOGINS = new Set(['renovate[bot]', 'code-infra-renovate[bot]']);
+
+/**
  * @type {string[]}
  * Labels to exclude from the changelog
  */
@@ -115,7 +121,7 @@ function parseTags(commitMessage) {
 function resolvePackagesByLabels(labels = []) {
   const resolvedPackages = [];
   for (const label of labels) {
-    switch (label.name) {
+    switch (label) {
       case 'scope: data grid':
         resolvedPackages.push('DataGrid');
         break;
@@ -147,7 +153,7 @@ function getContributors(commits = []) {
   const warnUsers = new Map();
   for (const commitItem of commits) {
     const { author, commit } = commitItem;
-    if (!author || author.login === 'renovate[bot]') {
+    if (!author || IGNORED_BOT_LOGINS.has(author.login)) {
       continue;
     }
     if (author.login === 'github-actions[bot]') {
@@ -217,17 +223,14 @@ async function generateChangelog({
       lastRelease,
       release,
     })
-  )
-    .filter((commit) => commit.author?.login !== 'renovate[bot]')
-    .map((commit) => ({
-      ...commit,
-      commit: {
-        message: commit.message,
-      },
-    }));
+  ).map((commit) => ({
+    ...commit,
+    commit: {
+      message: commit.message,
+    },
+  }));
 
   const changeLogMessages = {};
-  const prsLabelsMap = {};
   const community = getContributors(commitsItems);
 
   // Dispatch commits in different sections
@@ -249,12 +252,22 @@ async function generateChangelog({
   const codemodCommits = [];
 
   commitsItems
-    .filter((item) => !prsLabelsMap[item.sha]?.some((label) => excludeLabels.includes(label.name)))
+    .filter((item) => !item.labels?.some((label) => excludeLabels.includes(label)))
     .filter((item) => !excludeTitleTags.some((tag) => item.commit.message.includes(tag)))
     .forEach((commitItem) => {
-      const tag = parseTags(commitItem.commit.message);
+      // the `package: codemod` label wins over the title tag
+      if (commitItem.labels?.includes('package: codemod')) {
+        codemodCommits.push(commitItem);
+        return;
+      }
+      const tags = parseTags(commitItem.commit.message).split(',');
+      // a `docs` tag wins over the product one: `[docs][charts]` is a docs change
+      if (tags.includes('docs')) {
+        docsCommits.push(commitItem);
+        return;
+      }
       // for now we use only one parsed tag
-      const firstTag = tag.split(',')[0];
+      const firstTag = tags[0];
       switch (firstTag) {
         case 'DataGrid':
         case 'data grid':
@@ -273,6 +286,7 @@ async function generateChangelog({
         case 'fields':
           pickersCommits.push(commitItem);
           break;
+        case 'DateRangeCalendar':
         case 'DateRangePicker':
         case 'DateTimeRangePicker':
         case 'TimeRangePicker':
@@ -303,9 +317,6 @@ async function generateChangelog({
         case 'scheduler-premium':
           schedulerPremiumCommits.push(commitItem);
           break;
-        case 'docs':
-          docsCommits.push(commitItem);
-          break;
         case 'internal':
         case 'support-infra':
         case 'code-infra':
@@ -317,8 +328,7 @@ async function generateChangelog({
           break;
         case 'l10n':
         case '118n': {
-          const prLabels = prsLabelsMap[commitItem.sha];
-          const resolvedPackages = resolvePackagesByLabels(prLabels);
+          const resolvedPackages = resolvePackagesByLabels(commitItem.labels);
           if (resolvedPackages.length > 0) {
             resolvedPackages.forEach((resolvedPackage) => {
               switch (resolvedPackage) {
@@ -397,6 +407,7 @@ async function generateChangelog({
    * @param {import('@octokit/rest').Octokit.ReposCompareCommitsResponseCommitsItem[]} [options.proCommits] - The commits for the Pro package (if applicable)
    * @param {import('@octokit/rest').Octokit.ReposCompareCommitsResponseCommitsItem[]} [options.premiumCommits] - The commits for the Premium package (if applicable)
    * @param {string} [options.changelogKey] - The key to use for changelog messages (e.g., 'DataGrid', 'charts')
+   * @param {boolean} [options.internal] - Whether to omit the section when there are no commits
    * @returns {string} The formatted changelog section for the product
    */
   const logProductSection = ({
@@ -406,6 +417,7 @@ async function generateChangelog({
     proCommits = null,
     premiumCommits = null,
     changelogKey,
+    internal = false,
   }) => {
     const hasProVersion = proCommits !== null;
     const hasPremiumVersion = premiumCommits !== null;
@@ -416,9 +428,9 @@ async function generateChangelog({
       (proCommits?.length ?? 0) === 0 &&
       (premiumCommits?.length ?? 0) === 0;
 
-    // Keep rendering `Internal changes.` when a package is bumped without
+    // Keep rendering `Internal changes.` when a regular package is bumped without
     // commits (e.g. an `x-internals` update propagating a version bump).
-    if (hasNoCommits && !isPackageBumped(packageName, packageVersion)) {
+    if (hasNoCommits && (internal || !isPackageBumped(packageName, packageVersion))) {
       return '';
     }
 
@@ -586,6 +598,7 @@ ${logProductSection({
   packageName: 'x-codemod',
   baseCommits: codemodCommits,
   changelogKey: 'codemod',
+  internal: true,
 })}
 
 ${logOtherSection({

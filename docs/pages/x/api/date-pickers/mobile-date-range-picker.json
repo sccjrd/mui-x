@@ -1,6 +1,7 @@
 {
   "props": {
     "autoFocus": { "type": { "name": "bool" } },
+    "className": { "type": { "name": "string" } },
     "closeOnSelect": { "type": { "name": "bool" }, "default": "false" },
     "currentMonthCalendarPosition": {
       "type": { "name": "enum", "description": "1<br>&#124;&nbsp;2<br>&#124;&nbsp;3" },
@@ -54,6 +55,7 @@
         "describedArgs": ["value", "context"]
       }
     },
+    "onCancel": { "type": { "name": "func" } },
     "onChange": {
       "type": { "name": "func" },
       "signature": {
@@ -293,6 +295,5 @@
   "forwardsRefTo": "HTMLDivElement",
   "filename": "/packages/x-date-pickers-pro/src/MobileDateRangePicker/MobileDateRangePicker.tsx",
   "inheritance": null,
-  "demos": "<ul><li><a href=\"/x/react-date-pickers/date-range-picker/\">Date Range Picker <a href=\"/x/introduction/licensing/#pro-plan\" title=\"Pro plan\"><span class=\"plan-pro\"></span></a></a></li>\n<li><a href=\"/x/react-date-pickers/validation/\">Date and Time Pickers - Validation</a></li></ul>",
-  "cssComponent": false
+  "demos": "<ul><li><a href=\"/x/react-date-pickers/date-range-picker/\">Date Range Picker <a href=\"/x/introduction/licensing/#pro-plan\" title=\"Pro plan\"><span class=\"plan-pro\"></span></a></a></li>\n<li><a href=\"/x/react-date-pickers/validation/\">Date and Time Pickers - Validation</a></li></ul>"
 }

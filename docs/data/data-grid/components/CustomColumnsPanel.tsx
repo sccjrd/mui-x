@@ -1,20 +1,22 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import {
-  DataGrid,
+import type {
   GridColDef,
   GridColumnGroup,
   GridColumnGroupingModel,
   GridColumnVisibilityModel,
+  GridApi,
+  GridColumnLookup,
+  GridColumnsPanelProps,
+} from '@mui/x-data-grid';
+import {
+  DataGrid,
   gridColumnVisibilityModelSelector,
   useGridApiContext,
   useGridRootProps,
   isLeaf,
-  GridApi,
   gridColumnLookupSelector,
-  GridColumnLookup,
   useGridSelector,
-  GridColumnsPanelProps,
   GridColumnsPanel,
   GridPreferencePanelsValue,
 } from '@mui/x-data-grid';
@@ -175,8 +177,8 @@ const columnGroupingModel: GridColumnGroupingModel = [
 
 const columns: GridColDef[] = [
   { field: 'id', headerName: 'ID', width: 150 },
-  { field: 'firstName', headerName: 'First name', width: 150 },
-  { field: 'lastName', headerName: 'Last name', width: 150 },
+  { field: 'firstName', headerName: 'First name', width: 150, rowHeader: true },
+  { field: 'lastName', headerName: 'Last name', width: 150, rowHeader: true },
   { field: 'age', headerName: 'Age', type: 'number', width: 110 },
 ];
 

@@ -3,15 +3,18 @@ import * as React from 'react';
 import PropTypes from 'prop-types';
 import {
   RadarAxisHighlight,
-  type RadarChartProps,
   RadarDataProvider,
-  type RadarDataProviderProps,
   RadarGrid,
   RadarMetricLabels,
   RadarSeriesArea,
   RadarSeriesMarks,
-  type RadarChartSlotProps,
-  type RadarChartSlots,
+  FocusedRadarMark,
+} from '@mui/x-charts/RadarChart';
+import type {
+  RadarChartProps,
+  RadarDataProviderProps,
+  RadarChartSlotProps,
+  RadarChartSlots,
 } from '@mui/x-charts/RadarChart';
 import { useThemeProps } from '@mui/material/styles';
 import { useRadarChartProps } from '@mui/x-charts/internals';
@@ -20,16 +23,14 @@ import { ChartsSurface } from '@mui/x-charts/ChartsSurface';
 import { ChartsOverlay } from '@mui/x-charts/ChartsOverlay';
 import { ChartsTooltip } from '@mui/x-charts/ChartsTooltip';
 import { ChartsWrapper } from '@mui/x-charts/ChartsWrapper';
-import {
-  RADAR_CHART_PRO_PLUGINS,
-  type RadarChartProPluginSignatures,
-} from './RadarChartPro.plugins';
+import { RADAR_CHART_PRO_PLUGINS } from './RadarChartPro.plugins';
+import type { RadarChartProPluginSignatures } from './RadarChartPro.plugins';
 import { ChartsToolbarPro } from '../ChartsToolbarPro';
-import {
-  type ChartsToolbarProSlotProps,
-  type ChartsToolbarProSlots,
+import type {
+  ChartsToolbarProSlotProps,
+  ChartsToolbarProSlots,
 } from '../ChartsToolbarPro/Toolbar.types';
-import { type ChartsSlotPropsPro, type ChartsSlotsPro } from '../internals/material';
+import type { ChartsSlotPropsPro, ChartsSlotsPro } from '../internals/material';
 
 export interface RadarChartProSlots
   extends Omit<RadarChartSlots, 'toolbar'>, ChartsToolbarProSlots, Partial<ChartsSlotsPro> {}
@@ -101,6 +102,7 @@ const RadarChartPro = React.forwardRef(function RadarChartPro(
           <RadarSeriesArea />
           {highlight === 'axis' && <RadarAxisHighlight />}
           <RadarSeriesMarks />
+          <FocusedRadarMark />
           <ChartsOverlay {...overlayProps} />
           {children}
         </ChartsSurface>
@@ -110,11 +112,14 @@ const RadarChartPro = React.forwardRef(function RadarChartPro(
   );
 });
 
-RadarChartPro.propTypes = {
+RadarChartPro.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * The ref object that exposes the chart API methods.
+   */
   apiRef: PropTypes.shape({
     current: PropTypes.shape({
       exportAsImage: PropTypes.func.isRequired,
@@ -153,7 +158,16 @@ RadarChartPro.propTypes = {
   /**
    * Options to enable features planned for the next major.
    */
-  experimentalFeatures: PropTypes.object,
+  experimentalFeatures: PropTypes.shape({
+    keyboardActivation: PropTypes.bool,
+  }),
+  /**
+   * If `true`, clicking an item immediately shows the keyboard focus indicator on it.
+   * By default, clicking sets the item that keyboard navigation starts from, but the focus
+   * indicator stays hidden until the user presses a key.
+   * @default false
+   */
+  focusItemOnClick: PropTypes.bool,
   /**
    * The height of the chart in px. If not defined, it takes the height of the parent element.
    */
@@ -289,7 +303,7 @@ RadarChartPro.propTypes = {
   /**
    * The function called for onClick events.
    * The second argument contains information about all line/bar elements at the current mouse position.
-   * @param {MouseEvent} event The mouse event recorded on the `<svg/>` element.
+   * @param {ChartsActivationEvent} event The event recorded on the `<svg/>` element.
    * @param {null | ChartsAxisData} data The data about the clicked axis and items associated with it.
    */
   onAxisClick: PropTypes.func,
@@ -372,11 +386,18 @@ RadarChartPro.propTypes = {
    * @default (index) => index % 2 === 1 ? (theme.vars || theme).palette.text.secondary : 'none'
    */
   stripeColor: PropTypes.func,
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx: PropTypes.oneOfType([
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
     PropTypes.func,
     PropTypes.object,
   ]),
+  /**
+   * The color mode passed to `colors` when it is a function.
+   * Defaults to the mode of the Material UI theme.
+   */
   theme: PropTypes.oneOf(['dark', 'light']),
   /**
    * The title of the chart.

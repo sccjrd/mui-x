@@ -4,17 +4,17 @@ import PropTypes from 'prop-types';
 import { styled } from '@mui/material/styles';
 import composeClasses from '@mui/utils/composeClasses';
 import {
-  type GridRenderCellParams,
-  type GridRowEventLookup,
   gridSortModelSelector,
   useGridApiContext,
   useGridSelector,
   getDataGridUtilityClass,
   gridClasses,
 } from '@mui/x-data-grid';
+import type { GridRenderCellParams, GridRowEventLookup } from '@mui/x-data-grid';
 import { gridEditRowsStateSelector, isEventTargetInPortal, vars } from '@mui/x-data-grid/internals';
 import type { DataGridProProcessedProps } from '../models/dataGridProProps';
 import { useGridRootProps } from '../hooks/utils/useGridRootProps';
+import { isRowReorderAllowed } from '../hooks/features/rowReorder/rowReorderDragUtils';
 
 type OwnerState = {
   classes?: DataGridProProcessedProps['classes'];
@@ -53,12 +53,10 @@ function GridRowReorderCell(params: GridRenderCellParams) {
   const listenerNodeRef = React.useRef<HTMLDivElement>(null);
 
   const isRowReorderable = rootProps.isRowReorderable;
-  // TODO: remove sortModel check once row reorder is compatible
   const isDraggable = React.useMemo(() => {
-    const baseCondition =
-      !!rootProps.rowReordering && !sortModel.length && Object.keys(editRowsState).length === 0;
-
-    if (!baseCondition) {
+    if (
+      !isRowReorderAllowed({ rowReordering: rootProps.rowReordering, sortModel, editRowsState })
+    ) {
       return false;
     }
 
@@ -169,7 +167,7 @@ function GridRowReorderCell(params: GridRenderCellParams) {
   );
 }
 
-GridRowReorderCell.propTypes = {
+GridRowReorderCell.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |

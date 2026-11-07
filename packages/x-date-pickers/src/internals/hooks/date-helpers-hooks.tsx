@@ -1,15 +1,30 @@
 import * as React from 'react';
-import { PickerOnChangeFn } from './useViews';
+import type { PickerOnChangeFn } from './useViews';
 import { getMeridiem, convertToMeridiem } from '../utils/time-utils';
-import { PickerSelectionState } from './usePicker';
-import { PickersTimezone, PickerValidDate } from '../../models';
+import type { PickerSelectionState } from './usePicker';
+import type { PickersTimezone, PickerValidDate } from '../../models';
 import { usePickerAdapter } from '../../hooks/usePickerAdapter';
 
 export interface MonthValidationOptions {
+  /**
+   * If `true`, disable values before the current date.
+   */
   disablePast?: boolean;
+  /**
+   * If `true`, disable values after the current date.
+   */
   disableFuture?: boolean;
+  /**
+   * Minimal selectable date.
+   */
   minDate: PickerValidDate;
+  /**
+   * Maximal selectable date.
+   */
   maxDate: PickerValidDate;
+  /**
+   * The timezone used to compare dates.
+   */
   timezone: PickersTimezone;
 }
 

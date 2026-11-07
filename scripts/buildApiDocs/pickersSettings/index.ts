@@ -1,14 +1,15 @@
 import path from 'path';
 import fs from 'fs';
 import { LANGUAGES } from '@mui/internal-core-docs/constants';
-import {
+import type {
   ProjectSettings,
   ComponentReactApi,
   HookReactApi,
-  findApiPages,
 } from '@mui/internal-api-docs-builder';
-import generateUtilityClass, { isGlobalState } from '@mui/utils/generateUtilityClass';
+import { findApiPages } from '@mui/internal-api-docs-builder';
+import { isGlobalState } from '@mui/utils/generateUtilityClass';
 import { getComponentImports, getComponentInfo } from './getComponentInfo';
+import generatePickersClassName from './generatePickersClassName';
 
 type PageType = { pathname: string; title: string; plan?: 'community' | 'pro' | 'premium' };
 
@@ -93,7 +94,7 @@ export default datePickersApiPages;
   sortingStrategies: {
     slotsSort: (a, b) => a.name.localeCompare(b.name),
   },
-  generateClassName: generateUtilityClass,
+  generateClassName: generatePickersClassName,
   isGlobalClassName: isGlobalState,
   nonComponentFolders: [
     ...getNonComponentFolders(),

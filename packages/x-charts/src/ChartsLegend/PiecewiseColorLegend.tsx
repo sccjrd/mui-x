@@ -1,23 +1,22 @@
 'use client';
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import { styled, type SxProps, type Theme } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
+import type { SxProps, Theme } from '@mui/material/styles';
 import clsx from 'clsx';
-import { type PrependKeys } from '@mui/x-internals/types';
+import type { PrependKeys } from '@mui/x-internals/types';
 import { ChartsLabel } from '../ChartsLabel/ChartsLabel';
-import { ChartsLabelMark, type ChartsLabelMarkProps } from '../ChartsLabel/ChartsLabelMark';
-import { type Direction } from './direction';
+import { ChartsLabelMark } from '../ChartsLabel/ChartsLabelMark';
+import type { ChartsLabelMarkProps } from '../ChartsLabel/ChartsLabelMark';
+import type { Direction } from './direction';
 import { consumeThemeProps } from '../internals/consumeThemeProps';
-import {
-  piecewiseColorLegendClasses,
-  type PiecewiseColorLegendClasses,
-  useUtilityClasses,
-} from './piecewiseColorLegendClasses';
-import { type ColorLegendSelector } from './colorLegend.types';
-import { type PiecewiseLabelFormatterParams } from './piecewiseColorLegend.types';
-import { type ComputedAxis } from '../models/axis';
+import { piecewiseColorLegendClasses, useUtilityClasses } from './piecewiseColorLegendClasses';
+import type { PiecewiseColorLegendClasses } from './piecewiseColorLegendClasses';
+import type { ColorLegendSelector } from './colorLegend.types';
+import type { PiecewiseLabelFormatterParams } from './piecewiseColorLegend.types';
+import type { ComputedAxis } from '../models/axis';
 import { useAxis } from './useAxis';
-import { type PiecewiseColorLegendItemContext } from './legendContext.types';
+import type { PiecewiseColorLegendItemContext } from './legendContext.types';
 import { piecewiseColorDefaultLabelFormatter } from './piecewiseColorDefaultLabelFormatter';
 
 export interface PiecewiseColorLegendProps
@@ -54,7 +53,13 @@ export interface PiecewiseColorLegendProps
    */
   classes?: Partial<PiecewiseColorLegendClasses>;
   className?: string;
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx?: SxProps<Theme>;
+  /**
+   * The `tabIndex` of the root element.
+   */
   tabIndex?: number;
 }
 
@@ -266,8 +271,14 @@ const PiecewiseColorLegend = consumeThemeProps(
                 role={onItemClick ? 'button' : undefined}
                 type={onItemClick ? 'button' : undefined}
                 onClick={
-                  // @ts-ignore onClick is only attached to a button
-                  onItemClick ? (event) => onItemClick(event, clickObject, index) : undefined
+                  onItemClick
+                    ? (event) =>
+                        onItemClick(
+                          event as React.MouseEvent<HTMLButtonElement>,
+                          clickObject,
+                          index,
+                        )
+                    : undefined
                 }
                 className={clsx(classes?.item, {
                   [`${startClass}`]: index === 0,

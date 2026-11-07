@@ -2,17 +2,19 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import { useLicenseVerifier, Watermark } from '@mui/x-license/internals';
-import { GridRoot, GridContextProvider, type GridValidRowModel } from '@mui/x-data-grid';
+import { GridRoot, GridContextProvider } from '@mui/x-data-grid';
+import type { GridValidRowModel } from '@mui/x-data-grid';
 import {
-  type GridConfiguration,
   validateProps,
   useGridApiInitialization,
   useGridParamsOverridableMethods,
   useIsCellEditable,
 } from '@mui/x-data-grid/internals';
+import type { GridConfiguration } from '@mui/x-data-grid/internals';
 import { useMaterialCSSVariables } from '@mui/x-data-grid/material';
 import { forwardRef } from '@mui/x-internals/forwardRef';
 import { useGridRowsOverridableMethods } from '../hooks/features/rows/useGridRowsOverridableMethods';
+import { GridMultiSelectMeasurer } from '../components/cell/GridMultiSelectMeasurer';
 import { useDataGridProComponent } from './useDataGridProComponent';
 import type { DataGridProProcessedProps, DataGridProProps } from '../models/dataGridProProps';
 import { useDataGridProProps } from './useDataGridProProps';
@@ -33,6 +35,7 @@ const configuration: GridConfiguration<GridPrivateApiPro, DataGridProProcessedPr
     useIsCellEditable,
     useCellAggregationResult: () => null,
     useFilterValueGetter: (apiRef) => apiRef.current.getRowValue,
+    useColumnHeaderAdornment: () => null,
   },
 };
 const packageInfo = {
@@ -72,6 +75,7 @@ const DataGridProRaw = forwardRef(function DataGridPro<R extends GridValidRowMod
         ref={ref}
       >
         {watermark}
+        <GridMultiSelectMeasurer />
       </GridRoot>
     </GridContextProvider>
   );
@@ -93,7 +97,7 @@ interface DataGridProComponent {
  */
 export const DataGridPro = React.memo(DataGridProRaw) as DataGridProComponent;
 
-DataGridProRaw.propTypes = {
+DataGridProRaw.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -196,6 +200,7 @@ DataGridProRaw.propTypes = {
     renderHeader: PropTypes.func,
     renderHeaderFilter: PropTypes.func,
     resizable: PropTypes.bool,
+    rowHeader: PropTypes.bool,
     rowSpanValueGetter: PropTypes.func,
     sortable: PropTypes.bool,
     sortComparator: PropTypes.func,
@@ -242,6 +247,10 @@ DataGridProRaw.propTypes = {
    * Inherits the `columnHeaderHeight` value if not set.
    */
   columnGroupHeaderHeight: PropTypes.number,
+  /**
+   * The column groups of the header.
+   * @see See {@link https://mui.com/x/react-data-grid/column-groups/ column grouping docs} for more details.
+   */
   columnGroupingModel: PropTypes.arrayOf(PropTypes.object),
   /**
    * Sets the height in pixel of the column headers in the Data Grid.
@@ -274,6 +283,13 @@ DataGridProRaw.propTypes = {
     get: PropTypes.func.isRequired,
     set: PropTypes.func.isRequired,
   }),
+  /**
+   * If `true`, the previously displayed rows are kept visible while new rows are being fetched after pagination, sorting, or filtering changes.
+   * The loading overlay is rendered on top of the previous rows.
+   * Only applies to flat data; tree data and row grouping always reset the rows on refetch to keep the order consistent with the new response.
+   * @default false
+   */
+  dataSourceKeepPreviousData: PropTypes.bool,
   /**
    * If positive, the Data Grid will periodically revalidate data source rows by re-fetching them from the server when the cache entry has expired.
    * If the refetched rows are different from the current rows, the grid will update the rows.
@@ -403,6 +419,7 @@ DataGridProRaw.propTypes = {
    * For each feature, if the flag is not explicitly set to `true`, the feature will be fully disabled and any property / method call will not have any effect.
    */
   experimentalFeatures: PropTypes.shape({
+    imeFastEdit: PropTypes.bool,
     virtualizerLayoutMode: PropTypes.oneOf(['controlled', 'uncontrolled']),
     warnIfFocusStateIsNotSynced: PropTypes.bool,
   }),
@@ -507,6 +524,14 @@ DataGridProRaw.propTypes = {
    * @default false
    */
   headerFilters: PropTypes.bool,
+  /**
+   * The fixed height of the Data Grid.
+   * Accepts a number (pixels), a CSS length (for example `'50vh'`), a percentage, or a CSS calculation.
+   * Percentage values require a parent with an explicit height.
+   * Content-based values such as `'auto'`, `'min-content'`, `'max-content'`, and `'fit-content'` are not supported.
+   * For content-based sizing, use a flex parent container instead.
+   */
+  height: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   /**
    * If `true`, the footer component is hidden.
    * @default false
@@ -820,14 +845,16 @@ DataGridProRaw.propTypes = {
    */
   onFilterModelChange: PropTypes.func,
   /**
-   * Callback fired when the menu is closed.
+   * Callback fired when a grid menu is closed.
+   * This includes the column menu, the actions cell menu, and the toolbar menus.
    * @param {GridMenuParams} params With all properties from [[GridMenuParams]].
    * @param {MuiEvent<{}>} event The event object.
    * @param {GridCallbackDetails} details Additional details for this callback.
    */
   onMenuClose: PropTypes.func,
   /**
-   * Callback fired when the menu is opened.
+   * Callback fired when a grid menu is opened.
+   * This includes the column menu, the actions cell menu, and the toolbar menus.
    * @param {GridMenuParams} params With all properties from [[GridMenuParams]].
    * @param {MuiEvent<{}>} event The event object.
    * @param {GridCallbackDetails} details Additional details for this callback.
@@ -1015,7 +1042,7 @@ DataGridProRaw.propTypes = {
    * @param {R} newRow Row object with the new values.
    * @param {R} oldRow Row object with the old values.
    * @param {{ rowId: GridRowId }} params Additional parameters.
-   * @returns {Promise<R> | R} The final values to update the row.
+   * @returns {Promise<R | GridRowModelReplace<R>> | R | GridRowModelReplace<R>} The final values to update the row, or a `{ _action: 'replace', row }` update to store `row` as the new row without merging.
    */
   processRowUpdate: PropTypes.func,
   /**

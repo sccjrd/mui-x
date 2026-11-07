@@ -1,5 +1,5 @@
 import * as React from 'react';
-
+import Box from '@mui/material/Box';
 import { EventCalendarPremium } from '@mui/x-scheduler-premium/event-calendar-premium';
 import {
   initialEvents,
@@ -11,7 +11,7 @@ export default function RecurringEventsDataset() {
   const [events, setEvents] = React.useState(initialEvents);
 
   return (
-    <div style={{ height: '600px', width: '100%' }}>
+    <Box sx={{ height: 600, width: '100%', px: { xs: 2, md: 0 } }}>
       <EventCalendarPremium
         events={events}
         resources={resources}
@@ -19,6 +19,6 @@ export default function RecurringEventsDataset() {
         onEventsChange={setEvents}
         defaultPreferences={{ isSidePanelOpen: false }}
       />
-    </div>
+    </Box>
   );
 }

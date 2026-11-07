@@ -1,4 +1,5 @@
-import { ScatterChart, ScatterSeries } from '@mui/x-charts/ScatterChart';
+import type { ScatterSeries } from '@mui/x-charts/ScatterChart';
+import { ScatterChart } from '@mui/x-charts/ScatterChart';
 import { ChartsTooltipContainer, useItemTooltip } from '@mui/x-charts/ChartsTooltip';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -26,16 +27,14 @@ const series = [
       )
       .map((item) => ({ x: item.year, y: item.density as number, id: item.id })),
   },
-  ...constructors.map(
-    (constructor): ScatterSeries => ({
-      label: constructor,
-      highlightScope: { highlight: 'series', fade: 'global' },
-      markerSize: 3,
-      data: data
-        .filter((item) => item.constructor === constructor && item.density !== null)
-        .map((item) => ({ x: item.year, y: item.density as number, id: item.id })),
-    }),
-  ),
+  ...constructors.map((constructor): ScatterSeries => ({
+    label: constructor,
+    highlightScope: { highlight: 'series', fade: 'global' },
+    markerSize: 3,
+    data: data
+      .filter((item) => item.constructor === constructor && item.density !== null)
+      .map((item) => ({ x: item.year, y: item.density as number, id: item.id })),
+  })),
 ] satisfies ScatterSeries[];
 
 const numberFormatter = new Intl.NumberFormat('en-US').format;

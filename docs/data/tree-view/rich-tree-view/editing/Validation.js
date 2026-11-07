@@ -6,9 +6,8 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
 import { useTreeItemUtils } from '@mui/x-tree-view/hooks';
 import { TreeItem } from '@mui/x-tree-view/TreeItem';
-
 import { TreeItemLabelInput } from '@mui/x-tree-view/TreeItemLabelInput';
-import { MUI_X_PRODUCTS } from './products';
+import { MUI_X_PRODUCTS } from '../../datasets/products';
 
 const ERRORS = {
   REQUIRED: 'The label cannot be empty',

@@ -3,14 +3,23 @@ import * as React from 'react';
 import PropTypes from 'prop-types';
 import composeClasses from '@mui/utils/composeClasses';
 import clsx from 'clsx';
-import { GaugeContainer, type GaugeContainerProps } from './GaugeContainer';
+import { GaugeContainer } from './GaugeContainer';
+import type { GaugeContainerProps } from './GaugeContainer';
 import { GaugeValueArc } from './GaugeValueArc';
 import { GaugeReferenceArc } from './GaugeReferenceArc';
-import { type GaugeClasses, getGaugeUtilityClass } from './gaugeClasses';
-import { GaugeValueText, type GaugeValueTextProps } from './GaugeValueText';
+import { getGaugeUtilityClass } from './gaugeClasses';
+import type { GaugeClasses } from './gaugeClasses';
+import { GaugeValueText } from './GaugeValueText';
+import type { GaugeValueTextProps } from './GaugeValueText';
 
 export interface GaugeProps extends GaugeContainerProps, Pick<GaugeValueTextProps, 'text'> {
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes?: Partial<GaugeClasses>;
+  /**
+   * The content of the component.
+   */
   children?: React.ReactNode;
 }
 
@@ -36,12 +45,18 @@ const Gauge = React.forwardRef(function Gauge(props: GaugeProps, ref: React.Ref<
   );
 });
 
-Gauge.propTypes = {
+Gauge.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * The content of the component.
+   */
   children: PropTypes.node,
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes: PropTypes.object,
   className: PropTypes.string,
   /**
@@ -120,11 +135,18 @@ Gauge.propTypes = {
    * @default 0
    */
   startAngle: PropTypes.number,
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx: PropTypes.oneOfType([
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
     PropTypes.func,
     PropTypes.object,
   ]),
+  /**
+   * The text displayed in the gauge.
+   * A function receives the gauge value and its limits, and returns the text.
+   */
   text: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   /**
    * The title of the chart.

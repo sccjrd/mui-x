@@ -169,9 +169,19 @@ const chartsApiPages: MuiPage[] = [
     title: 'ChartsText',
   },
   {
+    pathname: '/x/api/charts/charts-toolbar-excel-export-trigger',
+    title: 'ChartsToolbarExcelExportTrigger',
+    plan: 'premium',
+  },
+  {
     pathname: '/x/api/charts/charts-toolbar-image-export-trigger',
     title: 'ChartsToolbarImageExportTrigger',
     plan: 'pro',
+  },
+  {
+    pathname: '/x/api/charts/charts-toolbar-premium',
+    title: 'ChartsToolbarPremium',
+    plan: 'premium',
   },
   {
     pathname: '/x/api/charts/charts-toolbar-print-export-trigger',
@@ -347,6 +357,11 @@ const chartsApiPages: MuiPage[] = [
   {
     pathname: '/x/api/charts/line-plot',
     title: 'LinePlot',
+  },
+  {
+    pathname: '/x/api/charts/map-image-plot',
+    title: 'MapImagePlot',
+    plan: 'premium',
   },
   {
     pathname: '/x/api/charts/map-shape',

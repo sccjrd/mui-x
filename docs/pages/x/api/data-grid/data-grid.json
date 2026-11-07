@@ -7,28 +7,35 @@
     "apiRef": { "type": { "name": "shape", "description": "{ current?: object }" } },
     "aria-label": { "type": { "name": "string" } },
     "aria-labelledby": { "type": { "name": "string" } },
-    "autoHeight": {
-      "type": { "name": "bool" },
-      "default": "false",
-      "deprecated": true,
-      "deprecationInfo": "Use flex parent container instead: <a href=\"https://mui.com/x/react-data-grid/layout/#flex-parent-container\">https://mui.com/x/react-data-grid/layout/#flex-parent-container</a>"
-    },
+    "autoHeight": { "type": { "name": "bool" }, "default": "false" },
     "autoPageSize": { "type": { "name": "bool" }, "default": "false" },
     "autosizeOnMount": { "type": { "name": "bool" }, "default": "false" },
     "autosizeOptions": {
       "type": {
         "name": "shape",
-        "description": "{ columns?: Array&lt;string&gt;, disableColumnVirtualization?: bool, expand?: bool, includeHeaders?: bool, includeOutliers?: bool, outliersFactor?: number }"
+        "description": "{ columns?: Array&lt;string&gt;, disableColumnVirtualization?: bool, expand?: bool, includeHeaderFilters?: bool, includeHeaders?: bool, includeOutliers?: bool, outliersFactor?: number }"
       }
     },
     "cellModesModel": { "type": { "name": "object" } },
-    "checkboxColDef": { "type": { "name": "object" } },
+    "checkboxColDef": {
+      "type": {
+        "name": "shape",
+        "description": "{ align?: 'center'<br>&#124;&nbsp;'left'<br>&#124;&nbsp;'right', cellClassName?: func<br>&#124;&nbsp;string, colSpan?: func<br>&#124;&nbsp;number, description?: string, disableColumnMenu?: bool, disableExport?: bool, disableReorder?: bool, display?: 'flex'<br>&#124;&nbsp;'text', editable?: bool, examples?: array, filterable?: bool, filterOperators?: Array&lt;{ getApplyFilterFn: func, getValueAsString?: func, headerLabel?: string, InputComponent?: elementType, InputComponentProps?: object, label?: string, requiresFilterValue?: bool, value: string }&gt;, flex?: number, getApplyQuickFilterFn?: func, getSortComparator?: func, groupable?: bool, headerAlign?: 'center'<br>&#124;&nbsp;'left'<br>&#124;&nbsp;'right', headerClassName?: func<br>&#124;&nbsp;string, headerName?: string, hideable?: bool, hideSortIcons?: bool, maxWidth?: number, minWidth?: number, pinnable?: bool, preProcessEditCellProps?: func, renderCell?: func, renderEditCell?: func, renderHeader?: func, resizable?: bool, rowHeader?: bool, rowSpanValueGetter?: func, sortable?: bool, sortComparator?: func, sortingOrder?: Array&lt;'asc'<br>&#124;&nbsp;'desc'&gt;, valueFormatter?: func, valueGetter?: func, valueParser?: func, valueSetter?: func, width?: number }"
+      }
+    },
     "checkboxSelection": { "type": { "name": "bool" }, "default": "false" },
     "classes": { "type": { "name": "object" }, "additionalInfo": { "cssApi": true } },
     "clipboardCopyCellDelimiter": { "type": { "name": "string" }, "default": "'\\t'" },
     "columnBufferPx": { "type": { "name": "number" }, "default": "150" },
     "columnFilterDebounceMs": { "type": { "name": "number" }, "default": "150" },
     "columnGroupHeaderHeight": { "type": { "name": "number" } },
+    "columnGroupingModel": {
+      "type": { "name": "arrayOf", "description": "Array&lt;object&gt;" },
+      "seeMoreLink": {
+        "url": "https://mui.com/x/react-data-grid/column-groups/",
+        "text": "column grouping docs"
+      }
+    },
     "columnHeaderHeight": { "type": { "name": "number" }, "default": "56" },
     "columnVisibilityModel": { "type": { "name": "object" } },
     "dataSource": {
@@ -37,6 +44,7 @@
     "dataSourceCache": {
       "type": { "name": "shape", "description": "{ clear: func, get: func, set: func }" }
     },
+    "dataSourceKeepPreviousData": { "type": { "name": "bool" }, "default": "false" },
     "dataSourceRevalidateMs": { "type": { "name": "number" }, "default": "0" },
     "density": {
       "type": {
@@ -68,7 +76,7 @@
     "experimentalFeatures": {
       "type": {
         "name": "shape",
-        "description": "{ virtualizerLayoutMode?: 'controlled'<br>&#124;&nbsp;'uncontrolled', warnIfFocusStateIsNotSynced?: bool }"
+        "description": "{ imeFastEdit?: bool, virtualizerLayoutMode?: 'controlled'<br>&#124;&nbsp;'uncontrolled', warnIfFocusStateIsNotSynced?: bool }"
       }
     },
     "filterDebounceMs": { "type": { "name": "number" }, "default": "150" },
@@ -131,6 +139,7 @@
         "returned": "GridRowSpacing"
       }
     },
+    "height": { "type": { "name": "union", "description": "number<br>&#124;&nbsp;string" } },
     "hideFooter": { "type": { "name": "bool" }, "default": "false" },
     "hideFooterPagination": { "type": { "name": "bool" }, "default": "false" },
     "hideFooterSelectedRowCount": { "type": { "name": "bool" }, "default": "false" },
@@ -435,6 +444,7 @@
       },
       "default": "[25, 50, 100]"
     },
+    "pagination": { "type": { "name": "enum", "description": "true" } },
     "paginationMeta": { "type": { "name": "shape", "description": "{ hasNextPage?: bool }" } },
     "paginationMode": {
       "type": { "name": "enum", "description": "'client'<br>&#124;&nbsp;'server'" },
@@ -446,9 +456,9 @@
     "processRowUpdate": {
       "type": { "name": "func" },
       "signature": {
-        "type": "function(newRow: R, oldRow: R, params: { rowId: GridRowId }) => Promise<R> | R",
+        "type": "function(newRow: R, oldRow: R, params: { rowId: GridRowId }) => Promise<R | GridRowModelReplace<R>> | R | GridRowModelReplace<R>",
         "describedArgs": ["newRow", "oldRow", "params"],
-        "returned": "Promise<R> | R"
+        "returned": "Promise<R | GridRowModelReplace<R>> | R | GridRowModelReplace<R>"
       }
     },
     "resizeThrottleMs": { "type": { "name": "number" }, "default": "60" },
@@ -498,6 +508,13 @@
         "description": "Array&lt;func<br>&#124;&nbsp;object<br>&#124;&nbsp;bool&gt;<br>&#124;&nbsp;func<br>&#124;&nbsp;object"
       },
       "additionalInfo": { "sx": true }
+    },
+    "tabNavigation": {
+      "type": {
+        "name": "enum",
+        "description": "'all'<br>&#124;&nbsp;'content'<br>&#124;&nbsp;'header'<br>&#124;&nbsp;'none'"
+      },
+      "default": "\"none\""
     },
     "virtualizeColumnsWithAutoRowHeight": { "type": { "name": "bool" }, "default": "false" }
   },
@@ -611,6 +628,12 @@
       "class": null
     },
     {
+      "name": "filterFormColumnInput",
+      "description": "Column input component rendered in each filter form of the filter panel.",
+      "default": "GridFilterFormColumnInput",
+      "class": "MuiDataGrid-filterFormColumnInput"
+    },
+    {
       "name": "columnsPanel",
       "description": "GridColumns panel component rendered when clicking the columns button.",
       "default": "GridColumnsPanel",
@@ -692,6 +715,12 @@
       "name": "baseMenuItem",
       "description": "The custom MenuItem component used in the grid.",
       "default": "MenuItem",
+      "class": null
+    },
+    {
+      "name": "baseModal",
+      "description": "The custom Modal component used in the grid.",
+      "default": "Modal",
       "class": null
     },
     {
@@ -1171,6 +1200,18 @@
       "isGlobal": false
     },
     {
+      "key": "cell--computed",
+      "className": "MuiDataGrid-cell--computed",
+      "description": "Styles applied to the cell element if the cell belongs to a computed column (Premium computed columns).",
+      "isGlobal": false
+    },
+    {
+      "key": "cell--computedError",
+      "className": "MuiDataGrid-cell--computedError",
+      "description": "Styles applied to the cell element if the formula of its computed column evaluates to an error for the row (Premium computed columns).",
+      "isGlobal": false
+    },
+    {
       "key": "cell--editable",
       "className": "MuiDataGrid-cell--editable",
       "description": "Styles applied to the cell element if the cell is editable.",
@@ -1369,6 +1410,18 @@
       "isGlobal": false
     },
     {
+      "key": "columnHeader--computed",
+      "className": "MuiDataGrid-columnHeader--computed",
+      "description": "Styles applied to the column header if the column is a computed column (Premium computed columns).",
+      "isGlobal": false
+    },
+    {
+      "key": "columnHeader--computedInvalid",
+      "className": "MuiDataGrid-columnHeader--computedInvalid",
+      "description": "Styles applied to the column header if the formula of its computed column is invalid (Premium computed columns).",
+      "isGlobal": false
+    },
+    {
       "key": "columnHeader--dragging",
       "className": "MuiDataGrid-columnHeader--dragging",
       "description": "Styles applied to the floating column header element when it is dragged.",
@@ -1419,13 +1472,13 @@
     {
       "key": "columnHeader--pinnedLeft",
       "className": "MuiDataGrid-columnHeader--pinnedLeft",
-      "description": "",
+      "description": "Styles applied to the column header if it is pinned to the left.",
       "isGlobal": false
     },
     {
       "key": "columnHeader--pinnedRight",
       "className": "MuiDataGrid-columnHeader--pinnedRight",
-      "description": "",
+      "description": "Styles applied to the column header if it is pinned to the right.",
       "isGlobal": false
     },
     {
@@ -1443,7 +1496,7 @@
     {
       "key": "columnHeader--withLeftBorder",
       "className": "MuiDataGrid-columnHeader--withLeftBorder",
-      "description": "",
+      "description": "Styles applied to the column header if it has a left border.",
       "isGlobal": false
     },
     {
@@ -1561,6 +1614,84 @@
       "isGlobal": false
     },
     {
+      "key": "computedColumnHeaderBadge",
+      "className": "MuiDataGrid-computedColumnHeaderBadge",
+      "description": "Styles applied to the `ƒx` badge in the column header of a computed column (Premium computed columns).",
+      "isGlobal": false
+    },
+    {
+      "key": "computedColumnsPanel",
+      "className": "MuiDataGrid-computedColumnsPanel",
+      "description": "Styles applied to the computed columns panel root element (Premium computed columns).",
+      "isGlobal": false
+    },
+    {
+      "key": "computedColumnsPanelEditor",
+      "className": "MuiDataGrid-computedColumnsPanelEditor",
+      "description": "Styles applied to the computed columns panel editor view element.",
+      "isGlobal": false
+    },
+    {
+      "key": "computedColumnsPanelEmpty",
+      "className": "MuiDataGrid-computedColumnsPanelEmpty",
+      "description": "Styles applied to the empty state of the computed columns panel list.",
+      "isGlobal": false
+    },
+    {
+      "key": "computedColumnsPanelField",
+      "className": "MuiDataGrid-computedColumnsPanelField",
+      "description": "Styles applied to the field rows of the computed columns panel editor.",
+      "isGlobal": false
+    },
+    {
+      "key": "computedColumnsPanelFooter",
+      "className": "MuiDataGrid-computedColumnsPanelFooter",
+      "description": "Styles applied to the footer of the computed columns panel editor.",
+      "isGlobal": false
+    },
+    {
+      "key": "computedColumnsPanelFormula",
+      "className": "MuiDataGrid-computedColumnsPanelFormula",
+      "description": "Styles applied to the formula surface of the computed columns panel editor.",
+      "isGlobal": false
+    },
+    {
+      "key": "computedColumnsPanelHeader",
+      "className": "MuiDataGrid-computedColumnsPanelHeader",
+      "description": "Styles applied to the computed columns panel header element.",
+      "isGlobal": false
+    },
+    {
+      "key": "computedColumnsPanelList",
+      "className": "MuiDataGrid-computedColumnsPanelList",
+      "description": "Styles applied to the computed columns panel list view element.",
+      "isGlobal": false
+    },
+    {
+      "key": "computedColumnsPanelListItem",
+      "className": "MuiDataGrid-computedColumnsPanelListItem",
+      "description": "Styles applied to each item of the computed columns panel list.",
+      "isGlobal": false
+    },
+    {
+      "key": "computedColumnsPanelPreview",
+      "className": "MuiDataGrid-computedColumnsPanelPreview",
+      "description": "Styles applied to the preview element of the computed columns panel editor.",
+      "isGlobal": false
+    },
+    {
+      "key": "computedColumnsPanelReference",
+      "className": "MuiDataGrid-computedColumnsPanelReference",
+      "description": "Styles applied to the reference pane (columns and functions to insert) of the computed columns panel editor.",
+      "isGlobal": false
+    },
+    {
+      "key": "computedColumnsPanelValidation",
+      "className": "MuiDataGrid-computedColumnsPanelValidation",
+      "description": "Styles applied to the validation block of the computed columns panel editor.",
+      "isGlobal": false
+    },
+    {
       "key": "container--bottom",
       "className": "MuiDataGrid-container--bottom",
       "description": "Styles applied to the bottom container.",
@@ -1633,15 +1764,39 @@
       "isGlobal": false
     },
     {
-      "key": "filterForm",
-      "className": "MuiDataGrid-filterForm",
-      "description": "Styles applied to the root of the filter form component.",
+      "key": "editMultiSelectCell",
+      "className": "MuiDataGrid-editMultiSelectCell",
+      "description": "Styles applied to the edit multi-select cell root element.",
       "isGlobal": false
     },
     {
-      "key": "filterFormColumnInput",
-      "className": "MuiDataGrid-filterFormColumnInput",
-      "description": "Styles applied to the column input of the filter form component.",
+      "key": "editMultiSelectCellChip",
+      "className": "MuiDataGrid-editMultiSelectCellChip",
+      "description": "Styles applied to each chip in the edit multi-select cell.",
+      "isGlobal": false
+    },
+    {
+      "key": "editMultiSelectCellOverflow",
+      "className": "MuiDataGrid-editMultiSelectCellOverflow",
+      "description": "Styles applied to the overflow \"+N\" chip in the edit multi-select cell.",
+      "isGlobal": false
+    },
+    {
+      "key": "editMultiSelectCellPopperContent",
+      "className": "MuiDataGrid-editMultiSelectCellPopperContent",
+      "description": "Styles applied to the edit multi-select cell popper content.",
+      "isGlobal": false
+    },
+    {
+      "key": "editMultiSelectCellPopup",
+      "className": "MuiDataGrid-editMultiSelectCellPopup",
+      "description": "Styles applied to the edit multi-select cell popup.",
+      "isGlobal": false
+    },
+    {
+      "key": "filterForm",
+      "className": "MuiDataGrid-filterForm",
+      "description": "Styles applied to the root of the filter form component.",
       "isGlobal": false
     },
     {
@@ -1684,6 +1839,24 @@
       "key": "footerContainer",
       "className": "MuiDataGrid-footerContainer",
       "description": "Styles applied to the footer container element.",
+      "isGlobal": false
+    },
+    {
+      "key": "formulaBar",
+      "className": "MuiDataGrid-formulaBar",
+      "description": "Styles applied to the formula bar root element (Premium formulas).",
+      "isGlobal": false
+    },
+    {
+      "key": "formulaColumnHeaderLetter",
+      "className": "MuiDataGrid-formulaColumnHeaderLetter",
+      "description": "Styles applied to the A1-notation column-letter adornment in the column header (Premium formulas).",
+      "isGlobal": false
+    },
+    {
+      "key": "formulaRowNumberCell",
+      "className": "MuiDataGrid-formulaRowNumberCell",
+      "description": "Styles applied to the cells of the A1-notation row-number column (Premium formulas).",
       "isGlobal": false
     },
     {
@@ -1767,7 +1940,7 @@
     {
       "key": "mainContent",
       "className": "MuiDataGrid-mainContent",
-      "description": "",
+      "description": "Styles applied to the element that wraps the main content of the grid.",
       "isGlobal": false
     },
     {
@@ -1798,6 +1971,36 @@
       "key": "menuOpen",
       "className": "MuiDataGrid-menuOpen",
       "description": "Styles applied to the menu icon element if the menu is open.",
+      "isGlobal": false
+    },
+    {
+      "key": "multiSelectCell",
+      "className": "MuiDataGrid-multiSelectCell",
+      "description": "Styles applied to the multi-select cell root element.",
+      "isGlobal": false
+    },
+    {
+      "key": "multiSelectCellChip",
+      "className": "MuiDataGrid-multiSelectCellChip",
+      "description": "Styles applied to each chip in the multi-select cell.",
+      "isGlobal": false
+    },
+    {
+      "key": "multiSelectCellOverflow",
+      "className": "MuiDataGrid-multiSelectCellOverflow",
+      "description": "Styles applied to the overflow \"+N\" chip in the multi-select cell.",
+      "isGlobal": false
+    },
+    {
+      "key": "multiSelectCellPopperContent",
+      "className": "MuiDataGrid-multiSelectCellPopperContent",
+      "description": "Styles applied to the multi-select cell popper content.",
+      "isGlobal": false
+    },
+    {
+      "key": "multiSelectCellPopup",
+      "className": "MuiDataGrid-multiSelectCellPopup",
+      "description": "Styles applied to the multi-select cell expand popup.",
       "isGlobal": false
     },
     {
@@ -1882,6 +2085,12 @@
       "key": "pivotPanelField",
       "className": "MuiDataGrid-pivotPanelField",
       "description": "Styles applied to the pivot panel field.",
+      "isGlobal": false
+    },
+    {
+      "key": "pivotPanelField--dragging",
+      "className": "MuiDataGrid-pivotPanelField--dragging",
+      "description": "Styles applied to the drag preview of a pivot panel field when it's dragged with touch or pen.",
       "isGlobal": false
     },
     {
@@ -2355,7 +2564,7 @@
     {
       "key": "withSidePanel",
       "className": "MuiDataGrid-withSidePanel",
-      "description": "",
+      "description": "Styles applied to the root element if a side panel is open.",
       "isGlobal": false
     },
     {
@@ -2369,6 +2578,5 @@
   "forwardsRefTo": "GridRoot",
   "filename": "/packages/x-data-grid/src/DataGrid/DataGrid.tsx",
   "inheritance": null,
-  "demos": "<ul><li><a href=\"/x/react-data-grid/#community-version-free-forever\">DataGrid</a></li>\n<li><a href=\"/x/react-data-grid/#pro-version\">DataGridPro</a></li>\n<li><a href=\"/x/react-data-grid/#premium-version\">DataGridPremium</a></li></ul>",
-  "cssComponent": false
+  "demos": "<ul><li><a href=\"/x/react-data-grid/#community-version-free-forever\">DataGrid</a></li>\n<li><a href=\"/x/react-data-grid/#pro-version\">DataGridPro</a></li>\n<li><a href=\"/x/react-data-grid/#premium-version\">DataGridPremium</a></li></ul>"
 }

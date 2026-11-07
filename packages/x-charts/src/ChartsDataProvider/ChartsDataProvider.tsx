@@ -1,23 +1,19 @@
 'use client';
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import {
-  defaultSlotsMaterial,
-  type ChartsSlotProps,
-  type ChartsSlots,
-} from '../internals/material';
+import { defaultSlotsMaterial } from '../internals/material';
+import type { ChartsSlotProps, ChartsSlots } from '../internals/material';
 import { ChartsSlotsProvider } from '../context/ChartsSlotsContext';
 
 import { useChartsDataProviderProps } from './useChartsDataProviderProps';
-import { ChartsProvider, type ChartsProviderProps } from '../context/ChartsProvider';
-import { type ChartSeriesType } from '../models/seriesType/config';
-import { type ChartAnyPluginSignature } from '../internals/plugins/models/plugin';
+import { ChartsProvider } from '../context/ChartsProvider';
+import type { ChartsProviderProps } from '../context/ChartsProvider';
+import type { ChartSeriesType } from '../models/seriesType/config';
+import type { ChartAnyPluginSignature } from '../internals/plugins/models/plugin';
 
-import { type AllPluginSignatures } from '../internals/plugins/allPlugins';
-import {
-  ChartsLocalizationProvider,
-  type ChartsLocalizationProviderProps,
-} from '../ChartsLocalizationProvider';
+import type { AllPluginSignatures } from '../internals/plugins/allPlugins';
+import { ChartsLocalizationProvider } from '../ChartsLocalizationProvider';
+import type { ChartsLocalizationProviderProps } from '../ChartsLocalizationProvider';
 
 export interface ChartsDataProviderSlots extends ChartsSlots {}
 
@@ -90,11 +86,14 @@ function ChartsDataProvider<
   );
 }
 
-ChartsDataProvider.propTypes = {
+ChartsDataProvider.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * The ref object that exposes the chart API methods.
+   */
   apiRef: PropTypes.shape({
     current: PropTypes.any,
   }),
@@ -107,6 +106,12 @@ ChartsDataProvider.propTypes = {
    * An array of objects that can be used to populate series and axes data using their `dataKey` property.
    */
   dataset: PropTypes.arrayOf(PropTypes.object),
+  /**
+   * Options to enable features planned for the next major.
+   */
+  experimentalFeatures: PropTypes.shape({
+    keyboardActivation: PropTypes.bool,
+  }),
   /**
    * The height of the chart in px. If not defined, it takes the height of the parent element.
    */
@@ -154,6 +159,10 @@ ChartsDataProvider.propTypes = {
    * Slots to customize charts' components.
    */
   slots: PropTypes.object,
+  /**
+   * The color mode passed to `colors` when it is a function.
+   * Defaults to the mode of the Material UI theme.
+   */
   theme: PropTypes.oneOf(['dark', 'light']),
   /**
    * The width of the chart in px. If not defined, it takes the width of the parent element.

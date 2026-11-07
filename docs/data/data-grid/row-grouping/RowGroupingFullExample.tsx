@@ -1,8 +1,10 @@
+import type {
+  GridGroupingColDefOverride,
+  GridValidRowModel,
+} from '@mui/x-data-grid-premium';
 import {
   DataGridPremium,
   GRID_ROW_GROUPING_SINGLE_GROUPING_FIELD,
-  GridGroupingColDefOverride,
-  GridValidRowModel,
   useGridApiRef,
   useKeepGroupedColumnsHidden,
 } from '@mui/x-data-grid-premium';
@@ -17,6 +19,7 @@ export default function RowGroupingFullExample() {
     dataSet: 'Commodity',
     rowLength: 100,
     maxColumns: 25,
+    multiSelect: true,
   });
   const apiRef = useGridApiRef();
 
@@ -26,7 +29,7 @@ export default function RowGroupingFullExample() {
       ...data.initialState,
       rowGrouping: {
         ...data.initialState?.rowGrouping,
-        model: ['commodity'],
+        model: ['commodity', 'tags'],
       },
       sorting: {
         sortModel: [{ field: GRID_ROW_GROUPING_SINGLE_GROUPING_FIELD, sort: 'asc' }],

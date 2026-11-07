@@ -1,9 +1,10 @@
 import { warnOnce } from '@mui/x-internals/warning';
-import { SchedulerEvent, SchedulerProcessedEvent } from '../models';
+import type { TemporalTimezone } from '@base-ui/react/internals/temporal';
+import type { SchedulerEvent, SchedulerProcessedEvent } from '../models';
 import { processDate } from '../process-date';
-import { Adapter } from '../use-adapter';
-import { SchedulerRecurringEventsPluginInterface } from '../internals/plugins/SchedulerRecurringEventsPlugin.types';
-import { TemporalTimezone } from '../base-ui-copy/types';
+import { normalizeAllDayBounds } from '../internals/utils/plain-date-utils/adapter';
+import type { Adapter } from '../use-adapter';
+import type { SchedulerRecurringEventsPluginInterface } from '../internals/plugins/SchedulerRecurringEventsPlugin.types';
 import { resolveEventDate } from './resolveEventDate';
 
 export function processEvent(
@@ -14,40 +15,38 @@ export function processEvent(
 ): SchedulerProcessedEvent {
   const dataTimezone = model.timezone ?? 'default';
 
-  const startInstant = resolveEventDate(model.start, dataTimezone, adapter);
-  const endInstant = resolveEventDate(model.end, dataTimezone, adapter);
+  const startInstant = resolveEventDate(model.start, dataTimezone, adapter, model.id);
+  const endInstant = resolveEventDate(model.end, dataTimezone, adapter, model.id);
   const resolvedExDates = model.exDates
-    ? model.exDates.map((exDate) => resolveEventDate(exDate, dataTimezone, adapter))
+    ? model.exDates.map((exDate) => resolveEventDate(exDate, dataTimezone, adapter, model.id))
     : undefined;
 
   const startInDisplayTz = adapter.setTimezone(startInstant, displayTimezone);
   const endInDisplayTz = adapter.setTimezone(endInstant, displayTimezone);
+  const displayBounds = normalizeAllDayBounds(
+    adapter,
+    startInDisplayTz,
+    endInDisplayTz,
+    model.allDay,
+  );
   const exDatesInDisplayTz = resolvedExDates
     ? resolvedExDates.map((exDate) => adapter.setTimezone(exDate, displayTimezone))
     : undefined;
 
   if (recurringEventsPlugin == null && model.rrule != null) {
     if (process.env.NODE_ENV !== 'production') {
-      warnOnce([
-        'MUI X Scheduler: Recurring events are a premium feature. The `rrule` property will be ignored.',
-        'Use <EventCalendarPremium /> or <EventTimelinePremium /> to enable recurring events.',
-      ]);
+      warnOnce(
+        [
+          'MUI X Scheduler: Recurring events are a premium feature. The `rrule` property will be ignored.',
+          'Use <EventCalendarPremium />, or <EventTimelinePremium /> with the `recurringEvents` feature from `@mui/x-scheduler-premium/recurring-events`, to enable recurring events.',
+        ].join('\n'),
+      );
     }
   }
 
   const parsedDataRRule =
     recurringEventsPlugin && model.rrule
       ? recurringEventsPlugin.parseRRule(adapter, model.rrule, dataTimezone)
-      : undefined;
-
-  const displayTimezoneRRule =
-    recurringEventsPlugin && parsedDataRRule
-      ? recurringEventsPlugin.projectRRuleToTimezone(
-          adapter,
-          parsedDataRRule,
-          displayTimezone,
-          startInstant,
-        )
       : undefined;
 
   return {
@@ -62,14 +61,9 @@ export function processEvent(
       exDates: resolvedExDates,
     },
     displayTimezone: {
-      start: model.allDay
-        ? processDate(adapter.startOfDay(startInDisplayTz), adapter)
-        : processDate(startInDisplayTz, adapter),
-      end: model.allDay
-        ? processDate(adapter.endOfDay(endInDisplayTz), adapter)
-        : processDate(endInDisplayTz, adapter),
+      start: processDate(displayBounds.start, adapter),
+      end: processDate(displayBounds.end, adapter),
       timezone: displayTimezone,
-      rrule: displayTimezoneRRule,
       exDates: exDatesInDisplayTz,
     },
     resource: model.resource,

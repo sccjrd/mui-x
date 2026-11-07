@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { isJSDOM } from 'test/utils/skipIf';
 import {
   TEST_LICENSE_KEY_PRO,
@@ -29,7 +29,7 @@ import {
   decodeLicenseVersion3,
 } from './verifyLicense';
 import { LICENSE_STATUS } from '../utils/licenseStatus';
-import { NullableLicenseDetails } from '../utils/licenseDetails';
+import type { NullableLicenseDetails } from '../utils/licenseDetails';
 
 const releaseDate = new Date(2018, 0, 0, 0, 0, 0, 0);
 const RELEASE_INFO = generateReleaseInfo(releaseDate);

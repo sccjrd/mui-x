@@ -1,14 +1,20 @@
 'use client';
 import * as React from 'react';
-import { type SeriesId } from '../models/seriesType/common';
-import { type BarElementOwnerState } from './barClasses';
+import type { SeriesId } from '../models/seriesType/common';
+import type { BarElementOwnerState } from './barClasses';
 import { useAnimateBar } from '../hooks/animation/useAnimateBar';
 
 export interface BarProps extends Omit<
   React.SVGProps<SVGRectElement>,
   'color' | 'ref' | 'x' | 'y' | 'height' | 'width'
 > {
+  /**
+   * The id of the series the element belongs to.
+   */
   seriesId: SeriesId;
+  /**
+   * The index of the data point in the series.
+   */
   dataIndex: number;
   color: string;
   ownerState: BarElementOwnerState;

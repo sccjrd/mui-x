@@ -1,16 +1,13 @@
 'use client';
 import * as React from 'react';
 import Paper from '@mui/material/Paper';
-import {
-  ChatBox,
-  ChatMessageContent,
-  type ChatMessageContentProps,
-} from '@mui/x-chat';
-import { createEchoAdapter } from 'docs/data/chat/material/examples/shared/demoUtils';
+import { ChatBox, ChatMessageContent } from '@mui/x-chat';
+import type { ChatMessageContentProps } from '@mui/x-chat';
+import { createEchoAdapter } from 'docs/data/chat/core/examples/shared/demoUtils';
 import {
   minimalConversation,
   minimalMessages,
-} from 'docs/data/chat/material/examples/shared/demoData';
+} from 'docs/data/chat/core/examples/shared/demoData';
 
 const PaperBubbleSlot = React.forwardRef<
   HTMLDivElement,
@@ -56,7 +53,9 @@ export default function PaperBubble() {
       initialActiveConversationId={minimalConversation.id}
       initialConversations={[minimalConversation]}
       initialMessages={minimalMessages}
-      slots={{ messageContent: CustomMessageContent }}
+      slots={{
+        messageContent: CustomMessageContent,
+      }}
       sx={{
         height: 500,
         border: '1px solid',

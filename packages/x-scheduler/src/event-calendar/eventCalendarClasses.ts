@@ -1,24 +1,29 @@
 import generateUtilityClass from '@mui/utils/generateUtilityClass';
 import generateUtilityClasses from '@mui/utils/generateUtilityClasses';
 import composeClasses from '@mui/utils/composeClasses';
+import type { EventDialogClasses } from '../internals/components/event-dialog/eventDialogClasses';
 import {
-  EventDialogClasses,
   eventDialogClassKeys,
   eventDialogSlots,
 } from '../internals/components/event-dialog/eventDialogClasses';
+import type { EventContextMenuClasses } from '../internals/components/event-context-menu/eventContextMenuClasses';
 import {
-  ErrorContainerClasses,
+  eventContextMenuClassKeys,
+  eventContextMenuSlots,
+} from '../internals/components/event-context-menu/eventContextMenuClasses';
+import type { ErrorContainerClasses } from '../internals/components/error-container/errorContainerClasses';
+import {
   errorContainerClassKeys,
   errorContainerSlots,
 } from '../internals/components/error-container/errorContainerClasses';
+import type { EventSkeletonClasses } from '../internals/components/event-skeleton/eventSkeletonClasses';
 import {
-  EventSkeletonClasses,
   eventSkeletonClassKeys,
   eventSkeletonSlots,
 } from '../internals/components/event-skeleton/eventSkeletonClasses';
 
 export interface EventCalendarClasses
-  extends EventDialogClasses, ErrorContainerClasses, EventSkeletonClasses {
+  extends EventDialogClasses, EventContextMenuClasses, ErrorContainerClasses, EventSkeletonClasses {
   /** Styles applied to the root element. */
   root: string;
   /** Styles applied to the side panel element. */
@@ -27,6 +32,8 @@ export interface EventCalendarClasses
   mainPanel: string;
   /** Styles applied to the content section element. */
   content: string;
+  /** Styles applied to the element that hosts the responsive typography tokens. */
+  responsiveTypographyContainer: string;
   /** Styles applied to the mini calendar root element. */
   miniCalendar: string;
   /** Styles applied to the mini calendar header element. */
@@ -51,8 +58,8 @@ export interface EventCalendarClasses
   headerToolbar: string;
   /** Styles applied to the header toolbar actions element. */
   headerToolbarActions: string;
-  /** Styles applied to the header toolbar left side element. */
-  headerToolbarLeftElement: string;
+  /** Styles applied to the header toolbar start side element. */
+  headerToolbarStart: string;
   /** Styles applied to the header toolbar label element. */
   headerToolbarLabel: string;
   /** Styles applied to the header toolbar date navigator buttons container element. */
@@ -91,6 +98,8 @@ export interface EventCalendarClasses
   agendaViewWeekNumberLabel: string;
   /** Styles applied to agenda view week number row elements. */
   agendaViewWeekNumberRow: string;
+  /** Styles applied to the agenda view empty state element. */
+  agendaViewEmptyState: string;
   /** Styles applied to the month view root element. */
   monthView: string;
   /** Styles applied to the month view grid element. */
@@ -133,7 +142,7 @@ export interface EventCalendarClasses
   dayTimeGridAllDayEventsRow: string;
   /** Styles applied to day time grid all day events cell elements. */
   dayTimeGridAllDayEventsCell: string;
-  /** Styles applied to the day time grid all day events header cell element. */
+  /** Styles applied to the day time grid all day events header cell (visually hidden row label). */
   dayTimeGridAllDayEventsHeaderCell: string;
   /** Styles applied to day time grid header content elements. */
   dayTimeGridHeaderContent: string;
@@ -305,6 +314,32 @@ export interface EventCalendarClasses
   miniCalendarNextButton: string;
   /** Styles applied to the more events popover element. */
   moreEventsPopover: string;
+  /** Styles applied to the header toolbar compact menu button element (compact layout). */
+  headerToolbarCompactMenuButton: string;
+  /** Styles applied to the header toolbar compact today button element (compact layout). */
+  headerToolbarCompactTodayButton: string;
+  /** Styles applied to the side panel drawer paper (popup) element (compact layout). */
+  sidePanelDrawer: string;
+  /** Styles applied to the side panel drawer backdrop element. */
+  sidePanelDrawerBackdrop: string;
+  /** Styles applied to the side panel drawer root (modal) element. */
+  sidePanelDrawerViewport: string;
+  /** Styles applied to the side panel drawer header element. */
+  sidePanelDrawerHeader: string;
+  /** Styles applied to the side panel drawer title element. */
+  sidePanelDrawerTitle: string;
+  /** Styles applied to the side panel drawer close button element. */
+  sidePanelDrawerCloseButton: string;
+  /** Styles applied to the side panel drawer view list element. */
+  sidePanelDrawerViewList: string;
+  /** Styles applied to side panel drawer view list item elements. */
+  sidePanelDrawerViewItem: string;
+  /** Styles applied to the side panel drawer preferences button element. */
+  sidePanelDrawerPreferencesButton: string;
+  /** Styles applied to the side panel drawer preferences entry list element. */
+  sidePanelDrawerPreferences: string;
+  /** Styles applied to the side panel drawer collapsible preferences options list element. */
+  sidePanelDrawerPreferencesList: string;
 }
 
 export type EventCalendarClassKey = keyof EventCalendarClasses;
@@ -320,6 +355,7 @@ export const eventCalendarClasses: EventCalendarClasses = generateUtilityClasses
     'sidePanel',
     'mainPanel',
     'content',
+    'responsiveTypographyContainer',
     'miniCalendar',
     'miniCalendarHeader',
     'miniCalendarNavigation',
@@ -332,7 +368,7 @@ export const eventCalendarClasses: EventCalendarClasses = generateUtilityClasses
     'miniCalendarDayButton',
     'headerToolbar',
     'headerToolbarActions',
-    'headerToolbarLeftElement',
+    'headerToolbarStart',
     'headerToolbarLabel',
     'headerToolbarDateNavigator',
     'viewSwitcher',
@@ -352,6 +388,7 @@ export const eventCalendarClasses: EventCalendarClasses = generateUtilityClasses
     'agendaViewEventsList',
     'agendaViewWeekNumberLabel',
     'agendaViewWeekNumberRow',
+    'agendaViewEmptyState',
     'monthView',
     'monthViewGrid',
     'monthViewHeader',
@@ -459,9 +496,23 @@ export const eventCalendarClasses: EventCalendarClasses = generateUtilityClasses
     'miniCalendarPreviousButton',
     'miniCalendarNextButton',
     'moreEventsPopover',
+    'headerToolbarCompactMenuButton',
+    'headerToolbarCompactTodayButton',
+    'sidePanelDrawer',
+    'sidePanelDrawerBackdrop',
+    'sidePanelDrawerViewport',
+    'sidePanelDrawerHeader',
+    'sidePanelDrawerTitle',
+    'sidePanelDrawerCloseButton',
+    'sidePanelDrawerViewList',
+    'sidePanelDrawerViewItem',
+    'sidePanelDrawerPreferencesButton',
+    'sidePanelDrawerPreferences',
+    'sidePanelDrawerPreferencesList',
     ...errorContainerClassKeys,
     ...eventSkeletonClassKeys,
     ...eventDialogClassKeys,
+    ...eventContextMenuClassKeys,
   ],
 );
 
@@ -470,6 +521,7 @@ const slots = {
   sidePanel: ['sidePanel'],
   mainPanel: ['mainPanel'],
   content: ['content'],
+  responsiveTypographyContainer: ['responsiveTypographyContainer'],
   miniCalendar: ['miniCalendar'],
   miniCalendarHeader: ['miniCalendarHeader'],
   miniCalendarNavigation: ['miniCalendarNavigation'],
@@ -482,7 +534,7 @@ const slots = {
   miniCalendarDayButton: ['miniCalendarDayButton'],
   headerToolbar: ['headerToolbar'],
   headerToolbarActions: ['headerToolbarActions'],
-  headerToolbarLeftElement: ['headerToolbarLeftElement'],
+  headerToolbarStart: ['headerToolbarStart'],
   headerToolbarLabel: ['headerToolbarLabel'],
   headerToolbarDateNavigator: ['headerToolbarDateNavigator'],
   viewSwitcher: ['viewSwitcher'],
@@ -502,6 +554,7 @@ const slots = {
   agendaViewEventsList: ['agendaViewEventsList'],
   agendaViewWeekNumberLabel: ['agendaViewWeekNumberLabel'],
   agendaViewWeekNumberRow: ['agendaViewWeekNumberRow'],
+  agendaViewEmptyState: ['agendaViewEmptyState'],
   monthView: ['monthView'],
   monthViewGrid: ['monthViewGrid'],
   monthViewHeader: ['monthViewHeader'],
@@ -609,9 +662,23 @@ const slots = {
   miniCalendarPreviousButton: ['miniCalendarPreviousButton'],
   miniCalendarNextButton: ['miniCalendarNextButton'],
   moreEventsPopover: ['moreEventsPopover'],
+  headerToolbarCompactMenuButton: ['headerToolbarCompactMenuButton'],
+  headerToolbarCompactTodayButton: ['headerToolbarCompactTodayButton'],
+  sidePanelDrawer: ['sidePanelDrawer'],
+  sidePanelDrawerBackdrop: ['sidePanelDrawerBackdrop'],
+  sidePanelDrawerViewport: ['sidePanelDrawerViewport'],
+  sidePanelDrawerHeader: ['sidePanelDrawerHeader'],
+  sidePanelDrawerTitle: ['sidePanelDrawerTitle'],
+  sidePanelDrawerCloseButton: ['sidePanelDrawerCloseButton'],
+  sidePanelDrawerViewList: ['sidePanelDrawerViewList'],
+  sidePanelDrawerViewItem: ['sidePanelDrawerViewItem'],
+  sidePanelDrawerPreferencesButton: ['sidePanelDrawerPreferencesButton'],
+  sidePanelDrawerPreferences: ['sidePanelDrawerPreferences'],
+  sidePanelDrawerPreferencesList: ['sidePanelDrawerPreferencesList'],
   ...errorContainerSlots,
   ...eventSkeletonSlots,
   ...eventDialogSlots,
+  ...eventContextMenuSlots,
 };
 
 /**

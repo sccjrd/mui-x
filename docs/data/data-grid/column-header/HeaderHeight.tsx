@@ -1,4 +1,5 @@
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import type { GridColDef } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
 
 const rows = [
   {
@@ -12,6 +13,7 @@ const columns: GridColDef[] = [
   {
     field: 'username',
     headerName: 'Username',
+    rowHeader: true,
     description:
       'The identification used by the person with access to the online service.',
   },

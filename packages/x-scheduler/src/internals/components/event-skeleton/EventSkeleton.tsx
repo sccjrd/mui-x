@@ -1,7 +1,8 @@
 'use client';
 import clsx from 'clsx';
 import Skeleton from '@mui/material/Skeleton';
-import { styled, CSSObject } from '@mui/material/styles';
+import type { CSSObject } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
 import { useSharedComponentsStyledContext } from '../SharedComponentsStyledContext';
 
 export type EventSkeletonVariant = 'time-column' | 'day-grid' | 'agenda' | 'timeline-row';
@@ -20,8 +21,8 @@ const EventSkeletonRoot = styled(Skeleton, {
   const variantStyles: Record<EventSkeletonVariant, CSSObject> = {
     'time-column': {
       position: 'absolute',
-      left: 0,
-      right: 12,
+      insetInlineStart: 0,
+      insetInlineEnd: 12,
       top: 0,
       height: '100%',
       borderRadius: 0,

@@ -5,17 +5,17 @@ import AddBoxOutlinedIcon from '@mui/icons-material/AddBoxOutlined';
 import IndeterminateCheckBoxOutlinedIcon from '@mui/icons-material/IndeterminateCheckBoxOutlined';
 import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
 import { useTreeItem } from '@mui/x-tree-view/useTreeItem';
+import type { TreeItemProps } from '@mui/x-tree-view/TreeItem';
 import {
   TreeItemContent,
   TreeItemLabel,
   TreeItemRoot,
-  TreeItemProps,
   TreeItemGroupTransition,
 } from '@mui/x-tree-view/TreeItem';
 import { TreeItemProvider } from '@mui/x-tree-view/TreeItemProvider';
 import { TreeItemDragAndDropOverlay } from '@mui/x-tree-view/TreeItemDragAndDropOverlay';
 import { useTreeItemUtils } from '@mui/x-tree-view/hooks';
-import { MUI_X_PRODUCTS } from './products';
+import { MUI_X_PRODUCTS } from '../datasets/disabledAndEditableProducts';
 
 const CustomTreeItem = React.forwardRef(function CustomTreeItem(
   { id, itemId, label, disabled, children }: TreeItemProps,

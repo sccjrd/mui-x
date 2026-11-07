@@ -1,9 +1,10 @@
 import { EMPTY_ARRAY } from '@base-ui/utils/empty';
-import { TemporalTimezone, TemporalSupportedObject } from '../../../base-ui-copy/types';
-import {
+import { generateId } from '@base-ui/utils/generateId';
+import { warnOnce } from '@mui/x-internals/warning';
+import type { TemporalTimezone, TemporalSupportedObject } from '@base-ui/react/internals/temporal';
+import type {
   SchedulerProcessedEvent,
   SchedulerEventId,
-  SchedulerOccurrencePlaceholder,
   SchedulerResource,
   SchedulerResourceId,
   SchedulerEventModelStructure,
@@ -13,40 +14,47 @@ import {
   SchedulerEventUpdatedProperties,
 } from '../../../models';
 import { processEvent } from '../../../process-event';
-import { Adapter } from '../../../use-adapter/useAdapter.types';
-import { SchedulerParameters, SchedulerState } from './SchedulerStore.types';
-import { SchedulerRecurringEventsPluginInterface } from '../../plugins/SchedulerRecurringEventsPlugin.types';
+import type { Adapter } from '../../../use-adapter/useAdapter.types';
+import type { SchedulerParameters, SchedulerState } from './SchedulerStore.types';
+import type { SchedulerRecurringEventsPluginInterface } from '../../plugins/SchedulerRecurringEventsPlugin.types';
 import { dateToEventString } from '../date-utils';
+import { schedulerEventSelectors } from '../../../scheduler-selectors/schedulerEventSelectors';
 
 /**
- * Determines if the occurrence placeholder has changed in a meaningful way that requires updating the store.
+ * Names the `eventModelStructure` date(s) — `start`, `end`, or both — that have a getter but no
+ * setter, so every writer that refuses a whole event (a creation, a move, a paste, or a
+ * dependency push) because of it can point at the specific property instead of a generic
+ * "start and / or end".
  */
-export function shouldUpdateOccurrencePlaceholder(
-  adapter: Adapter,
-  previous: SchedulerOccurrencePlaceholder | null,
-  next: SchedulerOccurrencePlaceholder | null,
-): boolean {
-  if (next == null || previous == null) {
-    return next !== previous;
-  }
-
-  const untypedPrevious = previous as Record<string, any>;
-  const untypedNext = next as Record<string, any>;
-
-  for (const key in untypedNext) {
-    if (key === 'start' || key === 'end') {
-      if (!adapter.isEqual(untypedNext[key], untypedPrevious[key])) {
-        return true;
-      }
-    } else if (!Object.is(untypedNext[key], untypedPrevious[key])) {
-      return true;
-    }
-  }
-
-  return false;
+export function datesNotWritableReason(state: SchedulerState): string {
+  const properties = schedulerEventSelectors.unwritableDates(state);
+  const names = properties.map((property) => `\`${property}\``).join(' and ');
+  const pronoun = properties.length > 1 ? 'they' : 'it';
+  return `\`eventModelStructure\` declares ${names} with a getter but no setter, so ${pronoun} cannot be written back to your event model. Add a \`setter\` to make ${pronoun === 'it' ? 'it' : 'them'} editable.`;
 }
 
-export const DEFAULT_EVENT_MODEL_STRUCTURE: SchedulerEventModelStructure<any> = {};
+/**
+ * Resolves `shouldEventRequireResource` and warns when it is enabled without any resource.
+ */
+export function getShouldEventRequireResource(
+  parameters: SchedulerParameters<any, any>,
+  defaultValue: boolean,
+): boolean {
+  const shouldEventRequireResource = parameters.shouldEventRequireResource ?? defaultValue;
+  if (
+    shouldEventRequireResource &&
+    (parameters.resources == null || parameters.resources.length === 0)
+  ) {
+    warnOnce(
+      [
+        'MUI X Scheduler: `shouldEventRequireResource` is `true` but no resources are configured.',
+        'Users will not be able to select a resource, and events cannot be saved from the event dialog.',
+        'Either provide at least one resource, or set `shouldEventRequireResource={false}`.',
+      ].join('\n'),
+    );
+  }
+  return shouldEventRequireResource;
+}
 
 const EVENT_PROPERTIES_LOOKUP: { [P in keyof SchedulerEvent]-?: true } = {
   id: true,
@@ -68,6 +76,42 @@ const EVENT_PROPERTIES_LOOKUP: { [P in keyof SchedulerEvent]-?: true } = {
 };
 
 const EVENT_PROPERTIES = Object.keys(EVENT_PROPERTIES_LOOKUP) as (keyof SchedulerEvent)[];
+
+/**
+ * Whether the key is one of the built-in `SchedulerEvent` properties.
+ */
+export function isBuiltInEventProperty(key: string): boolean {
+  return EVENT_PROPERTIES_LOOKUP.hasOwnProperty(key);
+}
+
+// Custom model keys are arbitrary consumer strings: a plain assignment of a key
+// like `__proto__` would hit the legacy prototype setter instead of creating an
+// own property.
+function setOwnProperty(target: object, key: string, value: unknown) {
+  Object.defineProperty(target, key, {
+    value,
+    writable: true,
+    enumerable: true,
+    configurable: true,
+  });
+}
+
+/**
+ * Returns the properties of an event model that are not part of the built-in `SchedulerEvent` shape.
+ */
+export function getCustomEventProperties<TEvent extends object>(model: TEvent): Partial<TEvent> {
+  const customProperties: Record<string, unknown> = {};
+  for (const key in model) {
+    // `call` form: a custom event property named `hasOwnProperty` would shadow the method.
+    if (
+      Object.prototype.hasOwnProperty.call(model, key) &&
+      !EVENT_PROPERTIES_LOOKUP.hasOwnProperty(key)
+    ) {
+      setOwnProperty(customProperties, key, model[key as keyof TEvent]);
+    }
+  }
+  return customProperties as Partial<TEvent>;
+}
 
 const RESOURCE_PROPERTIES_LOOKUP: { [P in keyof SchedulerResource]-?: true } = {
   id: true,
@@ -95,10 +139,9 @@ export function getProcessedEventFromModel<TEvent extends object>(
   const modelInDefaultFormat = {} as SchedulerEvent;
 
   for (const key of EVENT_PROPERTIES) {
-    // @ts-ignore
     const getter = eventModelStructure?.[key]?.getter;
 
-    // @ts-ignore
+    // @ts-expect-error Each property getter returns its corresponding property type, but the key is a union.
     modelInDefaultFormat[key] = getter ? getter(model) : model[key];
   }
 
@@ -165,14 +208,14 @@ export function getUpdatedEventModelFromChanges<TEvent extends object>(
 }
 
 /**
- * Create an event model from a processed event using the provided model structure.
+ * Creates an event model from the creation properties using the provided model structure.
  */
 export function createEventModel<TEvent extends object>(
   event: SchedulerEventCreationProperties,
   eventModelStructure: SchedulerEventModelStructure<TEvent> | undefined,
   adapter: Adapter,
 ) {
-  const id = crypto.randomUUID();
+  const id = generateId('event');
 
   const formatNewDate = (value: string | TemporalSupportedObject): string => {
     if (typeof value === 'string') {
@@ -220,23 +263,21 @@ function createOrUpdateEventModelFromBuiltInEventModel<
   const propertiesWithSetter: [AnyEventSetter<TEvent>, any][] = [];
 
   for (const key in changes) {
-    if (changes.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(changes, key)) {
       const typedKey = key as keyof SchedulerEvent;
       const setter = eventModelStructure?.[typedKey]?.setter;
       if (setter) {
-        // @ts-ignore
         propertiesWithSetter.push([setter, changes[key]]);
       } else if (changes[key] === undefined) {
-        // @ts-ignore
+        // @ts-expect-error Custom event models do not declare an index signature for property names.
         delete eventModel[key];
       }
       // If the property was set to its default value, remove it from the model
       else if (oldModel != null && key === 'allDay' && changes[key] === false) {
-        // @ts-ignore
+        // @ts-expect-error Custom event models do not declare an index signature for property names.
         delete eventModel[key];
       } else {
-        // @ts-ignore
-        eventModel[key] = changes[key];
+        setOwnProperty(eventModel, key, changes[key]);
       }
     }
   }
@@ -260,7 +301,8 @@ export function getProcessedResourceFromModel<TResource extends object>(
   for (const key of RESOURCE_PROPERTIES) {
     const getter = resourceModelStructure?.[key]?.getter;
 
-    // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- Custom resource indexing errors only in consumers enabling noImplicitAny.
+    // @ts-ignore Custom resource indexing errors only in consumers enabling noImplicitAny.
     const resourceProperty = getter ? getter(resource) : resource[key];
 
     if (key === 'children' && Array.isArray(resourceProperty)) {
@@ -268,12 +310,11 @@ export function getProcessedResourceFromModel<TResource extends object>(
       const children = resourceProperty.map((child) =>
         getProcessedResourceFromModel(child, resourceModelStructure),
       );
-      // @ts-ignore
       processedResource[key] = children;
       continue;
     }
 
-    // @ts-ignore
+    // @ts-expect-error The resource getter returns the value for this key, but TypeScript loses the correlation.
     processedResource[key] = resourceProperty;
   }
 
@@ -285,11 +326,56 @@ type AnyEventSetter<TEvent extends object> = (
   value: any,
 ) => TEvent;
 
-export function buildEventsState<TEvent extends object, TResource extends object>(
-  parameters: Pick<SchedulerParameters<TEvent, TResource>, 'events' | 'eventModelStructure'>,
+/**
+ * Throws if the resolved event id is missing.
+ */
+export function checkSchedulerEventIdIsValid(id: SchedulerEventId, event: object) {
+  if (id == null) {
+    throw new Error(
+      `MUI X Scheduler: All events must have a unique \`id\`.
+Without an \`id\`, an event cannot be tracked and silently overwrites another event in the calendar state.
+Add an \`id\` to every event, or set \`eventModelStructure.id.getter\` to derive one from your event model.
+An event was provided without an \`id\`:
+${JSON.stringify(event)}`,
+    );
+  }
+}
+
+type ProcessedEventLookupContext = [
   adapter: Adapter,
   displayTimezone: TemporalTimezone,
-  recurringEventsPlugin: SchedulerRecurringEventsPluginInterface | null = null,
+  eventModelStructure: SchedulerEventModelStructure<any> | undefined,
+  processedEventByModel: WeakMap<object, SchedulerProcessedEvent>,
+  recurringEventsPlugin: SchedulerRecurringEventsPluginInterface | null,
+];
+
+const processedEventLookupContext = new WeakMap<
+  Map<SchedulerEventId, SchedulerProcessedEvent>,
+  ProcessedEventLookupContext
+>();
+
+type BuildEventsStateParameters<TEvent extends object, TResource extends object> = Pick<
+  SchedulerParameters<TEvent, TResource>,
+  'events' | 'eventModelStructure'
+> & {
+  adapter: Adapter;
+  displayTimezone: TemporalTimezone;
+} & (
+    | {
+        recurringEventsPlugin?: SchedulerRecurringEventsPluginInterface | null;
+        previousState?: never;
+      }
+    | {
+        recurringEventsPlugin?: never;
+        previousState: Pick<
+          SchedulerState<TEvent>,
+          'eventIdList' | 'eventModelLookup' | 'processedEventLookup' | 'recurringEventsPlugin'
+        >;
+      }
+  );
+
+export function buildEventsState<TEvent extends object, TResource extends object>(
+  options: BuildEventsStateParameters<TEvent, TResource>,
 ): Pick<
   SchedulerState<TEvent>,
   | 'eventIdList'
@@ -298,30 +384,110 @@ export function buildEventsState<TEvent extends object, TResource extends object
   | 'eventModelStructure'
   | 'eventModelList'
 > {
-  const { events = EMPTY_ARRAY, eventModelStructure } = parameters;
+  const { adapter, displayTimezone, previousState, eventModelStructure } = options;
+  const events = options.events ?? EMPTY_ARRAY;
+  const recurringEventsPlugin =
+    options.recurringEventsPlugin ?? previousState?.recurringEventsPlugin ?? null;
 
   const eventIdList: SchedulerEventId[] = [];
   const eventModelLookup = new Map<SchedulerEventId, TEvent>();
   const processedEventLookup = new Map<SchedulerEventId, SchedulerProcessedEvent>();
+  const previousContext = previousState
+    ? processedEventLookupContext.get(previousState.processedEventLookup)
+    : undefined;
+  const canReusePrevious =
+    previousState !== undefined &&
+    previousContext !== undefined &&
+    previousContext[0] === adapter &&
+    previousContext[1] === displayTimezone &&
+    previousContext[2] === eventModelStructure &&
+    previousContext[4] === recurringEventsPlugin;
+  const previousProcessedEventByModel = canReusePrevious ? previousContext[3] : null;
+  const processedEventByModel = new WeakMap<object, SchedulerProcessedEvent>();
+  let hasSameEventIds = canReusePrevious;
+  let eventModelMismatchCount = 0;
+  let processedEventMismatchCount = 0;
 
   for (const event of events) {
-    const processedEvent = getProcessedEventFromModel(
-      event,
-      adapter,
-      eventModelStructure,
-      displayTimezone,
-      recurringEventsPlugin,
-    );
-    eventIdList.push(processedEvent.id);
-    eventModelLookup.set(processedEvent.id, event);
-    processedEventLookup.set(processedEvent.id, processedEvent);
+    const processedEvent =
+      previousProcessedEventByModel?.get(event) ??
+      getProcessedEventFromModel(
+        event,
+        adapter,
+        eventModelStructure,
+        displayTimezone,
+        recurringEventsPlugin,
+      );
+    processedEventByModel.set(event, processedEvent);
+    const { id } = processedEvent;
+    checkSchedulerEventIdIsValid(id, event);
+
+    const alreadySeen = eventModelLookup.has(id);
+    if (canReusePrevious) {
+      const previousEventModel = previousState.eventModelLookup.get(id);
+      const previousProcessedEvent = previousState.processedEventLookup.get(id);
+
+      // For duplicate ids, keep one mismatch per id based on the latest occurrence.
+      if (alreadySeen) {
+        if (eventModelLookup.get(id) !== previousEventModel) {
+          eventModelMismatchCount -= 1;
+        }
+        if (processedEventLookup.get(id) !== previousProcessedEvent) {
+          processedEventMismatchCount -= 1;
+        }
+      }
+      if (event !== previousEventModel) {
+        eventModelMismatchCount += 1;
+      }
+      if (processedEvent !== previousProcessedEvent) {
+        processedEventMismatchCount += 1;
+      }
+    }
+
+    if (alreadySeen) {
+      if (process.env.NODE_ENV !== 'production') {
+        warnOnce(
+          [
+            `MUI X Scheduler: Two or more events share the same id "${String(id)}".`,
+            'Event ids must be unique. Only the last event with a given id is kept, the others are ignored.',
+          ].join('\n'),
+        );
+      }
+    } else {
+      if (
+        hasSameEventIds &&
+        canReusePrevious &&
+        previousState.eventIdList[eventIdList.length] !== id
+      ) {
+        hasSameEventIds = false;
+      }
+      eventIdList.push(id);
+    }
+
+    eventModelLookup.set(id, event);
+    processedEventLookup.set(id, processedEvent);
   }
 
-  return {
-    eventIdList,
-    eventModelLookup,
+  hasSameEventIds &&= canReusePrevious && eventIdList.length === previousState.eventIdList.length;
+  const hasSameEventModels = hasSameEventIds && eventModelMismatchCount === 0;
+  const hasSameProcessedEvents = hasSameEventIds && processedEventMismatchCount === 0;
+  const nextProcessedEventLookup = hasSameProcessedEvents
+    ? previousState!.processedEventLookup
+    : processedEventLookup;
+
+  processedEventLookupContext.set(nextProcessedEventLookup, [
+    adapter,
+    displayTimezone,
     eventModelStructure,
-    processedEventLookup,
+    processedEventByModel,
+    recurringEventsPlugin,
+  ]);
+
+  return {
+    eventIdList: hasSameEventIds ? previousState!.eventIdList : eventIdList,
+    eventModelLookup: hasSameEventModels ? previousState!.eventModelLookup : eventModelLookup,
+    eventModelStructure,
+    processedEventLookup: nextProcessedEventLookup,
     eventModelList: events,
   };
 }

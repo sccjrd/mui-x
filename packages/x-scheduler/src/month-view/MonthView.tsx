@@ -1,17 +1,21 @@
 'use client';
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
-import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
 import { createSelectorMemoized, useStore } from '@base-ui/utils/store';
 import { useResizeObserver } from '@mui/x-internals/useResizeObserver';
-import {
-  EventCalendarViewConfig,
+import type {
+  EventCalendarViewDefinition,
   GridRowType,
-  SchedulerProcessedDate,
+  SchedulerProcessedDay,
 } from '@mui/x-scheduler-internals/models';
-import { getDayList } from '@mui/x-scheduler-internals/get-day-list';
-import { getStartOfWeek, getEndOfWeek } from '@mui/x-scheduler-internals/internals';
-import { useAdapterContext } from '@mui/x-scheduler-internals/use-adapter-context';
+import { getDayListFromPlainDates } from '@mui/x-scheduler-internals/get-day-list';
+import {
+  formatWeekdayShort,
+  getDayNumber,
+  getPlainDateWeekStart,
+  getStartOfMonthDayNumber,
+  plainDateFromDayNumber,
+} from '@mui/x-scheduler-internals/internals';
 import { useEventCalendarView } from '@mui/x-scheduler-internals/use-event-calendar-view';
 import { useEventCalendarStoreContext } from '@mui/x-scheduler-internals/use-event-calendar-store-context';
 import type { EventCalendarState as State } from '@mui/x-scheduler-internals/use-event-calendar';
@@ -20,10 +24,11 @@ import { CalendarGrid } from '@mui/x-scheduler-internals/calendar-grid';
 import { useEventOccurrencesGroupedByDay } from '@mui/x-scheduler-internals/use-event-occurrences-grouped-by-day';
 import { schedulerOtherSelectors } from '@mui/x-scheduler-internals/scheduler-selectors';
 import clsx from 'clsx';
-import { MonthViewProps } from './MonthView.types';
+import type { MonthViewProps } from './MonthView.types';
 import MonthViewWeekRow from './month-view-row/MonthViewWeekRow';
 import { MoreEventsPopoverProvider } from '../internals/components/more-events-popover';
 import { useEventCalendarStyledContext } from '../event-calendar/EventCalendarStyledContext';
+import { getSiblingMonthStart } from '../internals/utils/date-utils';
 
 const FIXED_CELL_WIDTH = 28;
 
@@ -116,24 +121,29 @@ const DAY_NUMBER_HEADER_HEIGHT = 22; // event height (18px) + gap (4px)
 const EVENT_HEIGHT = 18;
 const EVENT_GAP = 4; // theme.spacing(0.5) = 4px
 
-const MONTH_VIEW_CONFIG: EventCalendarViewConfig = {
-  siblingVisibleDateGetter: ({ state, delta }) =>
-    state.adapter.addMonths(
-      state.adapter.startOfMonth(schedulerOtherSelectors.visibleDate(state)),
-      delta,
-    ),
+const MONTH_VIEW_DEFINITION: EventCalendarViewDefinition = {
+  siblingVisibleDateGetter: ({ state, delta }) => getSiblingMonthStart(state, delta),
   visibleDaysSelector: createSelectorMemoized(
     (state: State) => state.adapter,
-    schedulerOtherSelectors.visibleDate,
+    // The day number of the first day of the month, so a move inside the month keeps the days.
+    (state: State) => {
+      const visiblePlainDate = schedulerOtherSelectors.visiblePlainDate(state);
+      return getStartOfMonthDayNumber(getDayNumber(visiblePlainDate));
+    },
+    schedulerOtherSelectors.displayTimezone,
     eventCalendarPreferenceSelectors.showWeekends,
     eventCalendarPreferenceSelectors.weekStartsOn,
-    (adapter, visibleDate, showWeekends, weekStartsOn) =>
-      getDayList({
+    (adapter, firstDayNumber, timezone, showWeekends, weekStartsOn) => {
+      const firstOfMonth = plainDateFromDayNumber(firstDayNumber);
+      const lastOfMonth = firstOfMonth.with({ day: firstOfMonth.daysInMonth });
+      return getDayListFromPlainDates({
         adapter,
-        start: getStartOfWeek(adapter, adapter.startOfMonth(visibleDate), weekStartsOn),
-        end: getEndOfWeek(adapter, adapter.endOfMonth(visibleDate), weekStartsOn),
+        firstPlainDate: getPlainDateWeekStart(firstOfMonth, weekStartsOn),
+        lastPlainDate: getPlainDateWeekStart(lastOfMonth, weekStartsOn).add({ days: 6 }),
+        timezone,
         excludeWeekends: !showWeekends,
-      }),
+      });
+    },
   ),
 };
 
@@ -146,28 +156,26 @@ export const MonthView = React.memo(
     forwardedRef: React.ForwardedRef<HTMLDivElement>,
   ) {
     // Context hooks
-    const adapter = useAdapterContext();
     const { classes, localeText } = useEventCalendarStyledContext();
     const store = useEventCalendarStoreContext();
 
     // Ref hooks
-    const containerRef = React.useRef<HTMLElement | null>(null);
-    const handleRef = useMergedRefs(forwardedRef, containerRef);
     const cellRef = React.useRef<HTMLDivElement>(null);
 
     // Selector hooks
     const showWeekNumber = useStore(store, eventCalendarPreferenceSelectors.showWeekNumber);
     const showWeekends = useStore(store, eventCalendarPreferenceSelectors.showWeekends);
+    const locale = useStore(store, schedulerOtherSelectors.dateLocale);
 
     // State hooks
     const [maxEvents, setMaxEvents] = React.useState<number>(2);
 
     // Feature hooks
-    const { days } = useEventCalendarView(MONTH_VIEW_CONFIG);
+    const { days } = useEventCalendarView(MONTH_VIEW_DEFINITION);
 
     const weeks = React.useMemo(() => {
       const chunkSize = showWeekends ? 7 : 5;
-      const result: SchedulerProcessedDate[][] = [];
+      const result: SchedulerProcessedDay[][] = [];
       for (let i = 0; i < days.length; i += chunkSize) {
         result.push(days.slice(i, i + chunkSize));
       }
@@ -195,7 +203,7 @@ export const MonthView = React.memo(
     return (
       <MonthViewRoot
         {...props}
-        ref={handleRef}
+        ref={forwardedRef}
         className={clsx(props.className, classes.monthView)}
       >
         <MoreEventsPopoverProvider>
@@ -227,7 +235,7 @@ export const MonthView = React.memo(
                   aria-colindex={dayIdx + 1}
                   skipDataCurrent
                 >
-                  {adapter.formatByString(weekDay.value, 'ccc')}
+                  {formatWeekdayShort(locale, weekDay.plainDate)}
                 </MonthViewHeaderCell>
               ))}
             </MonthViewHeader>

@@ -5,18 +5,19 @@ import { useLicenseVerifier, Watermark } from '@mui/x-license/internals';
 import {
   GridRoot,
   GridContextProvider,
-  type GridValidRowModel,
+  gridRowIdSelector,
   useGridSelector,
 } from '@mui/x-data-grid-pro';
+import type { GridValidRowModel } from '@mui/x-data-grid-pro';
 import {
   propValidatorsDataGrid,
   propValidatorsDataGridPro,
-  type PropValidator,
   validateProps,
-  type GridConfiguration,
   useGridApiInitialization,
   getRowValue,
+  GridMultiSelectMeasurer,
 } from '@mui/x-data-grid-pro/internals';
+import type { PropValidator, GridConfiguration } from '@mui/x-data-grid-pro/internals';
 import { useMaterialCSSVariables } from '@mui/x-data-grid/material';
 import { forwardRef } from '@mui/x-internals/forwardRef';
 import { useDataGridPremiumComponent } from './useDataGridPremiumComponent';
@@ -29,7 +30,10 @@ import { Sidebar } from '../components/sidebar';
 import { useGridAriaAttributesPremium } from '../hooks/utils/useGridAriaAttributes';
 import { useGridRowAriaAttributesPremium } from '../hooks/features/rows/useGridRowAriaAttributes';
 import { gridCellAggregationResultSelector } from '../hooks/features/aggregation/gridAggregationSelectors';
+import { gridCellFormulaResultSelector } from '../hooks/features/formula/gridFormulaSelectors';
+import { gridComputedColumnCellRevisionSelector } from '../hooks/features/computedColumns/gridComputedColumnsSelectors';
 import { useGridApiContext } from '../hooks/utils/useGridApiContext';
+import { useGridRootProps } from '../hooks/utils/useGridRootProps';
 import type { GridApiPremium, GridPrivateApiPremium } from '../models/gridApiPremium';
 import { useGridRowsOverridableMethods } from '../hooks/features/rows/useGridRowsOverridableMethods';
 import { useGridParamsOverridableMethods } from '../hooks/features/rows/useGridParamsOverridableMethods';
@@ -38,6 +42,8 @@ import { useIsCellEditable } from '../hooks/features/editing/useGridCellEditable
 
 export type { GridPremiumSlotsComponent as GridSlots } from '../models';
 
+const useNoopColumnHeaderAdornment = (_field: string): React.ReactNode => null;
+
 const configuration: GridConfiguration<GridPrivateApiPremium, DataGridPremiumProcessedProps> = {
   hooks: {
     useCSSVariables: useMaterialCSSVariables,
@@ -45,9 +51,24 @@ const configuration: GridConfiguration<GridPrivateApiPremium, DataGridPremiumPro
     useGridRowAriaAttributes: useGridRowAriaAttributesPremium,
     useCellAggregationResult: (id, field) => {
       const apiRef = useGridApiContext();
+      // Subscribing to the formula result is what re-renders formula cells
+      // after an evaluation pass — the value itself flows through the params
+      // overlay in `useGridParamsOverridableMethods`.
+      useGridSelector(apiRef, gridCellFormulaResultSelector, { id, field });
+      // Computed cells read their value through the `valueGetter` of their column:
+      // the revision is what re-renders them when the row object did not change.
+      useGridSelector(apiRef, gridComputedColumnCellRevisionSelector, field);
       return useGridSelector(apiRef, gridCellAggregationResultSelector, { id, field });
     },
     useFilterValueGetter: (apiRef, props) => (row, column) => {
+      const formulaResult = gridCellFormulaResultSelector(apiRef, {
+        id: gridRowIdSelector(apiRef, row),
+        field: column.field,
+      });
+      if (formulaResult != null) {
+        return formulaResult.type === 'error' ? formulaResult.code : formulaResult.value;
+      }
+
       if (props.aggregationRowsScope === 'all') {
         return apiRef.current.getRowValue(row, column);
       }
@@ -57,6 +78,18 @@ const configuration: GridConfiguration<GridPrivateApiPremium, DataGridPremiumPro
     useIsCellEditable,
     useGridRowsOverridableMethods,
     useGridParamsOverridableMethods,
+    // The A1 column-letter adornment comes from the injected formula feature —
+    // the grid only bundles this thin passthrough.
+    useColumnHeaderAdornment: (field) => {
+      const rootProps = useGridRootProps();
+      // Captured on the first render of each header: the injected feature
+      // provides a hook, so it must stay render-stable (enforced with a dev
+      // warning in `useDataGridPremiumComponent`).
+      const formulaFeature = React.useRef(rootProps.featureDependencies?.formula).current;
+      const useColumnHeaderAdornment =
+        formulaFeature?.useColumnHeaderAdornment ?? useNoopColumnHeaderAdornment;
+      return useColumnHeaderAdornment(field);
+    },
   },
 };
 const packageInfo = {
@@ -96,6 +129,12 @@ const DataGridPremiumRaw = forwardRef(function DataGridPremium<R extends GridVal
   const sidebarOpen = useGridSelector(privateApiRef, gridSidebarOpenSelector);
   const sidePanel = sidebarOpen ? <Sidebar /> : null;
 
+  // The reference-highlight overlay ships with the injected formula feature.
+  // Captured on the first render, consistently with the feature's hooks.
+  const FormulaReferenceOverlay = React.useRef(
+    initialProps.featureDependencies?.formula?.ReferenceOverlay,
+  ).current;
+
   return (
     <GridContextProvider
       privateApiRef={privateApiRef}
@@ -111,12 +150,14 @@ const DataGridPremiumRaw = forwardRef(function DataGridPremium<R extends GridVal
         sidePanel={sidePanel}
       >
         {watermark}
+        <GridMultiSelectMeasurer />
+        {FormulaReferenceOverlay !== undefined && <FormulaReferenceOverlay />}
       </GridRoot>
     </GridContextProvider>
   );
 });
 
-DataGridPremiumRaw.propTypes = {
+DataGridPremiumRaw.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -270,10 +311,12 @@ DataGridPremiumRaw.propTypes = {
   checkboxColDef: PropTypes.shape({
     aggregable: PropTypes.bool,
     align: PropTypes.oneOf(['center', 'left', 'right']),
+    allowFormulas: PropTypes.bool,
     availableAggregationFunctions: PropTypes.arrayOf(PropTypes.string),
     cellClassName: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
     chartable: PropTypes.bool,
     colSpan: PropTypes.oneOfType([PropTypes.func, PropTypes.number]),
+    computed: PropTypes.bool,
     description: PropTypes.string,
     disableColumnMenu: PropTypes.bool,
     disableExport: PropTypes.bool,
@@ -316,6 +359,7 @@ DataGridPremiumRaw.propTypes = {
     renderHeader: PropTypes.func,
     renderHeaderFilter: PropTypes.func,
     resizable: PropTypes.bool,
+    rowHeader: PropTypes.bool,
     rowSpanValueGetter: PropTypes.func,
     sortable: PropTypes.bool,
     sortComparator: PropTypes.func,
@@ -362,6 +406,10 @@ DataGridPremiumRaw.propTypes = {
    * Inherits the `columnHeaderHeight` value if not set.
    */
   columnGroupHeaderHeight: PropTypes.number,
+  /**
+   * The column groups of the header.
+   * @see See {@link https://mui.com/x/react-data-grid/column-groups/ column grouping docs} for more details.
+   */
   columnGroupingModel: PropTypes.arrayOf(PropTypes.object),
   /**
    * Sets the height in pixel of the column headers in the Data Grid.
@@ -377,6 +425,65 @@ DataGridPremiumRaw.propTypes = {
    * If defined, the Data Grid will ignore the `hide` property in [[GridColDef]].
    */
   columnVisibilityModel: PropTypes.object,
+  /**
+   * The column definition properties applied to the columns generated from the `computedColumns` model.
+   * Pass a function to return different properties for each computed column.
+   * Keep the reference stable between renders when it holds functions, arrays, or objects: the overrides are compared property by property, so a new one re-creates the computed columns on every render, and loops when the parent re-renders on grid state.
+   */
+  computedColDef: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
+  /**
+   * Set the computed columns of the grid: read-only columns whose value is a formula
+   * evaluated for every row from the other fields of the same row.
+   * Has no effect unless the formula feature is provided through `featureDependencies`.
+   */
+  computedColumns: PropTypes.arrayOf(
+    PropTypes.shape({
+      description: PropTypes.string,
+      editable: PropTypes.bool,
+      field: PropTypes.string.isRequired,
+      formula: PropTypes.string.isRequired,
+      headerName: PropTypes.string.isRequired,
+      numberFormat: PropTypes.shape({
+        compactDisplay: PropTypes.oneOf(['long', 'short']),
+        currency: PropTypes.string,
+        currencyDisplay: PropTypes.oneOf(['code', 'name', 'narrowSymbol', 'symbol']),
+        currencySign: PropTypes.oneOf(['accounting', 'standard']),
+        localeMatcher: PropTypes.oneOf(['best fit', 'lookup']),
+        maximumFractionDigits: PropTypes.number,
+        maximumSignificantDigits: PropTypes.number,
+        minimumFractionDigits: PropTypes.number,
+        minimumIntegerDigits: PropTypes.number,
+        minimumSignificantDigits: PropTypes.number,
+        notation: PropTypes.oneOf(['compact', 'engineering', 'scientific', 'standard']),
+        numberingSystem: PropTypes.string,
+        roundingIncrement: PropTypes.oneOf([
+          1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000,
+        ]),
+        roundingMode: PropTypes.oneOf([
+          'ceil',
+          'expand',
+          'floor',
+          'halfCeil',
+          'halfEven',
+          'halfExpand',
+          'halfFloor',
+          'halfTrunc',
+          'trunc',
+        ]),
+        roundingPriority: PropTypes.oneOf(['auto', 'lessPrecision', 'morePrecision']),
+        signDisplay: PropTypes.oneOf(['always', 'auto', 'exceptZero', 'negative', 'never']),
+        style: PropTypes.oneOf(['currency', 'decimal', 'percent', 'unit']),
+        trailingZeroDisplay: PropTypes.oneOf(['auto', 'stripIfInteger']),
+        unit: PropTypes.string,
+        unitDisplay: PropTypes.oneOf(['long', 'narrow', 'short']),
+        useGrouping: PropTypes.oneOfType([
+          PropTypes.oneOf(['always', 'auto', 'false', 'min2', 'true']),
+          PropTypes.bool,
+        ]),
+      }),
+      type: PropTypes.oneOf(['boolean', 'date', 'dateTime', 'number', 'string']).isRequired,
+    }),
+  ),
   /**
    * Data source object.
    */
@@ -395,6 +502,13 @@ DataGridPremiumRaw.propTypes = {
     get: PropTypes.func.isRequired,
     set: PropTypes.func.isRequired,
   }),
+  /**
+   * If `true`, the previously displayed rows are kept visible while new rows are being fetched after pagination, sorting, or filtering changes.
+   * The loading overlay is rendered on top of the previous rows.
+   * Only applies to flat data; tree data and row grouping always reset the rows on refetch to keep the order consistent with the new response.
+   * @default false
+   */
+  dataSourceKeepPreviousData: PropTypes.bool,
   /**
    * If positive, the Data Grid will periodically revalidate data source rows by re-fetching them from the server when the cache entry has expired.
    * If the refetched rows are different from the current rows, the grid will update the rows.
@@ -478,6 +592,12 @@ DataGridPremiumRaw.propTypes = {
    */
   disableColumnSorting: PropTypes.bool,
   /**
+   * If `true`, the computed columns are disabled: the columns of the `computedColumns` model are
+   * not added to the grid and the UI to manage them is hidden.
+   * @default false
+   */
+  disableComputedColumns: PropTypes.bool,
+  /**
    * If `true`, the density selector is disabled.
    * @default false
    */
@@ -487,6 +607,17 @@ DataGridPremiumRaw.propTypes = {
    * @default false
    */
   disableEval: PropTypes.bool,
+  /**
+   * If `true`, the suggestion dropdown shown while editing a formula cell is disabled.
+   * Has no effect when `disableFormulas` is `true` or a `dataSource` is set.
+   * @default false
+   */
+  disableFormulaAutocomplete: PropTypes.bool,
+  /**
+   * If `true`, the formula evaluation is disabled: `=` cell values render as raw strings.
+   * @default false
+   */
+  disableFormulas: PropTypes.bool,
   /**
    * If `true`, filtering with multiple columns is disabled.
    * @default false
@@ -544,8 +675,26 @@ DataGridPremiumRaw.propTypes = {
    * For each feature, if the flag is not explicitly set to `true`, then the feature is fully disabled, and neither property nor method calls will have any effect.
    */
   experimentalFeatures: PropTypes.shape({
+    imeFastEdit: PropTypes.bool,
     virtualizerLayoutMode: PropTypes.oneOf(['controlled', 'uncontrolled']),
     warnIfFocusStateIsNotSynced: PropTypes.bool,
+  }),
+  /**
+   * Injectable feature implementations.
+   * Import the formula feature from `@mui/x-data-grid-premium/formula` and pass it here to
+   * enable formula evaluation — the feature is not bundled with the grid itself.
+   * The value is read on the first render and must not change afterwards.
+   */
+  featureDependencies: PropTypes.shape({
+    formula: PropTypes.shape({
+      FormulaBar: PropTypes.elementType,
+      ReferenceOverlay: PropTypes.elementType,
+      stateInitializer: PropTypes.func.isRequired,
+      transformProps: PropTypes.func.isRequired,
+      useColumnHeaderAdornment: PropTypes.func.isRequired,
+      useFeature: PropTypes.func.isRequired,
+      usePreProcessors: PropTypes.func.isRequired,
+    }),
   }),
   /**
    * The milliseconds delay to wait after a keystroke before triggering filtering.
@@ -575,6 +724,22 @@ DataGridPremiumRaw.propTypes = {
     quickFilterLogicOperator: PropTypes.oneOf(['and', 'or']),
     quickFilterValues: PropTypes.array,
   }),
+  /**
+   * If `true`, formulas can be entered and are displayed using A1 notation
+   * (`=A1 + B2`) while still being stored in the canonical syntax.
+   * A leftmost row-number column and column-letter header adornments are shown.
+   * Has no effect when `disableFormulas` is `true` or a `dataSource` is set.
+   * @default false
+   */
+  formulaA1Notation: PropTypes.bool,
+  /**
+   * Functions available to formulas, keyed by name.
+   * The prop replaces the built-in set: spread `GRID_FORMULA_FUNCTIONS`
+   * (imported from `@mui/x-data-grid-premium/formula`) to extend it.
+   * Has no effect unless the formula feature is provided through `featureDependencies`.
+   * @default GRID_FORMULA_FUNCTIONS when `dataSource` is not provided, `{}` when `dataSource` is provided
+   */
+  formulaFunctions: PropTypes.object,
   /**
    * Determines the position of an aggregated value.
    * @param {GridGroupNode} groupNode The current group.
@@ -665,6 +830,14 @@ DataGridPremiumRaw.propTypes = {
    */
   headerFilters: PropTypes.bool,
   /**
+   * The fixed height of the Data Grid.
+   * Accepts a number (pixels), a CSS length (for example `'50vh'`), a percentage, or a CSS calculation.
+   * Percentage values require a parent with an explicit height.
+   * Content-based values such as `'auto'`, `'min-content'`, `'max-content'`, and `'fit-content'` are not supported.
+   * For content-based sizing, use a flex parent container instead.
+   */
+  height: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+  /**
    * If `true`, the footer component is hidden.
    * @default false
    */
@@ -709,6 +882,7 @@ DataGridPremiumRaw.propTypes = {
       'aiAssistantActiveConversationIndexChange',
       'aiAssistantConversationsChange',
       'cellClick',
+      'cellCompositionStart',
       'cellDoubleClick',
       'cellDragEnter',
       'cellDragOver',
@@ -756,6 +930,7 @@ DataGridPremiumRaw.propTypes = {
       'columnSeparatorMouseDown',
       'columnVisibilityModelChange',
       'columnWidthChange',
+      'computedColumnsChange',
       'debouncedResize',
       'densityChange',
       'detailPanelsExpandedRowIdsChange',
@@ -763,6 +938,7 @@ DataGridPremiumRaw.propTypes = {
       'fetchRows',
       'filteredRowsSet',
       'filterModelChange',
+      'formulaEvaluated',
       'headerFilterBlur',
       'headerFilterClick',
       'headerFilterKeyDown',
@@ -1123,6 +1299,12 @@ DataGridPremiumRaw.propTypes = {
    */
   onColumnWidthChange: PropTypes.func,
   /**
+   * Callback fired when the computed columns model changes.
+   * @param {GridComputedColumnsModel} model The new computed columns model.
+   * @param {GridCallbackDetails} details Additional details for this callback.
+   */
+  onComputedColumnsChange: PropTypes.func,
+  /**
    * Callback fired when a data source request fails.
    * @param {GridGetRowsError | GridUpdateRowError} error The data source error object.
    */
@@ -1158,14 +1340,16 @@ DataGridPremiumRaw.propTypes = {
    */
   onFilterModelChange: PropTypes.func,
   /**
-   * Callback fired when the menu is closed.
+   * Callback fired when a grid menu is closed.
+   * This includes the column menu, the actions cell menu, and the toolbar menus.
    * @param {GridMenuParams} params With all properties from [[GridMenuParams]].
    * @param {MuiEvent<{}>} event The event object.
    * @param {GridCallbackDetails} details Additional details for this callback.
    */
   onMenuClose: PropTypes.func,
   /**
-   * Callback fired when the menu is opened.
+   * Callback fired when a grid menu is opened.
+   * This includes the column menu, the actions cell menu, and the toolbar menus.
    * @param {GridMenuParams} params With all properties from [[GridMenuParams]].
    * @param {MuiEvent<{}>} event The event object.
    * @param {GridCallbackDetails} details Additional details for this callback.
@@ -1464,7 +1648,7 @@ DataGridPremiumRaw.propTypes = {
    * @param {R} newRow Row object with the new values.
    * @param {R} oldRow Row object with the old values.
    * @param {{ rowId: GridRowId }} params Additional parameters.
-   * @returns {Promise<R> | R} The final values to update the row.
+   * @returns {Promise<R | GridRowModelReplace<R>> | R | GridRowModelReplace<R>} The final values to update the row, or a `{ _action: 'replace', row }` update to store `row` as the new row without merging.
    */
   processRowUpdate: PropTypes.func,
   /**

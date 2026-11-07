@@ -1,11 +1,13 @@
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
-import {
-  DataGrid,
+import type {
   GridColDef,
   GridColumnGroupHeaderParams,
   GridColumnGroupingModel,
+} from '@mui/x-data-grid';
+import {
+  DataGrid,
   gridColumnVisibilityModelSelector,
   useGridApiContext,
 } from '@mui/x-data-grid';
@@ -96,8 +98,8 @@ const columnGroupingModel: GridColumnGroupingModel = [
 
 const columns: GridColDef[] = [
   { field: 'id', headerName: 'ID', width: 150 },
-  { field: 'firstName', headerName: 'First name', width: 150 },
-  { field: 'lastName', headerName: 'Last name', width: 150 },
+  { field: 'firstName', headerName: 'First name', width: 150, rowHeader: true },
+  { field: 'lastName', headerName: 'Last name', width: 150, rowHeader: true },
   { field: 'age', headerName: 'Age', type: 'number', width: 110 },
 ];
 

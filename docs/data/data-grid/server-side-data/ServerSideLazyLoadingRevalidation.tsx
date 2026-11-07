@@ -1,18 +1,18 @@
 import * as React from 'react';
-import {
-  DataGridPro,
+import type {
   GridColDef,
   GridDataSource,
   GridGetRowsParams,
   GridRenderCellParams,
-  useGridApiRef,
 } from '@mui/x-data-grid-pro';
+import { DataGridPro, useGridApiRef } from '@mui/x-data-grid-pro';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
-import { alpha, type SxProps, type Theme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
+import type { SxProps, Theme } from '@mui/material/styles';
 import { Chance } from 'chance';
 
 const chance = new Chance(42);
@@ -159,7 +159,7 @@ function FlashOnChange({
 
 const columns: GridColDef<StockRow>[] = [
   { field: 'symbol', headerName: 'Symbol', width: 100 },
-  { field: 'name', headerName: 'Company', flex: 1, minWidth: 180 },
+  { field: 'name', headerName: 'Company', flex: 1, minWidth: 180, rowHeader: true },
   {
     field: 'price',
     headerName: 'Price',

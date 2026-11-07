@@ -4,13 +4,12 @@ import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
-import {
-  DataGridPro,
+import type {
   DataGridProProps,
   GridColDef,
   GridEventListener,
-  useGridApiRef,
 } from '@mui/x-data-grid-pro';
+import { DataGridPro, useGridApiRef } from '@mui/x-data-grid-pro';
 import {
   randomCreatedDate,
   randomPrice,
@@ -56,7 +55,7 @@ function DetailPanelContent({ row: rowProp }: { row: Customer }) {
           <DataGridPro
             density="compact"
             columns={[
-              { field: 'name', headerName: 'Product', flex: 1 },
+              { field: 'name', headerName: 'Product', flex: 1, rowHeader: true },
               {
                 field: 'quantity',
                 headerName: 'Quantity',

@@ -1,17 +1,18 @@
 'use client';
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import { type ChartSeriesType } from '../models/seriesType/config';
-import {
-  ChartsDataProvider,
-  type ChartsDataProviderProps,
-  type ChartsDataProviderSlotProps,
-  type ChartsDataProviderSlots,
+import type { ChartSeriesType } from '../models/seriesType/config';
+import { ChartsDataProvider } from '../ChartsDataProvider';
+import type {
+  ChartsDataProviderProps,
+  ChartsDataProviderSlotProps,
+  ChartsDataProviderSlots,
 } from '../ChartsDataProvider';
 import { useChartsContainerProps } from './useChartsContainerProps';
-import { ChartsSurface, type ChartsSurfaceProps } from '../ChartsSurface';
-import { type AllPluginSignatures } from '../internals/plugins/allPlugins';
-import { type ChartAnyPluginSignature } from '../internals/plugins/models/plugin';
+import { ChartsSurface } from '../ChartsSurface';
+import type { ChartsSurfaceProps } from '../ChartsSurface';
+import type { AllPluginSignatures } from '../internals/plugins/allPlugins';
+import type { ChartAnyPluginSignature } from '../internals/plugins/models/plugin';
 
 export interface ChartsContainerSlots extends ChartsDataProviderSlots {}
 
@@ -66,13 +67,16 @@ const ChartsContainer = React.forwardRef(function ChartsContainer<
   props: ChartsContainerProps<SeriesType> & { ref?: React.ForwardedRef<HTMLDivElement> },
 ) => React.JSX.Element;
 
-// @ts-ignore
+// @ts-expect-error The generic call signature does not declare the generated propTypes property.
 
-ChartsContainer.propTypes = {
+ChartsContainer.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * The ref object that exposes the chart API methods.
+   */
   apiRef: PropTypes.shape({
     current: PropTypes.object,
   }),
@@ -89,6 +93,9 @@ ChartsContainer.propTypes = {
     preventHighlight: PropTypes.bool,
     preventTooltip: PropTypes.bool,
   }),
+  /**
+   * The content of the component.
+   */
   children: PropTypes.node,
   className: PropTypes.string,
   /**
@@ -122,7 +129,16 @@ ChartsContainer.propTypes = {
   /**
    * Options to enable features planned for the next major.
    */
-  experimentalFeatures: PropTypes.any,
+  experimentalFeatures: PropTypes.shape({
+    keyboardActivation: PropTypes.bool,
+  }),
+  /**
+   * If `true`, clicking an item immediately shows the keyboard focus indicator on it.
+   * By default, clicking sets the item that keyboard navigation starts from, but the focus
+   * indicator stays hidden until the user presses a key.
+   * @default false
+   */
+  focusItemOnClick: PropTypes.bool,
   /**
    * The height of the chart in px. If not defined, it takes the height of the parent element.
    */
@@ -254,7 +270,7 @@ ChartsContainer.propTypes = {
   /**
    * The function called for onClick events.
    * The second argument contains information about all line/bar elements at the current mouse position.
-   * @param {MouseEvent} event The mouse event recorded on the `<svg/>` element.
+   * @param {ChartsActivationEvent} event The event recorded on the `<svg/>` element.
    * @param {null | ChartsAxisData} data The data about the clicked axis and items associated with it.
    */
   onAxisClick: PropTypes.func,
@@ -280,7 +296,7 @@ ChartsContainer.propTypes = {
   /**
    * Callback fired when clicking close to an item.
    * This is only available for scatter plot for now.
-   * @param {MouseEvent} event Mouse event caught at the svg level
+   * @param {ChartsActivationEvent} event Event caught at the svg level
    * @param {ScatterItemIdentifier} scatterItemIdentifier Identify which item got clicked
    */
   onItemClick: PropTypes.func,
@@ -329,11 +345,18 @@ ChartsContainer.propTypes = {
    * Slots to customize charts' components.
    */
   slots: PropTypes.object,
+  /**
+   * The system prop that allows defining system overrides as well as additional CSS styles.
+   */
   sx: PropTypes.oneOfType([
     PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.func, PropTypes.object, PropTypes.bool])),
     PropTypes.func,
     PropTypes.object,
   ]),
+  /**
+   * The color mode passed to `colors` when it is a function.
+   * Defaults to the mode of the Material UI theme.
+   */
   theme: PropTypes.oneOf(['dark', 'light']),
   /**
    * The title of the chart.
@@ -395,6 +418,7 @@ ChartsContainer.propTypes = {
           max: PropTypes.oneOfType([PropTypes.instanceOf(Date), PropTypes.number]),
           min: PropTypes.oneOfType([PropTypes.instanceOf(Date), PropTypes.number]),
           type: PropTypes.oneOf(['continuous']).isRequired,
+          unknownColor: PropTypes.string,
         }),
         PropTypes.shape({
           colors: PropTypes.arrayOf(PropTypes.string).isRequired,
@@ -402,6 +426,7 @@ ChartsContainer.propTypes = {
             PropTypes.oneOfType([PropTypes.instanceOf(Date), PropTypes.number]).isRequired,
           ).isRequired,
           type: PropTypes.oneOf(['piecewise']).isRequired,
+          unknownColor: PropTypes.string,
         }),
         PropTypes.shape({
           colors: PropTypes.arrayOf(PropTypes.string).isRequired,

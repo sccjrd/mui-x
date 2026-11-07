@@ -2,8 +2,9 @@ import * as React from 'react';
 import { alpha, styled } from '@mui/material/styles';
 import Stack from '@mui/material/Stack';
 import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
-import { TreeItem, TreeItemProps } from '@mui/x-tree-view/TreeItem';
-import { MUI_X_PRODUCTS } from './products';
+import type { TreeItemProps } from '@mui/x-tree-view/TreeItem';
+import { TreeItem } from '@mui/x-tree-view/TreeItem';
+import { MUI_X_PRODUCTS } from '../datasets/disabledAndEditableProducts';
 
 const CustomContent = styled('div')(({ theme }) => ({
   padding: theme.spacing(0.5, 1),

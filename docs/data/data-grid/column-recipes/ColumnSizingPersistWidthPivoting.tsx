@@ -1,9 +1,8 @@
 import * as React from 'react';
+import type { GridColDef, GridColumnResizeParams } from '@mui/x-data-grid-premium';
 import {
   DataGridPremium,
   useGridApiRef,
-  GridColDef,
-  GridColumnResizeParams,
   GRID_ROW_GROUPING_SINGLE_GROUPING_FIELD,
 } from '@mui/x-data-grid-premium';
 import Button from '@mui/material/Button';
@@ -97,7 +96,7 @@ export default function ColumnSizingPersistWidthPivoting() {
   const [index, setIndex] = React.useState(0);
   const inputColumns: GridColDef[] = React.useMemo(
     () => [
-      { field: 'product', headerName: 'Product', key: index },
+      { field: 'product', headerName: 'Product', key: index, rowHeader: true },
       { field: 'region', headerName: 'Region' },
       { field: 'quarter', headerName: 'Quarter' },
       {

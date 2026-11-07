@@ -4,15 +4,16 @@ import PropTypes from 'prop-types';
 import resolveComponentProps from '@mui/utils/resolveComponentProps';
 import refType from '@mui/utils/refType';
 import { useMobilePicker } from '../internals/hooks/useMobilePicker';
-import { MobileDatePickerProps } from './MobileDatePicker.types';
-import { DatePickerViewRenderers, useDatePickerDefaultizedProps } from '../DatePicker/shared';
+import type { MobileDatePickerProps } from './MobileDatePicker.types';
+import type { DatePickerViewRenderers } from '../DatePicker/shared';
+import { useDatePickerDefaultizedProps } from '../DatePicker/shared';
 import { usePickerAdapter } from '../hooks/usePickerAdapter';
-import { extractValidationProps, validateDate } from '../validation';
-import { DateView, PickerOwnerState } from '../models';
+import { extractValidationProps } from '../validation';
+import type { DateView, PickerOwnerState } from '../models';
 import { DateField } from '../DateField';
-import { singleItemValueManager } from '../internals/utils/valueManagers';
 import { renderDateViewCalendar } from '../dateViewRenderers';
 import { resolveDateFormat } from '../internals/utils/date-utils';
+import { useDateManager } from '../managers';
 
 type MobileDatePickerComponent = ((
   props: MobileDatePickerProps & React.RefAttributes<HTMLDivElement>,
@@ -33,6 +34,7 @@ const MobileDatePicker = React.forwardRef(function MobileDatePicker(
   ref: React.Ref<HTMLDivElement>,
 ) {
   const adapter = usePickerAdapter();
+  const manager = useDateManager();
 
   // Props with the default values common to all date pickers
   const defaultizedProps = useDatePickerDefaultizedProps<MobileDatePickerProps>(
@@ -72,16 +74,14 @@ const MobileDatePicker = React.forwardRef(function MobileDatePicker(
   const { renderPicker } = useMobilePicker<DateView, typeof props>({
     ref,
     props,
-    valueManager: singleItemValueManager,
-    valueType: 'date',
-    validator: validateDate,
+    manager,
     steps: null,
   });
 
   return renderPicker();
 }) as MobileDatePickerComponent;
 
-MobileDatePicker.propTypes = {
+MobileDatePicker.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -93,6 +93,9 @@ MobileDatePicker.propTypes = {
    * - the `input` element if there is a field rendered.
    */
   autoFocus: PropTypes.bool,
+  /**
+   * A CSS class name applied to the root element.
+   */
   className: PropTypes.string,
   /**
    * If `true`, the Picker will close after submitting the full date.
@@ -214,6 +217,10 @@ MobileDatePicker.propTypes = {
    * - `shortcut` (optional): the shortcut metadata if the value was accepted via a shortcut selection
    */
   onAccept: PropTypes.func,
+  /**
+   * Callback fired when the Cancel action is triggered.
+   */
+  onCancel: PropTypes.func,
   /**
    * Callback fired when the value changes.
    * @template TValue The value type. It will be the same type as `value` or `null`. It can be in `[start, end]` format in case of range value.

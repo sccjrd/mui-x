@@ -1,12 +1,13 @@
 import * as React from 'react';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
+import type { SelectChangeEvent } from '@mui/material/Select';
+import Select from '@mui/material/Select';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 import MenuItem from '@mui/material/MenuItem';
 import { ScatterChartPro } from '@mui/x-charts-pro/ScatterChartPro';
-import { ChartProApi } from '@mui/x-charts-pro/context';
+import type { ChartProApi } from '@mui/x-charts-pro/context';
 import { BarChartPro } from '@mui/x-charts-pro/BarChartPro';
 import { LineChartPro } from '@mui/x-charts-pro/LineChartPro';
 import { Heatmap } from '@mui/x-charts-pro/Heatmap';
@@ -14,7 +15,7 @@ import { FunnelChart } from '@mui/x-charts-pro/FunnelChart';
 import { useChartProApiRef } from '@mui/x-charts-pro/hooks';
 import { RadarChartPro } from '@mui/x-charts-pro/RadarChartPro';
 import { PieChartPro } from '@mui/x-charts-pro/PieChartPro';
-import { Unstable_SankeyChart } from '@mui/x-charts-pro/SankeyChart';
+import { SankeyChart } from '@mui/x-charts-pro/SankeyChart';
 import { data } from './randomData';
 import { heatmapData } from './heatmapData';
 
@@ -44,14 +45,7 @@ const series = [
 ];
 
 type ChartType =
-  | 'scatter'
-  | 'line'
-  | 'bar'
-  | 'pie'
-  | 'heatmap'
-  | 'funnel'
-  | 'radar'
-  | 'sankey';
+  'scatter' | 'line' | 'bar' | 'pie' | 'heatmap' | 'funnel' | 'radar' | 'sankey';
 
 export default function PrintChart() {
   const [chartType, setChartType] = React.useState<ChartType>('scatter');
@@ -85,7 +79,14 @@ export default function PrintChart() {
             <MenuItem value="sankey">Sankey</MenuItem>
           </Select>
         </FormControl>
-        <Button onClick={() => apiRef.current!.exportAsPrint()} variant="contained">
+        <Button
+          onClick={() =>
+            apiRef.current!.exportAsPrint().catch((error) => {
+              console.error(error);
+            })
+          }
+          variant="contained"
+        >
           Print
         </Button>
       </Stack>
@@ -198,7 +199,7 @@ function Chart<T extends ChartType = ChartType>({
       );
     case 'sankey':
       return (
-        <Unstable_SankeyChart
+        <SankeyChart
           apiRef={apiRef as React.RefObject<ChartProApi<'sankey'> | undefined>}
           height={300}
           series={sankeySeries}

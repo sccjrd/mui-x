@@ -1,17 +1,25 @@
 'use client';
 import * as React from 'react';
 import { useStore } from '@base-ui/utils/store';
-import { useRenderElement } from '../../base-ui-copy/utils/useRenderElement';
-import { BaseUIComponentProps } from '../../base-ui-copy/utils/types';
-import { useCompositeListItem } from '../../base-ui-copy/composite/list/useCompositeListItem';
-import { useCompositeListContext } from '../../base-ui-copy/composite/list/CompositeListContext';
+import { useRenderElement } from '@base-ui/react/internals/useRenderElement';
+import type { BaseUIComponentProps } from '@base-ui/react/internals/types';
+import { useCompositeListItem } from '@base-ui/react/internals/composite';
+import { useDirection } from '@base-ui/react/direction-provider';
 import { useEventCalendarStoreContext } from '../../use-event-calendar-store-context';
-import { useAdapterContext } from '../../use-adapter-context';
-import { schedulerNowSelectors } from '../../scheduler-selectors';
+import type { SchedulerEvent, SchedulerResourceId } from '../../models';
+import { schedulerNowSelectors, schedulerOtherSelectors } from '../../scheduler-selectors';
 import { EVENT_CREATION_PRECISION_MINUTE } from '../../constants';
+import {
+  floorToWallClockMinutes,
+  toEpochMs,
+} from '../../internals/utils/plain-date-utils/timeZone';
+import { FULL_DAY_MINUTES, getPlainDateTimelineAxis } from '../../internals/utils/timeline-axis';
+import type { BaseTemporal } from '../../internals/utils/base-temporal';
+import { getDayNumber } from '../../internals/utils/plain-date-utils/plainDate';
 import { useEventCreation } from '../../internals/utils/useEventCreation';
 import { useKeyboardEventCreation } from '../../internals/utils/useKeyboardEventCreation';
 import { getNavigationTarget } from '../../internals/utils/getNavigationTarget';
+import { useCalendarGridCellsRefsContext } from '../../internals/utils/CalendarGridCellsRefsContext';
 import { useCalendarGridRootContext } from '../root/CalendarGridRootContext';
 import { CalendarGridTimeColumnContext } from './CalendarGridTimeColumnContext';
 import { useTimeDropTarget } from './useTimeDropTarget';
@@ -26,20 +34,22 @@ export const CalendarGridTimeColumn = React.forwardRef(function CalendarGridTime
     render,
     style,
     // Internal props
-    start,
-    end,
+    value,
+    dayStartMinute = 0,
+    dayEndMinute = FULL_DAY_MINUTES,
     addPropertiesToDroppedEvent,
     resourceId,
     // Props forwarded to the DOM element
     ...elementProps
   } = componentProps;
 
-  const adapter = useAdapterContext();
   const store = useEventCalendarStoreContext();
   const { focusedCell, setFocusedCell, rowTypes, rowsPerType } = useCalendarGridRootContext();
-  const isCurrentDay = useStore(store, schedulerNowSelectors.isCurrentDay, start);
+  const isRtl = useDirection() === 'rtl';
+  const isCurrentDay = useStore(store, schedulerNowSelectors.nowDayNumber) === getDayNumber(value);
+  const displayTimezone = useStore(store, schedulerOtherSelectors.displayTimezone);
   const { ref: listItemRef, index } = useCompositeListItem();
-  const { elementsRef } = useCompositeListContext();
+  const cellsRefs = useCalendarGridCellsRefsContext();
 
   const cellRef = React.useRef<HTMLDivElement>(null);
   const hasFocus =
@@ -47,38 +57,45 @@ export const CalendarGridTimeColumn = React.forwardRef(function CalendarGridTime
     focusedCell?.rowIndex === 0 &&
     focusedCell?.columnIndex === index;
 
-  const { getCursorPositionInElementMs, ref: dropTargetRef } = useTimeDropTarget({
-    start,
-    end,
-    addPropertiesToDroppedEvent,
-    resourceId,
-  });
+  const axis = React.useMemo(
+    () => getPlainDateTimelineAxis(value, { dayStartMinute, dayEndMinute }, displayTimezone),
+    [value, displayTimezone, dayStartMinute, dayEndMinute],
+  );
+  const { start, end } = axis;
 
-  const eventCreationProps = useEventCreation(({ event, creationConfig }) => {
+  const {
+    getCursorPositionInElementMs,
+    getTimestampAtPointer,
+    ref: dropTargetRef,
+  } = useTimeDropTarget({ axis, addPropertiesToDroppedEvent, resourceId });
+
+  const eventCreationProps = useEventCreation(({ event, creationConfig, timezone }) => {
     const offsetMs = getCursorPositionInElementMs({
       input: { clientY: event.clientY },
       elementRef: dropTargetRef,
     });
-    const anchor = adapter.addMilliseconds(start, offsetMs);
-    const startDate = adapter.addMinutes(
-      anchor,
-      -(adapter.getMinutes(anchor) % EVENT_CREATION_PRECISION_MINUTE),
+    const startTimestamp = floorToWallClockMinutes(
+      start + offsetMs,
+      EVENT_CREATION_PRECISION_MINUTE,
+      timezone,
     );
     return {
       surfaceType: 'time-grid' as const,
-      start: startDate,
-      end: adapter.addMinutes(startDate, creationConfig.duration),
+      start: startTimestamp,
+      end: startTimestamp + creationConfig.duration * 60_000,
       resourceId: resourceId ?? null,
     };
   });
 
-  const triggerKeyboardCreation = useKeyboardEventCreation(({ creationConfig }) => {
-    const noon = adapter.setHours(adapter.setMinutes(start, 0), 12);
+  const triggerKeyboardCreation = useKeyboardEventCreation(({ creationConfig, timezone }) => {
+    const noon = toEpochMs(value, 12 * 60 * 60_000, timezone);
+    // Keep the default creation anchor inside the visible window when the view limits its hour range.
+    const anchor = noon < start || noon >= end ? start : noon;
     return {
       surfaceType: 'time-grid' as const,
-      start: noon,
-      end: adapter.addMinutes(noon, creationConfig.duration),
-      resourceId: null,
+      start: anchor,
+      end: anchor + creationConfig.duration * 60_000,
+      resourceId: resourceId ?? null,
     };
   });
 
@@ -91,9 +108,10 @@ export const CalendarGridTimeColumn = React.forwardRef(function CalendarGridTime
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     const target = getNavigationTarget(event.key, 'time-grid', 0, index, {
-      columnCount: elementsRef.current.length,
+      columnCount: cellsRefs.current.length,
       rowTypes,
       rowsPerType,
+      isRtl,
     });
     if (target) {
       event.preventDefault();
@@ -103,7 +121,7 @@ export const CalendarGridTimeColumn = React.forwardRef(function CalendarGridTime
 
     if (event.key === 'Enter' && event.target === event.currentTarget && triggerKeyboardCreation) {
       event.preventDefault();
-      triggerKeyboardCreation();
+      triggerKeyboardCreation(event.nativeEvent);
     }
   };
 
@@ -122,13 +140,13 @@ export const CalendarGridTimeColumn = React.forwardRef(function CalendarGridTime
 
   const contextValue: CalendarGridTimeColumnContext = React.useMemo(
     () => ({
-      start,
-      end,
-      index,
+      plainDate: value,
+      axis,
       hasFocus,
       getCursorPositionInElementMs,
+      getTimestampAtPointer,
     }),
-    [start, end, index, hasFocus, getCursorPositionInElementMs],
+    [value, axis, hasFocus, getCursorPositionInElementMs, getTimestampAtPointer],
   );
 
   const keyboardProps = {
@@ -163,5 +181,34 @@ export namespace CalendarGridTimeColumn {
     current: boolean;
   }
 
-  export interface Props extends BaseUIComponentProps<'div', State>, useTimeDropTarget.Parameters {}
+  export interface Props extends BaseUIComponentProps<'div', State> {
+    /**
+     * The date of the column, in the display timezone.
+     * Keep its identity stable: the column rebuilds its axis and its context when it changes.
+     */
+    value: BaseTemporal.PlainDate;
+    /**
+     * First displayed minute of the day, as an offset from midnight.
+     * Derived from the view's whole-hour window so it stays aligned with the
+     * grid rows even on DST-transition days.
+     * @default 0
+     */
+    dayStartMinute?: number;
+    /**
+     * End of the displayed window of the day, as an exclusive offset from midnight (1440 for the full day).
+     * Derived from the view's whole-hour window so it stays aligned with the
+     * grid rows even on DST-transition days.
+     * @default 1440
+     */
+    dayEndMinute?: number;
+    /**
+     * Add properties to the event dropped in the column before storing it in the store.
+     */
+    addPropertiesToDroppedEvent?: () => Partial<SchedulerEvent>;
+    /**
+     * The resource this column represents.
+     * When set, created and dropped events are associated with this resource.
+     */
+    resourceId?: SchedulerResourceId | null;
+  }
 }

@@ -1,4 +1,4 @@
-import { type RefObject } from '@mui/x-internals/types';
+import type { RefObject } from '@mui/x-internals/types';
 import { createRenderer, fireEvent, createEvent, act } from '@mui/internal-test-utils';
 import {
   getColumnHeadersTextContent,
@@ -6,9 +6,10 @@ import {
   getCell,
   raf,
 } from 'test/utils/helperFn';
-import { useGridApiRef, DataGridPro, gridClasses, type GridApi } from '@mui/x-data-grid-pro';
+import { useGridApiRef, DataGridPro, gridClasses } from '@mui/x-data-grid-pro';
+import type { GridApi } from '@mui/x-data-grid-pro';
 import { useBasicDemoData } from '@mui/x-data-grid-generator';
-import { spy } from 'sinon';
+import { vi, describe, it, expect } from 'vitest';
 
 const isJSDOM = /jsdom/.test(window.navigator.userAgent);
 
@@ -125,6 +126,51 @@ describe('<DataGridPro /> - Columns reorder', () => {
     expect(getColumnHeadersTextContent()).to.deep.equal(['desc', 'type', 'brand']);
   });
 
+  it('should mark the dragged column header as moving during the drag', () => {
+    const rows = [{ id: 0, brand: 'Nike' }];
+    const columns = [{ field: 'brand' }, { field: 'desc' }];
+
+    render(
+      <div style={{ width: 300, height: 300 }}>
+        <DataGridPro rows={rows} columns={columns} />
+      </div>,
+    );
+    const dragCol = getColumnHeaderCell(0).firstChild!;
+    expect(getColumnHeaderCell(0)).not.to.have.class(gridClasses['columnHeader--moving']);
+
+    fireEvent.dragStart(dragCol);
+    expect(getColumnHeaderCell(0)).to.have.class(gridClasses['columnHeader--moving']);
+    expect(getColumnHeaderCell(1)).not.to.have.class(gridClasses['columnHeader--moving']);
+
+    fireEvent(dragCol, createDragEndEvent(dragCol));
+    expect(getColumnHeaderCell(0)).not.to.have.class(gridClasses['columnHeader--moving']);
+  });
+
+  it('should support custom classes for the dragged column header', () => {
+    const rows = [{ id: 0, brand: 'Nike' }];
+    const columns = [{ field: 'brand' }, { field: 'desc' }];
+
+    render(
+      <div style={{ width: 300, height: 300 }}>
+        <DataGridPro
+          rows={rows}
+          columns={columns}
+          classes={{ 'columnHeader--dragging': 'custom-dragging' }}
+        />
+      </div>,
+    );
+
+    // `composeClasses` joins the default and the custom class with a space, which `classList.add` rejects
+    const dragCol = getColumnHeaderCell(0).firstChild! as Element;
+    fireEvent.dragStart(dragCol);
+    expect(dragCol).to.have.class('custom-dragging');
+    expect(dragCol).to.have.class(gridClasses['columnHeader--dragging']);
+
+    fireEvent(dragCol, createDragEndEvent(dragCol));
+    expect(dragCol).not.to.have.class('custom-dragging');
+    expect(getColumnHeadersTextContent()).to.deep.equal(['brand', 'desc']);
+  });
+
   it('should cancel the reordering when dropping the column outside the grid', () => {
     const rows = [{ id: 0, brand: 'Nike' }];
     const columns = [{ field: 'brand' }, { field: 'desc' }, { field: 'type' }];
@@ -194,7 +240,7 @@ describe('<DataGridPro /> - Columns reorder', () => {
   });
 
   it('should call onColumnOrderChange after the column has been reordered', () => {
-    const onColumnOrderChange = spy();
+    const onColumnOrderChange = vi.fn();
     function Test() {
       const data = useBasicDemoData(1, 3);
 
@@ -217,12 +263,34 @@ describe('<DataGridPro /> - Columns reorder', () => {
     const dragEndEvent = createDragEndEvent(dragCol);
     fireEvent(dragCol, dragEndEvent);
 
-    expect(onColumnOrderChange.callCount).to.equal(1);
-    expect(onColumnOrderChange.lastCall.args[2].api.state.columns.orderedFields).to.deep.equal([
+    expect(onColumnOrderChange.mock.calls.length).to.equal(1);
+    expect(onColumnOrderChange.mock.lastCall?.[2].api.state.columns.orderedFields).to.deep.equal([
       'currencyPair',
       'price1M',
       'id',
     ]);
+  });
+
+  it('should not call onColumnOrderChange when the column is dropped at its original position', () => {
+    const onColumnOrderChange = vi.fn();
+    function Test() {
+      const data = useBasicDemoData(1, 3);
+
+      return (
+        <div style={{ width: 300, height: 300 }}>
+          <DataGridPro {...data} onColumnOrderChange={onColumnOrderChange} />
+        </div>
+      );
+    }
+
+    render(<Test />);
+
+    const dragCol = getColumnHeaderCell(0).firstChild!;
+    fireEvent.dragStart(dragCol);
+    const dragEndEvent = createDragEndEvent(dragCol);
+    fireEvent(dragCol, dragEndEvent);
+
+    expect(onColumnOrderChange.mock.calls.length).to.equal(0);
   });
 
   describe('column - disableReorder', () => {
@@ -360,10 +428,10 @@ describe('<DataGridPro /> - Columns reorder', () => {
   });
 
   it('should prevent drag events propagation', () => {
-    const handleDragStart = spy();
-    const handleDragEnter = spy();
-    const handleDragOver = spy();
-    const handleDragEnd = spy();
+    const handleDragStart = vi.fn();
+    const handleDragEnter = vi.fn();
+    const handleDragOver = vi.fn();
+    const handleDragEnd = vi.fn();
     function Test() {
       const data = useBasicDemoData(3, 3);
 
@@ -393,10 +461,10 @@ describe('<DataGridPro /> - Columns reorder', () => {
     const dragEndColEvent = createDragEndEvent(dragCol);
     fireEvent(dragCol, dragEndColEvent);
 
-    expect(handleDragStart.callCount).to.equal(0);
-    expect(handleDragEnter.callCount).to.equal(0);
-    expect(handleDragOver.callCount).to.equal(0);
-    expect(handleDragEnd.callCount).to.equal(0);
+    expect(handleDragStart.mock.calls.length).to.equal(0);
+    expect(handleDragEnter.mock.calls.length).to.equal(0);
+    expect(handleDragOver.mock.calls.length).to.equal(0);
+    expect(handleDragEnd.mock.calls.length).to.equal(0);
   });
 
   describe('reorder with column grouping', () => {

@@ -1,14 +1,14 @@
 {
   "componentDescription": "",
-  "propDescriptions": {},
+  "propDescriptions": {
+    "classes": { "description": "Override or extend the styles applied to the component." },
+    "slotProps": { "description": "The props used for each component slot." },
+    "slots": { "description": "Overridable component slots." }
+  },
   "classDescriptions": {
     "actions": {
       "description": "Styles applied to {{nodeName}}.",
       "nodeName": "the message actions element"
-    },
-    "authorLabel": {
-      "description": "Styles applied to {{nodeName}}.",
-      "nodeName": "the message author label element"
     },
     "avatar": {
       "description": "Styles applied to {{nodeName}}.",
@@ -25,6 +25,14 @@
     "dateDivider": {
       "description": "Styles applied to {{nodeName}}.",
       "nodeName": "the date divider element"
+    },
+    "dateDividerLabel": {
+      "description": "Styles applied to {{nodeName}}.",
+      "nodeName": "the formatted day label inside the date divider"
+    },
+    "dateDividerLine": {
+      "description": "Styles applied to {{nodeName}}.",
+      "nodeName": "the horizontal rule on each side of the date divider label"
     },
     "error": { "description": "Applied when the message has an error status" },
     "group": {
@@ -47,6 +55,9 @@
       "description": "Styles applied to {{nodeName}}.",
       "nodeName": "the message meta element"
     },
+    "noAvatar": {
+      "description": "Applied when the avatar slot is hidden (<code>slots.avatar: null</code>) so the grid drops the avatar track."
+    },
     "roleAssistant": { "description": "Applied when the message role is &#39;assistant&#39;" },
     "roleUser": { "description": "Applied when the message role is &#39;user&#39;" },
     "root": {
@@ -54,5 +65,6 @@
       "nodeName": "the message root element"
     },
     "streaming": { "description": "Applied while the message is streaming" }
-  }
+  },
+  "slotDescriptions": { "authorLabel": "The component that renders the author label." }
 }

@@ -16,6 +16,11 @@ const dataGridApiPages: MuiPage[] = [
     title: 'ColumnsPanelTrigger',
   },
   {
+    pathname: '/x/api/data-grid/computed-columns-panel-trigger',
+    title: 'ComputedColumnsPanelTrigger',
+    plan: 'premium',
+  },
+  {
     pathname: '/x/api/data-grid/data-grid',
     title: 'DataGrid',
   },
@@ -63,6 +68,10 @@ const dataGridApiPages: MuiPage[] = [
   {
     pathname: '/x/api/data-grid/grid-filter-panel',
     title: 'GridFilterPanel',
+  },
+  {
+    pathname: '/x/api/data-grid/grid-filter-panel-base',
+    title: 'GridFilterPanelBase',
   },
   {
     pathname: '/x/api/data-grid/grid-toolbar-quick-filter',

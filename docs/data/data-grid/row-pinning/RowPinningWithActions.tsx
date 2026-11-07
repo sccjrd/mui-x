@@ -1,12 +1,14 @@
 import * as React from 'react';
-import {
-  DataGridPro,
+import type {
   GridRowModel,
-  GridActionsCellItem,
   GridColDef,
   GridRowId,
-  GridActionsCell,
   GridRenderCellParams,
+} from '@mui/x-data-grid-pro';
+import {
+  DataGridPro,
+  GridActionsCellItem,
+  GridActionsCell,
 } from '@mui/x-data-grid-pro';
 import ArrowUpIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownIcon from '@mui/icons-material/ArrowDownward';
@@ -107,7 +109,7 @@ const columns: GridColDef<(typeof data)[number]>[] = [
     width: 100,
     renderCell: (params) => <ActionsCell {...params} />,
   },
-  { field: 'name', headerName: 'Name', width: 150 },
+  { field: 'name', headerName: 'Name', width: 150, rowHeader: true },
   { field: 'city', headerName: 'City', width: 150 },
   { field: 'username', headerName: 'Username' },
   { field: 'email', headerName: 'Email', width: 200 },

@@ -1,5 +1,12 @@
 {
   "props": {
+    "status": {
+      "type": {
+        "name": "shape",
+        "description": "{ disabled: bool, editable: bool, editing: bool, error: bool, expandable: bool, expanded: bool, focused: bool, indeterminate?: bool, loading: bool, selected: bool }"
+      },
+      "required": true
+    },
     "slotProps": { "type": { "name": "object" }, "default": "{}" },
     "slots": {
       "type": { "name": "object" },
@@ -27,6 +34,5 @@
   "muiName": "MuiTreeItemIcon",
   "filename": "/packages/x-tree-view/src/TreeItemIcon/TreeItemIcon.tsx",
   "inheritance": null,
-  "demos": "<ul><li><a href=\"/x/react-tree-view/tree-item-customization/\">Tree Item customization</a></li></ul>",
-  "cssComponent": false
+  "demos": "<ul><li><a href=\"/x/react-tree-view/tree-item-customization/\">Tree Item customization</a></li></ul>"
 }

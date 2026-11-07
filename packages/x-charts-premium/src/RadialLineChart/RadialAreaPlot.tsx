@@ -1,7 +1,9 @@
 import { styled } from '@mui/material/styles';
+import PropTypes from 'prop-types';
 import { selectorChartPolarCenter, useChartsContext } from '@mui/x-charts/internals';
 import { useRadialLinePlotData } from './useRadialLinePlotData';
-import { type RadialLineClasses, useUtilityClasses } from './radialLineClasses';
+import { useUtilityClasses } from './radialLineClasses';
+import type { RadialLineClasses } from './radialLineClasses';
 import { RadialArea } from './RadialArea';
 
 const RadialAreaPlotRoot = styled('g', {
@@ -10,10 +12,13 @@ const RadialAreaPlotRoot = styled('g', {
 })();
 
 export interface RadialAreaPlotProps {
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes?: Partial<Pick<RadialLineClasses, 'area' | 'areaPlot'>>;
 }
 
-export function RadialAreaPlot(props: RadialAreaPlotProps) {
+function RadialAreaPlot(props: RadialAreaPlotProps) {
   const { classes: inClasses } = props;
   const completedData = useRadialLinePlotData();
 
@@ -42,3 +47,16 @@ export function RadialAreaPlot(props: RadialAreaPlotProps) {
     </RadialAreaPlotRoot>
   );
 }
+
+RadialAreaPlot.propTypes /* remove-proptypes */ = {
+  // ----------------------------- Warning --------------------------------
+  // | These PropTypes are generated from the TypeScript type definitions |
+  // | To update them edit the TypeScript types and run "pnpm proptypes"  |
+  // ----------------------------------------------------------------------
+  /**
+   * Override or extend the styles applied to the component.
+   */
+  classes: PropTypes.object,
+} as any;
+
+export { RadialAreaPlot };

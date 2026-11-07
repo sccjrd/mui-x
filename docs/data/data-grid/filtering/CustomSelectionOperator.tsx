@@ -1,7 +1,8 @@
 import * as React from 'react';
+import type { GridFilterOperator } from '@mui/x-data-grid';
 import {
+  gridRowIdSelector,
   DataGrid,
-  GridFilterOperator,
   getGridDefaultColumnTypes,
   DEFAULT_GRID_COL_TYPE_KEY,
   gridRowSelectionManagerSelector,
@@ -34,7 +35,7 @@ export default function CustomSelectionOperator() {
         }
 
         return (value, row, col, apiRef) => {
-          const rowId = apiRef.current.getRowId(row);
+          const rowId = gridRowIdSelector(apiRef, row);
           const rowSelectionManager = gridRowSelectionManagerSelector(apiRef);
           if (rowSelectionManager.has(rowId)) {
             return true;
@@ -53,7 +54,11 @@ export default function CustomSelectionOperator() {
     return data.columns.map((col) => {
       const filterOperators =
         col.filterOperators ??
-        defaultColumnTypes[col.type ?? DEFAULT_GRID_COL_TYPE_KEY].filterOperators!;
+        defaultColumnTypes[col.type ?? DEFAULT_GRID_COL_TYPE_KEY]?.filterOperators;
+
+      if (!filterOperators) {
+        return col;
+      }
 
       return {
         ...col,

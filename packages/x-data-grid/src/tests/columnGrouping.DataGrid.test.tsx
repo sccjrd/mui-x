@@ -1,7 +1,9 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { createRenderer, ErrorBoundary, fireEvent, screen } from '@mui/internal-test-utils';
-import { DataGrid, type DataGridProps, type GridRowModel, type GridColDef } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
+import type { DataGridProps, GridRowModel, GridColDef } from '@mui/x-data-grid';
+import { describe, it, expect } from 'vitest';
 
 const isJSDOM = /jsdom/.test(window.navigator.userAgent);
 
@@ -429,7 +431,7 @@ describe('<DataGrid /> - Column grouping', () => {
               nbColumns={2}
               columnGroupingModel={[
                 {
-                  // @ts-ignore
+                  // @ts-expect-error Test the runtime warning for a group without its required groupId.
                   groupId: undefined,
                   children: [
                     { field: 'col1' },
@@ -466,7 +468,7 @@ describe('<DataGrid /> - Column grouping', () => {
           <TestWithError
             nbColumns={2}
             columnGroupingModel={[
-              // @ts-ignore
+              // @ts-expect-error Test the runtime warning for a group without its required children.
               {
                 groupId: 'col12',
               },

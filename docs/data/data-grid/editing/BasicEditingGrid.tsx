@@ -1,4 +1,5 @@
-import { DataGrid, GridColDef, GridRowsProp } from '@mui/x-data-grid';
+import type { GridColDef, GridRowsProp } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
 import {
   randomCreatedDate,
   randomTraderName,
@@ -14,7 +15,7 @@ export default function BasicEditingGrid() {
 }
 
 const columns: GridColDef[] = [
-  { field: 'name', headerName: 'Name', width: 180, editable: true },
+  { field: 'name', headerName: 'Name', width: 180, editable: true, rowHeader: true },
   {
     field: 'bio',
     headerName: 'Bio',

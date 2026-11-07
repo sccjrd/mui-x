@@ -2,17 +2,22 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { ConversationHeader, type ConversationHeaderProps } from '@mui/x-chat-headless';
+import { ConversationHeader } from '@mui/x-chat-headless';
+import type { ConversationHeaderProps, ConversationHeaderSlots } from '@mui/x-chat-headless';
 import { styled, createUseThemeProps } from '../internals/zero-styled';
-import {
-  useChatConversationUtilityClasses,
-  type ChatConversationClasses,
-} from './chatConversationClasses';
+import { mergeSlotProps } from '../internals/mergeSlotProps';
+import { useChatConversationUtilityClasses } from './chatConversationClasses';
+import type { ChatConversationClasses } from './chatConversationClasses';
 
 const useThemeProps = createUseThemeProps('MuiChatConversationHeader');
 
+export interface ChatConversationHeaderSlots extends ConversationHeaderSlots {}
+
 export interface ChatConversationHeaderProps extends ConversationHeaderProps {
   className?: string;
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes?: Partial<ChatConversationClasses>;
 }
 
@@ -43,31 +48,47 @@ const ChatConversationHeader = React.forwardRef<HTMLElement, ChatConversationHea
       <ConversationHeader
         {...other}
         slots={{
-          header: slots?.header ?? ChatConversationHeaderStyled,
           ...slots,
+          header: slots?.header ?? ChatConversationHeaderStyled,
         }}
         slotProps={{
           ...slotProps,
-          header: {
-            ref,
-            className: clsx(classes.header, className),
-            ...(slotProps?.header as object),
-          } as any,
+          header: mergeSlotProps(
+            {
+              ref,
+              className: clsx(classes.header, className),
+            },
+            slotProps?.header,
+          ) as any,
         }}
       />
     );
   },
 );
 
-ChatConversationHeader.propTypes = {
+ChatConversationHeader.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * The content of the component.
+   */
   children: PropTypes.node,
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes: PropTypes.object,
   className: PropTypes.string,
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
   slotProps: PropTypes.object,
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
   slots: PropTypes.object,
 } as any;
 

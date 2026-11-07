@@ -4,7 +4,14 @@
       "type": { "name": "arrayOf", "description": "Array&lt;number&gt;" },
       "required": true
     },
+    "apiRef": { "type": { "name": "shape", "description": "{ current?: object }" } },
     "area": { "type": { "name": "bool" }, "default": "false" },
+    "axisHighlight": {
+      "type": {
+        "name": "shape",
+        "description": "{ x?: 'band'<br>&#124;&nbsp;'line'<br>&#124;&nbsp;'none', y?: 'band'<br>&#124;&nbsp;'line'<br>&#124;&nbsp;'none' }"
+      }
+    },
     "baseline": {
       "type": {
         "name": "union",
@@ -18,6 +25,7 @@
         "description": "{ enabled?: bool, preventHighlight?: bool, preventTooltip?: bool }"
       }
     },
+    "children": { "type": { "name": "node" } },
     "clipAreaOffset": {
       "type": {
         "name": "shape",
@@ -29,6 +37,13 @@
       "type": { "name": "union", "description": "func<br>&#124;&nbsp;string" },
       "default": "rainbowSurgePalette[0]"
     },
+    "curve": {
+      "type": {
+        "name": "enum",
+        "description": "'bumpX'<br>&#124;&nbsp;'bumpY'<br>&#124;&nbsp;'catmullRom'<br>&#124;&nbsp;'linear'<br>&#124;&nbsp;'monotoneX'<br>&#124;&nbsp;'monotoneY'<br>&#124;&nbsp;'natural'<br>&#124;&nbsp;'step'<br>&#124;&nbsp;'stepAfter'<br>&#124;&nbsp;'stepBefore'"
+      },
+      "default": "'linear'"
+    },
     "dataset": { "type": { "name": "arrayOf", "description": "Array&lt;object&gt;" } },
     "desc": { "type": { "name": "string" } },
     "disableAxisListener": { "type": { "name": "bool" }, "default": "false" },
@@ -36,8 +51,12 @@
     "disableHitArea": { "type": { "name": "bool" } },
     "disableKeyboardNavigation": { "type": { "name": "bool" } },
     "experimentalFeatures": {
-      "type": { "name": "shape", "description": "{ enablePositionBasedPointerInteraction?: bool }" }
+      "type": {
+        "name": "shape",
+        "description": "{ enablePositionBasedPointerInteraction?: bool, keyboardActivation?: bool, progressiveRendering?: bool }"
+      }
     },
+    "focusItemOnClick": { "type": { "name": "bool" }, "default": "false" },
     "height": { "type": { "name": "number" } },
     "hiddenItems": {
       "type": {
@@ -76,7 +95,7 @@
     "onAxisClick": {
       "type": { "name": "func" },
       "signature": {
-        "type": "function(event: MouseEvent, data: null | ChartsAxisData) => void",
+        "type": "function(event: ChartsActivationEvent, data: null | ChartsAxisData) => void",
         "describedArgs": ["event", "data"]
       }
     },
@@ -104,7 +123,7 @@
     "onItemClick": {
       "type": { "name": "func" },
       "signature": {
-        "type": "function(event: MouseEvent, scatterItemIdentifier: ScatterItemIdentifier) => void",
+        "type": "function(event: ChartsActivationEvent, scatterItemIdentifier: ScatterItemIdentifier) => void",
         "describedArgs": ["event", "scatterItemIdentifier"]
       }
     },
@@ -135,6 +154,14 @@
       "default": "{}",
       "additionalInfo": { "slotsApi": true }
     },
+    "sx": {
+      "type": {
+        "name": "union",
+        "description": "Array&lt;func<br>&#124;&nbsp;object<br>&#124;&nbsp;bool&gt;<br>&#124;&nbsp;func<br>&#124;&nbsp;object"
+      },
+      "additionalInfo": { "sx": true }
+    },
+    "theme": { "type": { "name": "enum", "description": "'dark'<br>&#124;&nbsp;'light'" } },
     "title": { "type": { "name": "string" } },
     "tooltipAxis": {
       "type": {
@@ -187,8 +214,18 @@
       "default": "LineElementPath",
       "class": null
     },
-    { "name": "lineHighlight", "description": "", "class": null },
-    { "name": "mark", "description": "", "class": null },
+    {
+      "name": "lineHighlight",
+      "description": "The component that renders the line highlight.",
+      "default": "LineHighlightElement",
+      "class": null
+    },
+    {
+      "name": "mark",
+      "description": "The component that renders the marks.",
+      "default": "MarkElement",
+      "class": null
+    },
     {
       "name": "tooltip",
       "description": "Custom component for the tooltip popper.",
@@ -203,6 +240,5 @@
   "forwardsRefTo": "HTMLDivElement",
   "filename": "/packages/x-charts/src/SparkLineChart/SparkLineChart.tsx",
   "inheritance": null,
-  "demos": "<ul><li><a href=\"/x/react-charts/sparkline/\">Charts - Sparkline</a></li></ul>",
-  "cssComponent": false
+  "demos": "<ul><li><a href=\"/x/react-charts/sparkline/\">Charts - Sparkline</a></li></ul>"
 }

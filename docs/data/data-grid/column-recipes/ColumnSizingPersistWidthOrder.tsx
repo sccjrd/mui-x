@@ -1,11 +1,13 @@
 import * as React from 'react';
+import type {
+  GridColDef,
+  GridColumnResizeParams,
+  GridApiPro,
+} from '@mui/x-data-grid-pro';
 import {
   DataGridPro,
   useGridApiRef,
-  GridColDef,
-  GridColumnResizeParams,
   gridColumnFieldsSelector,
-  GridApiPro,
 } from '@mui/x-data-grid-pro';
 import Button from '@mui/material/Button';
 
@@ -23,7 +25,7 @@ export default function ColumnSizingPersistWidthOrder() {
   const inputColumns = React.useMemo(
     () => [
       { field: 'id' },
-      { field: 'username', width: 200, key: index },
+      { field: 'username', width: 200, key: index, rowHeader: true },
       { field: 'age', disableReorder: true },
     ],
     [index],

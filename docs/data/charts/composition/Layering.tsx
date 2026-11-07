@@ -9,8 +9,8 @@ import { ChartsWrapper } from '@mui/x-charts/ChartsWrapper';
 import { ChartsLayerContainer } from '@mui/x-charts/ChartsLayerContainer';
 import { ChartsSvgLayer } from '@mui/x-charts/ChartsSvgLayer';
 import { ChartsWebGLLayer } from '@mui/x-charts-premium/ChartsWebGLLayer';
-import { Unstable_CandlestickPlot as CandlestickPlot } from '@mui/x-charts-premium/CandlestickChart';
-import { OHLCValueType } from '@mui/x-charts-premium/models';
+import { CandlestickPlot as CandlestickPlot } from '@mui/x-charts-premium/CandlestickChart';
+import type { OHLCValueType } from '@mui/x-charts-premium/models';
 
 const ohlcData: OHLCValueType[] = [
   [100, 110, 95, 105],

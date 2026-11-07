@@ -2,6 +2,7 @@
 // See https://github.com/date-fns/date-fns/issues/1781
 /* eslint-disable import/extensions */
 /* v8 ignore start */
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment -- This v2 adapter is tested with v2 aliases; the workspace installs v4 imports.
 // @ts-nocheck
 import addDays from 'date-fns/addDays/index.js';
 import addSeconds from 'date-fns/addSeconds/index.js';
@@ -49,7 +50,7 @@ import defaultLocale from 'date-fns/locale/en-US/index.js';
 import type { Locale as DateFnsLocale } from 'date-fns';
 import longFormatters from 'date-fns/_lib/format/longFormatters/index.js';
 /* v8 ignore end */
-import { AdapterFormats, AdapterOptions, MuiPickersAdapter } from '../models';
+import type { AdapterFormats, AdapterOptions, MuiPickersAdapter } from '../models';
 import { AdapterDateFnsBase } from '../AdapterDateFnsBase';
 
 declare module '@mui/x-date-pickers/models' {

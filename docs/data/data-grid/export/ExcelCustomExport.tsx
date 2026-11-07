@@ -1,10 +1,10 @@
-import {
-  DataGridPremium,
+import type {
   GridExceljsProcessInput,
   GridColDef,
   DataGridPremiumProps,
   GridExcelExportOptions,
 } from '@mui/x-data-grid-premium';
+import { DataGridPremium } from '@mui/x-data-grid-premium';
 
 const rows = [
   {
@@ -229,6 +229,7 @@ const rows = [
 const columns: GridColDef[] = [
   {
     field: 'plan',
+    rowHeader: true,
     type: 'singleSelect',
     valueOptions: ['Community', 'Pro', 'Premium'],
   },

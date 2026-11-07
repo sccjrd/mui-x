@@ -3,11 +3,10 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
+import type { GridColDef, GridRowParams } from '@mui/x-data-grid-pro';
 import {
   DataGridPro,
-  GridColDef,
   useGridApiContext,
-  GridRowParams,
   GRID_DETAIL_PANEL_TOGGLE_FIELD,
   useGridSelector,
   gridDimensionsSelector,
@@ -47,7 +46,7 @@ function DetailPanelContent({ row: rowProp }: { row: Customer }) {
           <DataGridPro
             density="compact"
             columns={[
-              { field: 'name', headerName: 'Product', flex: 1 },
+              { field: 'name', headerName: 'Product', flex: 1, rowHeader: true },
               {
                 field: 'quantity',
                 headerName: 'Quantity',

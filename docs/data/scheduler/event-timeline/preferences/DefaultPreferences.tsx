@@ -1,9 +1,14 @@
 import * as React from 'react';
-import { EventCalendarPreferences, SchedulerEvent } from '@mui/x-scheduler/models';
+import type { SchedulerEvent } from '@mui/x-scheduler/models';
+import type { EventTimelinePremiumPreferences } from '@mui/x-scheduler-premium/models';
 import { EventTimelinePremium } from '@mui/x-scheduler-premium/event-timeline-premium';
-import { initialEvents, resources } from '../../datasets/company-roadmap';
+import {
+  initialEvents,
+  resources,
+  defaultVisibleDate,
+} from '../../datasets/company-roadmap';
 
-const defaultPreferences: Partial<EventCalendarPreferences> = {
+const defaultPreferences: Partial<EventTimelinePremiumPreferences> = {
   ampm: false,
   weekStartsOn: 1,
 };
@@ -17,6 +22,7 @@ export default function DefaultPreferences() {
         events={events}
         resources={resources}
         defaultPreferences={defaultPreferences}
+        defaultVisibleDate={defaultVisibleDate}
         onEventsChange={setEvents}
         defaultPreset="dayAndWeek"
       />

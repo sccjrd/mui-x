@@ -122,7 +122,7 @@ You can modify this behavior with the `anchor`, `position`, and `placement` prop
   - The `anchor: 'node'` is only available for tooltip with `trigger: 'item'`
   - The `anchor: 'chart'` is only available for tooltip with `trigger: 'axis'`
 - `position: 'top' | 'right' | 'bottom' | 'left'`: Defines the anchor position compared to the node or chart. This prop has no effect if the anchor is the pointer
-- `placement`: The tooltip placement from [PopperJS](https://popper.js.org/docs/v2/constructors/#options). It specifies the tooltip position in relation to the anchor position. By default, it uses the same value as `position` if defined
+- `placement`: The tooltip placement from [PopperJS](https://github.com/floating-ui/popper-docs/blob/main/docs/v2/constructors.md#options). It specifies the tooltip position in relation to the anchor position. By default, it uses the same value as `position` if defined
 
 For example, setting `anchor: 'node'`, `position: 'bottom'`, and `placement: 'top'` on a bar chart renders a tooltip above the bottom of a bar.
 
@@ -217,6 +217,15 @@ Otherwise no tooltip will be shown.
 :::
 
 {{"demo": "ControlledAxisTooltip.js"}}
+
+### Synchronizing tooltips across charts
+
+To compare values at the same position across stacked charts, share the highlighted axis between them and render a single tooltip for all of them.
+
+Each chart receives the same `highlightedAxis` state and updates it with `onHighlightedAxisChange`, so hovering one chart moves the crosshair on every chart.
+The built-in tooltip is turned off with `slotProps={{ tooltip: { trigger: 'none' } }}`, and one tooltip reads the value of every chart at the shared `dataIndex`.
+
+{{"demo": "SynchronizedTooltip.js"}}
 
 ## Creating a tooltip
 

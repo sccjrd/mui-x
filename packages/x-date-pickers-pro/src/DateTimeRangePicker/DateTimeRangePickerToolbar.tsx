@@ -4,13 +4,15 @@ import PropTypes from 'prop-types';
 import clsx from 'clsx';
 import { styled, useThemeProps } from '@mui/material/styles';
 import composeClasses from '@mui/utils/composeClasses';
-import {
+import type {
   BaseToolbarProps,
   ExportedBaseToolbarProps,
   DateOrTimeViewWithMeridiem,
   PickerRangeValue,
-  useToolbarOwnerState,
   PickerToolbarOwnerState,
+} from '@mui/x-date-pickers/internals';
+import {
+  useToolbarOwnerState,
   DateTimePickerToolbarOverrideContext,
 } from '@mui/x-date-pickers/internals';
 import {
@@ -18,12 +20,10 @@ import {
   usePickerContext,
   usePickerTranslations,
 } from '@mui/x-date-pickers/hooks';
-import { PickerValidDate } from '@mui/x-date-pickers/models';
+import type { PickerValidDate } from '@mui/x-date-pickers/models';
 import { DateTimePickerToolbar } from '@mui/x-date-pickers/DateTimePicker';
-import {
-  DateTimeRangePickerToolbarClasses,
-  getDateTimeRangePickerToolbarUtilityClass,
-} from './dateTimeRangePickerToolbarClasses';
+import type { DateTimeRangePickerToolbarClasses } from './dateTimeRangePickerToolbarClasses';
+import { getDateTimeRangePickerToolbarUtilityClass } from './dateTimeRangePickerToolbarClasses';
 import { calculateRangeChange } from '../internals/utils/date-range-manager';
 import { usePickerRangePositionContext } from '../hooks';
 
@@ -39,6 +39,9 @@ const useUtilityClasses = (classes: Partial<DateTimeRangePickerToolbarClasses> |
 
 export interface DateTimeRangePickerToolbarProps
   extends BaseToolbarProps, ExportedDateTimeRangePickerToolbarProps {
+  /**
+   * 12h/24h view for hour selection clock.
+   */
   ampm?: boolean;
 }
 
@@ -201,16 +204,22 @@ const DateTimeRangePickerToolbar = React.forwardRef(function DateTimeRangePicker
   );
 }) as DateTimeRangePickerToolbarComponent;
 
-DateTimeRangePickerToolbar.propTypes = {
+DateTimeRangePickerToolbar.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
   // ----------------------------------------------------------------------
+  /**
+   * 12h/24h view for hour selection clock.
+   */
   ampm: PropTypes.bool,
   /**
    * Override or extend the styles applied to the component.
    */
   classes: PropTypes.object,
+  /**
+   * A CSS class name applied to the root element.
+   */
   className: PropTypes.string,
   /**
    * If `true`, show the toolbar even in desktop mode.
@@ -225,6 +234,10 @@ DateTimeRangePickerToolbar.propTypes = {
     PropTypes.func,
     PropTypes.object,
   ]),
+  /**
+   * The id of the toolbar title element.
+   * The picker uses it to label its popup.
+   */
   titleId: PropTypes.string,
   /**
    * Toolbar date format.

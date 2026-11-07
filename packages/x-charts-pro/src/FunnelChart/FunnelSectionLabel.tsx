@@ -1,9 +1,11 @@
 'use client';
 import * as React from 'react';
 import { styled, useTheme } from '@mui/material/styles';
-import { consumeSlots, type SeriesId } from '@mui/x-charts/internals';
+import { consumeSlots } from '@mui/x-charts/internals';
+import type { SeriesId } from '@mui/x-charts/internals';
 import clsx from 'clsx';
-import { useUtilityClasses, type FunnelClasses } from './funnelClasses';
+import { useUtilityClasses } from './funnelClasses';
+import type { FunnelClasses } from './funnelClasses';
 
 export interface FunnelSectionLabelConfig {
   x: number;
@@ -17,6 +19,9 @@ export interface FunnelSectionLabelProps extends Omit<
   React.SVGProps<SVGTextElement>,
   'ref' | 'id'
 > {
+  /**
+   * Override or extend the styles applied to the component.
+   */
   classes?: Partial<FunnelClasses>;
   label: FunnelSectionLabelConfig;
   /**

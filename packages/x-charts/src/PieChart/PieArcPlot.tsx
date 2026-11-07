@@ -2,22 +2,33 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import { styled } from '@mui/material/styles';
-import { PieArc, type PieArcProps } from './PieArc';
-import {
-  type ComputedPieRadius,
-  type DefaultizedPieSeriesType,
-  type DefaultizedPieValueType,
-  type PieItemIdentifier,
+import type { WithDataAttributes } from '@mui/utils/types';
+import { PieArc } from './PieArc';
+import type { PieArcProps } from './PieArc';
+import type {
+  ComputedPieRadius,
+  DefaultizedPieSeriesType,
+  DefaultizedPieValueType,
+  PieItemIdentifier,
 } from '../models/seriesType/pie';
 import { useTransformData } from './dataTransform/useTransformData';
+import { useRegisterItemActivation } from '../internals/useRegisterItemActivation';
+import type { ChartsActivationEvent } from '../models/events';
 import type { PieArcPropsOverrides } from '../models/chartsSlotsComponentsProps';
 
 export interface PieArcPlotSlots {
+  /**
+   * The component that renders the pie arcs.
+   * @default PieArc
+   */
   pieArc?: React.JSXElementConstructor<PieArcProps & PieArcPropsOverrides>;
 }
 
 export interface PieArcPlotSlotProps {
-  pieArc?: Partial<PieArcProps> & PieArcPropsOverrides;
+  /**
+   * The props used for the `pieArc` slot.
+   */
+  pieArc?: WithDataAttributes<Partial<PieArcProps> & PieArcPropsOverrides>;
 }
 
 export interface PieArcPlotProps
@@ -48,12 +59,12 @@ export interface PieArcPlotProps
   slotProps?: PieArcPlotSlotProps;
   /**
    * Callback fired when a pie item is clicked.
-   * @param {React.MouseEvent<SVGPathElement, MouseEvent>} event The event source of the callback.
+   * @param {ChartsActivationEvent<SVGPathElement>} event The event source of the callback.
    * @param {PieItemIdentifier} pieItemIdentifier The pie item identifier.
    * @param {DefaultizedPieValueType} item The pie item.
    */
   onItemClick?: (
-    event: React.MouseEvent<SVGPathElement, MouseEvent>,
+    event: ChartsActivationEvent<SVGPathElement>,
     pieItemIdentifier: PieItemIdentifier,
     item: DefaultizedPieValueType,
   ) => void;
@@ -97,6 +108,20 @@ function PieArcPlot(props: PieArcPlotProps) {
     data,
   });
 
+  useRegisterItemActivation(
+    { type: 'pie', seriesId },
+    onItemClick &&
+      ((event, focusedItem) => {
+        const item = transformedData[focusedItem.dataIndex];
+
+        if (item === undefined) {
+          return;
+        }
+
+        onItemClick(event, { type: 'pie', seriesId, dataIndex: focusedItem.dataIndex }, item);
+      }),
+  );
+
   if (data.length === 0) {
     return null;
   }
@@ -134,7 +159,7 @@ function PieArcPlot(props: PieArcPlotProps) {
   );
 }
 
-PieArcPlot.propTypes = {
+PieArcPlot.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -149,16 +174,20 @@ PieArcPlot.propTypes = {
    * @default 0
    */
   cornerRadius: PropTypes.number,
+  /**
+   * The data of the series, with the default values applied.
+   */
   data: PropTypes.arrayOf(
     PropTypes.shape({
       color: PropTypes.string.isRequired,
       endAngle: PropTypes.number.isRequired,
       formattedValue: PropTypes.string.isRequired,
+      hidden: PropTypes.bool.isRequired,
       id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
       index: PropTypes.number.isRequired,
       label: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
       labelMarkType: PropTypes.oneOfType([
-        PropTypes.oneOf(['circle', 'line', 'square']),
+        PropTypes.oneOf(['circle', 'line', 'line+mark', 'square']),
         PropTypes.func,
       ]),
       padAngle: PropTypes.number.isRequired,
@@ -192,17 +221,13 @@ PieArcPlot.propTypes = {
     paddingAngle: PropTypes.number,
   }),
   /**
-   * The id of this series.
-   */
-  seriesId: PropTypes.string.isRequired,
-  /**
    * The radius between circle center and the beginning of the arc.
    * @default 0
    */
   innerRadius: PropTypes.number,
   /**
    * Callback fired when a pie item is clicked.
-   * @param {React.MouseEvent<SVGPathElement, MouseEvent>} event The event source of the callback.
+   * @param {ChartsActivationEvent<SVGPathElement>} event The event source of the callback.
    * @param {PieItemIdentifier} pieItemIdentifier The pie item identifier.
    * @param {DefaultizedPieValueType} item The pie item.
    */
@@ -216,6 +241,10 @@ PieArcPlot.propTypes = {
    * @default 0
    */
   paddingAngle: PropTypes.number,
+  /**
+   * The id of this series.
+   */
+  seriesId: PropTypes.string.isRequired,
   /**
    * If `true`, animations are skipped.
    * @default false

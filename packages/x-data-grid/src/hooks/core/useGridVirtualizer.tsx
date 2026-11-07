@@ -4,16 +4,16 @@ import useEventCallback from '@mui/utils/useEventCallback';
 import { useRtl } from '@mui/system/RtlProvider';
 import { roundToDecimalPlaces } from '@mui/x-internals/math';
 import { lruMemoize } from '@mui/x-internals/lruMemoize';
-import { useStoreEffect } from '@mui/x-internals/store';
+import { useStoreEffect } from '@mui/x-internals/useStoreEffect';
 import {
   useVirtualizer,
   Dimensions,
   LayoutDataGrid,
-  type VirtualizerParams,
   Virtualization,
   EMPTY_RENDER_CONTEXT,
 } from '@mui/x-virtualizer';
-import { useFirstRender } from '../utils/useFirstRender';
+import type { VirtualizerParams } from '@mui/x-virtualizer';
+import { useOnFirstRender } from '@base-ui/utils/useOnFirstRender';
 import type { GridStateColDef } from '../../models/colDef/gridColDef';
 import { createSelector } from '../../utils/createSelector';
 import { useGridSelector } from '../utils/useGridSelector';
@@ -33,6 +33,7 @@ import { useGridVisibleRows } from '../utils/useGridVisibleRows';
 import { gridPaginationSelector } from '../features/pagination';
 import { gridFocusedVirtualCellSelector } from '../features/virtualization/gridFocusedVirtualCellSelector';
 import { gridRowSelectionManagerSelector } from '../features/rowSelection';
+import { gridColumnGroupsHeaderMaxDepthSelector } from '../features/columnGrouping/gridColumnGroupsSelector';
 import { DATA_GRID_PROPS_DEFAULT_VALUES } from '../../constants/dataGridPropsDefaultValues';
 import {
   getValidRowHeight,
@@ -91,6 +92,18 @@ export function useGridVirtualizer() {
   const apiRef = useGridPrivateApiContext();
   const { listView } = rootProps;
   const visibleColumns = useGridSelector(apiRef, gridVisibleColumnDefinitionsSelector);
+  // Convert visible row-header columns to their indexes once per column-model change. Each GridRow
+  // uses this ordered list to render those cells even when they fall outside its horizontal render
+  // context. This keeps the row-identifying cells available to assistive technology while scrolling.
+  const retainedColumnIndexes = React.useMemo(() => {
+    const indexes: number[] = [];
+    visibleColumns.forEach((column, index) => {
+      if (column.rowHeader) {
+        indexes.push(index);
+      }
+    });
+    return indexes;
+  }, [visibleColumns]);
 
   const pinnedRows = useGridSelector(apiRef, gridPinnedRowsSelector);
   const pinnedColumns = gridVisiblePinnedColumnDefinitionsSelector(apiRef);
@@ -128,6 +141,8 @@ export function useGridVirtualizer() {
     (rootProps.headerFilterHeight ?? rootProps.columnHeaderHeight) * density,
   );
   const columnsTotalWidth = useGridSelector(apiRef, columnsTotalWidthSelector);
+  // `getTotalHeaderHeight` reads the group depth imperatively, subscribe so it re-renders when it changes.
+  eslintUseValue(useGridSelector(apiRef, gridColumnGroupsHeaderMaxDepthSelector));
   const headersTotalHeight = getTotalHeaderHeight(apiRef, rootProps);
 
   const leftPinnedWidth = pinnedColumns.left.reduce((w, col) => w + col.computedWidth, 0);
@@ -300,6 +315,7 @@ export function useGridVirtualizer() {
           rowHeight={params.baseRowHeight}
           pinnedColumns={pinnedColumns}
           visibleColumns={visibleColumns}
+          retainedColumnIndexes={retainedColumnIndexes}
           firstColumnIndex={params.firstColumnIndex}
           lastColumnIndex={params.lastColumnIndex}
           focusedColumnIndex={params.focusedColumnIndex}
@@ -317,34 +333,36 @@ export function useGridVirtualizer() {
         hasFiller,
         isRowSelected,
         pinnedColumns,
+        retainedColumnIndexes,
         RowSlot,
         rowSlotProps,
         verticalScrollbarWidth,
         visibleColumns,
       ],
     ),
-
-    renderInfiniteLoadingTrigger: React.useCallback(
-      (id: any) => (apiRef as any).current.getInfiniteLoadingTriggerElement?.({ lastRowId: id }),
-      [apiRef],
-    ),
   });
+
+  // `virtualizer` is a new object on each render that references the callbacks of that render, so it must stay out of this scope.
+  // Otherwise every render stays reachable from the next one, along with its rows.
+  // The store is the same object for the grid's lifetime.
+  // https://github.com/mui/mui-x/issues/20699
+  const virtualizerStore = virtualizer.store;
 
   // HACK: Keep the grid's store in sync with the virtualizer store. We set up the
   // subscription in the render phase rather than in an effect because other grid
   // initialization code runs between those two moments.
   //
   // TODO(v9): Remove this
-  useFirstRender(() => {
+  useOnFirstRender(() => {
     apiRef.current.store.state.dimensions = addGridDimensions(
-      virtualizer.store.state.dimensions,
+      virtualizerStore.state.dimensions,
       headerHeight,
       groupHeaderHeight,
       headerFilterHeight,
       headersTotalHeight,
     );
-    apiRef.current.store.state.rowsMeta = virtualizer.store.state.rowsMeta;
-    apiRef.current.store.state.virtualization = virtualizer.store.state.virtualization;
+    apiRef.current.store.state.rowsMeta = virtualizerStore.state.rowsMeta;
+    apiRef.current.store.state.virtualization = virtualizerStore.state.virtualization;
   });
 
   useStoreEffect(virtualizer.store, Dimensions.selectors.dimensions, (_, dimensions) => {

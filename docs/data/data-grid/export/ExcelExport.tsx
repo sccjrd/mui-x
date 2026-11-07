@@ -1,4 +1,5 @@
-import { DataGridPremium, GridColDef, GridRowsProp } from '@mui/x-data-grid-premium';
+import type { GridColDef, GridRowsProp } from '@mui/x-data-grid-premium';
+import { DataGridPremium } from '@mui/x-data-grid-premium';
 
 const rows: GridRowsProp = [
   {
@@ -94,7 +95,7 @@ const rows: GridRowsProp = [
 ];
 
 const columns: GridColDef[] = [
-  { field: 'jobTitle', headerName: 'Job Title', width: 200 },
+  { field: 'jobTitle', headerName: 'Job Title', width: 200, rowHeader: true },
   {
     field: 'recruitmentDate',
     headerName: 'Recruitment Date',

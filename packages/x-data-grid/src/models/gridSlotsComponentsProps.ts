@@ -3,7 +3,8 @@ import type { GridToolbarProps } from '../components/toolbar/GridToolbar';
 import type { ColumnHeaderFilterIconButtonProps } from '../components/columnHeaders/GridColumnHeaderFilterIconButton';
 import type { GridColumnMenuProps } from '../components/menu/columnMenu/GridColumnMenuProps';
 import type { GridColumnsPanelProps } from '../components/panel/GridColumnsPanel';
-import type { GridFilterPanelProps } from '../components/panel/filterPanel/GridFilterPanel';
+import type { GridFilterPanelProps } from '../components/panel/filterPanel/GridFilterPanelBase';
+import type { GridFilterFormColumnInputProps } from '../components/panel/filterPanel/GridFilterFormColumnInput';
 import type { GridFooterContainerProps } from '../components/containers/GridFooterContainer';
 import type { GridOverlayProps } from '../components/containers/GridOverlay';
 import type { GridPanelProps } from '../components/panel/GridPanel';
@@ -32,6 +33,7 @@ import type {
   LinearProgressProps,
   MenuListProps,
   MenuItemProps,
+  ModalProps,
   PaginationProps,
   PopperProps,
   SelectProps,
@@ -59,6 +61,7 @@ export interface BaseDividerPropsOverrides {}
 export interface BaseLinearProgressPropsOverrides {}
 export interface BaseMenuListPropsOverrides {}
 export interface BaseMenuItemPropsOverrides {}
+export interface BaseModalPropsOverrides {}
 export interface BaseTabsPropsOverrides {}
 export interface BaseTextFieldPropsOverrides {}
 export interface BaseSelectPropsOverrides {}
@@ -86,6 +89,7 @@ export interface ColumnsPanelPropsOverrides {}
 export interface DetailPanelsPropsOverrides {}
 export interface ColumnsManagementPropsOverrides {}
 export interface FilterPanelPropsOverrides {}
+export interface FilterFormColumnInputPropsOverrides {}
 export interface FooterPropsOverrides {}
 export interface FooterRowCountOverrides {}
 export interface PaginationPropsOverrides {}
@@ -109,6 +113,7 @@ interface BaseSlotProps {
   baseLinearProgress: LinearProgressProps & BaseLinearProgressPropsOverrides;
   baseMenuList: MenuListProps & BaseMenuListPropsOverrides;
   baseMenuItem: MenuItemProps & BaseMenuItemPropsOverrides;
+  baseModal: ModalProps & BaseModalPropsOverrides;
   baseTabs: TabsProps & BaseTabsPropsOverrides;
   baseTextField: TextFieldProps & BaseTextFieldPropsOverrides;
   baseSwitch: SwitchProps & BaseSwitchPropsOverrides;
@@ -139,6 +144,7 @@ interface ElementSlotProps {
   columnsManagement: GridColumnsManagementProps & ColumnsManagementPropsOverrides;
   detailPanels: GridDetailPanelsProps & DetailPanelsPropsOverrides;
   filterPanel: GridFilterPanelProps & FilterPanelPropsOverrides;
+  filterFormColumnInput: GridFilterFormColumnInputProps & FilterFormColumnInputPropsOverrides;
   footer: GridFooterContainerProps & FooterPropsOverrides;
   footerRowCount: GridRowCountProps & FooterRowCountOverrides;
   loadingOverlay: GridLoadingOverlayProps & LoadingOverlayPropsOverrides;

@@ -1,4 +1,5 @@
-import { DataGridPro, GridColDef, gridClasses } from '@mui/x-data-grid-pro';
+import type { GridColDef } from '@mui/x-data-grid-pro';
+import { DataGridPro, gridClasses } from '@mui/x-data-grid-pro';
 
 const rows = [
   {
@@ -14,6 +15,7 @@ const columns: GridColDef[] = [
   },
   {
     field: 'username',
+    rowHeader: true,
     width: 200,
     resizable: false,
   },

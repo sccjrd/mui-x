@@ -1,4 +1,5 @@
-import { DescribeJalaliAdapterTestSuite } from './describeJalaliAdapter.types';
+import { it, expect } from 'vitest';
+import type { DescribeJalaliAdapterTestSuite } from './describeJalaliAdapter.types';
 import { TEST_DATE_ISO_STRING } from '../describeGregorianAdapter';
 
 export const testCalculations: DescribeJalaliAdapterTestSuite = ({ adapter }) => {

@@ -1,10 +1,9 @@
 import * as React from 'react';
+import type { GridDataSource, GridGetRowsResponse } from '@mui/x-data-grid-premium';
 import {
   DataGridPremium,
   useKeepGroupedColumnsHidden,
   useGridApiRef,
-  GridDataSource,
-  GridGetRowsResponse,
 } from '@mui/x-data-grid-premium';
 import { useMockServer } from '@mui/x-data-grid-generator';
 
@@ -32,6 +31,7 @@ export default function ServerSideDataGridAggregationRowGrouping() {
       maxColumns: 10,
       dataSet: 'Commodity',
       editable: true,
+      multiSelect: true,
       visibleFields: VISIBLE_COLUMNS,
     });
 

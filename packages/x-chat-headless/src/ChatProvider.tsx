@@ -3,38 +3,94 @@ import * as React from 'react';
 import type { ChatAdapter } from './adapters';
 import { useChatController } from './internals/useChatController';
 import { useChatInstance } from './internals/useChatInstance';
-import {
-  ChatRuntimeContext,
-  type ChatRuntimeContextValue,
-} from './internals/useChatRuntimeContext';
+import { ChatRuntimeContext } from './internals/useChatRuntimeContext';
+import type { ChatRuntimeContextValue } from './internals/useChatRuntimeContext';
 import type { ChatPartRendererMap } from './renderers';
 import { defaultPartRenderers } from './renderers/defaultPartRenderers';
-import { type ChatStoreConstructor, type ChatStoreParameters } from './store';
-import type { ChatOnData, ChatOnFinish, ChatOnToolCall } from './types';
-import type { ChatError } from './types/chat-error';
+import type { ChatStoreConstructor, ChatStoreParameters } from './store';
+import type { ChatOnData, ChatOnError, ChatOnFinish, ChatOnToolCall } from './types';
 import { ChatStoreContext } from './internals/useChatStoreContext';
+
+/**
+ * Runtime feature flags for the headless chat controller.
+ *
+ * These flags toggle optional runtime behaviors (not rendering). The Material
+ * `ChatBoxFeatures` vocabulary structurally includes these so the flag is
+ * declared once and forwarded from `ChatBox` down to the controller.
+ */
+export interface ChatFeatures {
+  /**
+   * Whether the runtime sends outbound typing signals through `adapter.setTyping()`
+   * automatically as the user composes a message.
+   *
+   * When enabled and the adapter implements `setTyping()`, the runtime calls it
+   * for the active conversation: `{ isTyping: true }` when the composer value
+   * changes from empty (`''`) to non-empty, and `{ isTyping: false }` when it
+   * changes back to empty — including when a message is sent (sending clears the
+   * composer). Switching conversations clears typing on the previous one and
+   * re-signals on the new one if a draft is present; mounting with an initial
+   * draft signals `true`; unmounting signals a final `false`. Keystrokes that
+   * keep the composer non-empty produce no additional calls, there is no
+   * built-in idle timeout, and failures are swallowed with a dev-only warning.
+   *
+   * When disabled (the default), the runtime never calls `setTyping()`; wire it
+   * up manually (e.g. on composer `onChange`) instead. If you enable this flag,
+   * remove any manual wiring to avoid double-firing.
+   * @default false
+   */
+  typingSignal?: boolean;
+}
 
 export interface ChatProviderProps<Cursor = string> extends Omit<
   ChatStoreParameters<Cursor>,
-  'activeConversationIdControlled'
+  'activeConversationIdControlled' | 'hasHistoryLoader'
 > {
+  /**
+   * The content of the component.
+   */
   children?: React.ReactNode;
+  /**
+   * The adapter that connects the chat to your backend.
+   */
   adapter: ChatAdapter<Cursor>;
+  /**
+   * Callback fired when the assistant calls a tool.
+   * @param {ChatOnToolCallPayload} payload The tool call.
+   */
   onToolCall?: ChatOnToolCall;
+  /**
+   * Callback fired when the assistant finishes a response, including when it is aborted, disconnected, or fails.
+   * @param {ChatOnFinishPayload} payload The final message and how the response ended.
+   */
   onFinish?: ChatOnFinish;
+  /**
+   * Callback fired when a data part is received.
+   * @param {ChatDataMessagePart} part The data part.
+   */
   onData?: ChatOnData;
-  onError?: (error: ChatError) => void;
+  /**
+   * Callback fired when an error occurs.
+   * @param {ChatError} error The error.
+   */
+  onError?: ChatOnError;
   /**
    * Flush interval in milliseconds for batching rapid streaming deltas before applying them to the store.
    * @default 16
    */
   streamFlushInterval?: number;
+  /**
+   * Custom renderers for message parts, by part type.
+   */
   partRenderers?: ChatPartRendererMap;
   /**
    * The store class to use for this provider.
    * @default ChatStore
    */
   storeClass?: ChatStoreConstructor<Cursor>;
+  /**
+   * Runtime feature flags for the chat controller (e.g. outbound typing signals).
+   */
+  features?: ChatFeatures;
 }
 
 export function ChatProvider<Cursor = string>(props: ChatProviderProps<Cursor>) {
@@ -52,6 +108,7 @@ export function ChatProvider<Cursor = string>(props: ChatProviderProps<Cursor>) 
     streamFlushInterval,
     partRenderers,
     storeClass,
+    features,
     members,
     currentUser,
     roleDisplayNames,
@@ -72,6 +129,7 @@ export function ChatProvider<Cursor = string>(props: ChatProviderProps<Cursor>) 
     onComposerValueChange,
   } = props;
 
+  const hasHistoryLoader = adapter.listMessages != null;
   const parameters = React.useMemo(
     () => ({
       members,
@@ -86,6 +144,7 @@ export function ChatProvider<Cursor = string>(props: ChatProviderProps<Cursor>) 
       initialConversations,
       activeConversationId,
       activeConversationIdControlled: isActiveConversationIdControlled,
+      hasHistoryLoader,
       initialActiveConversationId,
       composerValue,
       initialComposerValue,
@@ -107,6 +166,7 @@ export function ChatProvider<Cursor = string>(props: ChatProviderProps<Cursor>) 
       initialConversations,
       activeConversationId,
       isActiveConversationIdControlled,
+      hasHistoryLoader,
       initialActiveConversationId,
       composerValue,
       initialComposerValue,
@@ -125,6 +185,7 @@ export function ChatProvider<Cursor = string>(props: ChatProviderProps<Cursor>) 
     onData,
     onError,
     streamFlushInterval,
+    features,
   });
   const mergedPartRenderers = React.useMemo<ChatPartRendererMap>(
     () => ({

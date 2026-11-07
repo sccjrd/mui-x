@@ -1,10 +1,12 @@
 import * as React from 'react';
-import {
-  DataGridPremium,
-  GRID_ROW_GROUPING_SINGLE_GROUPING_FIELD,
+import type {
   GridPivotModel,
   DataGridPremiumProps,
   GridInitialState,
+} from '@mui/x-data-grid-premium';
+import {
+  DataGridPremium,
+  GRID_ROW_GROUPING_SINGLE_GROUPING_FIELD,
   GridSidebarValue,
 } from '@mui/x-data-grid-premium';
 import { useDemoData } from '@mui/x-data-grid-generator';
@@ -46,6 +48,7 @@ export default function GridPivotingCommodities() {
     dataSet: 'Commodity',
     rowLength: 1_000,
     editable: true,
+    multiSelect: true,
   });
 
   const [pivotActive, setPivotActive] = React.useState(false);

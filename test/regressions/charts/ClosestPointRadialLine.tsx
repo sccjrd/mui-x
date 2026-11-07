@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { useDrawingArea } from '@mui/x-charts/hooks';
-import { UseChartPolarAxisSignature, useChartsContext } from '@mui/x-charts/internals';
+import type { UseChartPolarAxisSignature } from '@mui/x-charts/internals';
+import { useChartsContext } from '@mui/x-charts/internals';
 import { getRadialLineItemAtPosition } from '@mui/x-charts-premium/internals';
-import { Unstable_RadialLineChart as RadialLineChart } from '@mui/x-charts-premium/RadialLineChart';
+import { RadialLineChart } from '@mui/x-charts-premium/RadialLineChart';
 
 const HEIGHT = 200;
 const WIDTH = 200;

@@ -1,20 +1,32 @@
 'use client';
 import * as React from 'react';
 import useSlotProps from '@mui/utils/useSlotProps';
-import { SlotComponentProps } from '@mui/utils/types';
+import type { SlotComponentProps } from '@mui/utils/types';
 import type { ChatAttachmentRejection } from '../types/chat-entities';
 import { useChatLocaleText } from '../chat/internals/ChatLocaleContext';
 import { useComposerContext } from './internals/ComposerContext';
-import { type ComposerAttachButtonOwnerState } from './composer.types';
+import type { ComposerAttachButtonOwnerState } from './composer.types';
 import { matchesMimeType } from './internals/matchesMimeType';
 
 export interface ComposerAttachButtonSlots {
+  /**
+   * The component that renders the attach button.
+   */
   attachButton: React.ElementType;
+  /**
+   * The component that renders the attach input.
+   */
   attachInput: React.ElementType;
 }
 
 export interface ComposerAttachButtonSlotProps {
+  /**
+   * The props used for the attach button slot.
+   */
   attachButton?: SlotComponentProps<'button', {}, ComposerAttachButtonOwnerState>;
+  /**
+   * The props used for the attach input slot.
+   */
   attachInput?: SlotComponentProps<'input', {}, ComposerAttachButtonOwnerState>;
 }
 
@@ -22,7 +34,15 @@ export interface ComposerAttachButtonProps extends Omit<
   React.ButtonHTMLAttributes<HTMLButtonElement>,
   'type'
 > {
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
   slots?: Partial<ComposerAttachButtonSlots>;
+  /**
+   * The props used for each component slot.
+   * @default {}
+   */
   slotProps?: ComposerAttachButtonSlotProps;
 }
 
@@ -72,11 +92,9 @@ export const ComposerAttachButton = React.forwardRef(function ComposerAttachButt
     },
   }) as React.InputHTMLAttributes<HTMLInputElement> & React.RefAttributes<HTMLInputElement>;
   const externalOnClick = rootProps.onClick as
-    | React.MouseEventHandler<HTMLButtonElement>
-    | undefined;
+    React.MouseEventHandler<HTMLButtonElement> | undefined;
   const externalOnChange = inputProps.onChange as
-    | React.ChangeEventHandler<HTMLInputElement>
-    | undefined;
+    React.ChangeEventHandler<HTMLInputElement> | undefined;
 
   return (
     <React.Fragment>

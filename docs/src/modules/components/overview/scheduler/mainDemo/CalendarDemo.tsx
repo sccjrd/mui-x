@@ -3,13 +3,10 @@ import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import { EventCalendarPremium } from '@mui/x-scheduler-premium/event-calendar-premium';
-import { SchedulerEvent } from '@mui/x-scheduler/models';
+import type { SchedulerEvent } from '@mui/x-scheduler/models';
 import { calendarEvents, calendarResources, calendarDefaultVisibleDate } from './data';
-import {
-  CustomThemeName,
-  DemoThemeSelector,
-  SchedulerDemoThemeProvider,
-} from './DemoThemeSelector';
+import type { CustomThemeName } from './DemoThemeSelector';
+import { DemoThemeSelector, SchedulerDemoThemeProvider } from './DemoThemeSelector';
 import LicenseCard from '../LicenseCard';
 
 export default function CalendarDemo() {
@@ -18,7 +15,7 @@ export default function CalendarDemo() {
     React.useState<SchedulerEvent[]>(calendarEvents);
 
   return (
-    <Stack spacing={2.5} sx={{ width: '100%', mb: 6 }}>
+    <Stack spacing={2.5} sx={{ width: '100%', mb: 6, px: { xs: 2, md: 0 } }}>
       <Stack direction="row" sx={{ justifyContent: 'flex-start' }}>
         <DemoThemeSelector
           ariaLabel="Calendar demo theme"
@@ -53,7 +50,7 @@ export default function CalendarDemo() {
           </Box>
         </Paper>
       </SchedulerDemoThemeProvider>
-      <Stack direction="row" spacing={2} sx={{ flexDirection: { xs: 'column', md: 'row' } }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
         <LicenseCard
           plan="community"
           title="Community features"

@@ -1,13 +1,16 @@
 'use client';
 import * as React from 'react';
 import PropTypes from 'prop-types';
+import { useThemeProps } from '@mui/material/styles';
 import { useLicenseVerifier, Watermark } from '@mui/x-license/internals';
-import { useExtractEventCalendarParameters } from '@mui/x-scheduler-internals/use-event-calendar';
-import { EventCalendarPremiumStore } from '@mui/x-scheduler-internals-premium/use-event-calendar-premium';
+import {
+  EventCalendarPremiumStore,
+  useExtractEventCalendarPremiumParameters,
+} from '@mui/x-scheduler-internals-premium/use-event-calendar-premium';
 import { DayView } from '@mui/x-scheduler/day-view';
 import { EventCalendarProvider, EventDialogProvider } from '@mui/x-scheduler/internals';
 import { PREMIUM_EVENT_DIALOG_OPTIONAL_RENDERERS } from '../internals/eventDialogOptionalRenderers';
-import { StandaloneDayViewPremiumProps } from './DayViewPremium.types';
+import type { StandaloneDayViewPremiumProps } from './DayViewPremium.types';
 
 const packageInfo = {
   releaseDate: '__RELEASE_INFO__',
@@ -23,28 +26,39 @@ const StandaloneDayViewPremium = React.forwardRef(function StandaloneDayViewPrem
   TEvent extends object,
   TResource extends object,
 >(
-  props: StandaloneDayViewPremiumProps<TEvent, TResource>,
+  inProps: StandaloneDayViewPremiumProps<TEvent, TResource>,
   forwardedRef: React.ForwardedRef<HTMLDivElement>,
 ) {
   useLicenseVerifier(packageInfo);
 
-  const { parameters, forwardedProps } = useExtractEventCalendarParameters<
+  // eslint-disable-next-line mui/material-ui-name-matches-component-name
+  const props = useThemeProps({ props: inProps, name: 'MuiEventCalendar' });
+
+  const { parameters, forwardedProps } = useExtractEventCalendarPremiumParameters<
     TEvent,
     TResource,
     typeof props
   >(props);
 
+  const { localeText, slots, slotProps, ...other } = forwardedProps;
+
   return (
-    <EventCalendarProvider {...parameters} storeClass={EventCalendarPremiumStore}>
+    <EventCalendarProvider
+      {...parameters}
+      storeClass={EventCalendarPremiumStore}
+      localeText={localeText}
+      slots={slots}
+      slotProps={slotProps}
+    >
       <EventDialogProvider optionalRenderers={PREMIUM_EVENT_DIALOG_OPTIONAL_RENDERERS}>
-        <DayView ref={forwardedRef} {...forwardedProps} />
+        <DayView ref={forwardedRef} {...other} />
         {watermark}
       </EventDialogProvider>
     </EventCalendarProvider>
   );
 }) as StandaloneDayViewPremiumComponent;
 
-StandaloneDayViewPremium.propTypes = {
+StandaloneDayViewPremium.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -84,16 +98,17 @@ StandaloneDayViewPremium.propTypes = {
     persistEvents: PropTypes.func.isRequired,
   }),
   /**
-   * The locale object from `date-fns` used to format dates.
-   * This affects day names, month names, week start day, and other locale-dependent formatting.
-   * Import a locale from `date-fns/locale` and pass it to this prop.
-   * @default enUS (English)
+   * The locale of the dates, as a BCP 47 language tag such as `"fr-FR"`, like the locales of
+   * `Intl.DateTimeFormat`.
+   * This affects day names, month names, the first day of the week, week numbers, the 12-hour
+   * or 24-hour clock and the other locale-dependent formatting.
+   * @default "en-US"
    */
-  dateLocale: PropTypes.object,
+  dateLocale: PropTypes.string,
   /**
    * The default preferences for the calendar.
    * To use controlled preferences, use the `preferences` prop.
-   * @default { showWeekends: true, showWeekNumber: false, isSidePanelOpen: true, showEmptyDaysInAgenda: true, ampm: true }
+   * @default { showWeekends: true, showWeekNumber: false, isSidePanelOpen: true, showEmptyDaysInAgenda: true }
    */
   defaultPreferences: PropTypes.shape({
     ampm: PropTypes.bool,
@@ -101,7 +116,7 @@ StandaloneDayViewPremium.propTypes = {
     showEmptyDaysInAgenda: PropTypes.bool,
     showWeekends: PropTypes.bool,
     showWeekNumber: PropTypes.bool,
-    weekStartsOn: PropTypes.oneOf([0, 1, 2, 3, 4, 5, 6]),
+    weekStartsOn: PropTypes.oneOf([1, 2, 3, 4, 5, 6, 7]),
   }),
   /**
    * The view initially displayed in the calendar.
@@ -131,7 +146,8 @@ StandaloneDayViewPremium.propTypes = {
    * "locale" (use the user's current locale timezone),
    * or "UTC".
    *
-   * This timezone only affects rendering, events keep their original data timezone.
+   * Events keep their original data timezone. The visible range starts on the day of the visible
+   * date in this timezone, and the next and previous navigation return dates in this timezone.
    * @default "default"
    */
   displayTimezone: PropTypes.string,
@@ -162,8 +178,22 @@ StandaloneDayViewPremium.propTypes = {
    */
   eventCreation: PropTypes.oneOfType([
     PropTypes.shape({
+      canHaveMultipleResources: PropTypes.bool,
       duration: PropTypes.number,
       interaction: PropTypes.oneOf(['click', 'double-click']),
+    }),
+    PropTypes.bool,
+  ]),
+  /**
+   * Configures how events are deleted.
+   * If `false`, event deletion is disabled.
+   * If `true`, event deletion is enabled with default configuration.
+   * If an object, event deletion is enabled with the provided configuration.
+   * @default true
+   */
+  eventDeletion: PropTypes.oneOfType([
+    PropTypes.shape({
+      confirmation: PropTypes.bool,
     }),
     PropTypes.bool,
   ]),
@@ -175,9 +205,27 @@ StandaloneDayViewPremium.propTypes = {
   eventModelStructure: PropTypes.object,
   /**
    * The events currently available in the calendar.
+   *
+   * Event models are compared by reference to avoid reprocessing unchanged events.
+   * Replace an event model with a new object when updating it instead of mutating it in place.
    * @default []
    */
   events: PropTypes.arrayOf(PropTypes.object),
+  /**
+   * Set the locale text of the view.
+   * You can find all the translation keys supported in [the source](https://github.com/mui/mui-x/blob/HEAD/packages/x-scheduler/src/models/translations.ts)
+   * in the GitHub repository.
+   */
+  localeText: PropTypes.object,
+  /**
+   * Event handler called right before the built-in event dialog (or its mobile drawer variant) opens,
+   * regardless of what triggered it (pointer, keyboard, the armed toolbar's Edit action or event creation).
+   * `eventDetails.reason` is `"creation"` when the user is creating a new event, `"view"` when the
+   * occurrence is read-only (through the event, its resource or the `readOnly` prop) and the dialog
+   * opens in view-only mode, and `"edit"` otherwise.
+   * Call `eventDetails.cancel()` to keep it closed and handle the interaction in your own UI.
+   */
+  onEventEditingStart: PropTypes.func,
   /**
    * Callback fired when some event of the calendar change.
    */
@@ -207,13 +255,13 @@ StandaloneDayViewPremium.propTypes = {
     showEmptyDaysInAgenda: PropTypes.bool,
     showWeekends: PropTypes.bool,
     showWeekNumber: PropTypes.bool,
-    weekStartsOn: PropTypes.oneOf([0, 1, 2, 3, 4, 5, 6]),
+    weekStartsOn: PropTypes.oneOf([1, 2, 3, 4, 5, 6, 7]),
   }),
   /**
    * Config of the preferences menu.
    * Defines which options are visible in the menu.
    * If `false`, the menu will be entirely hidden.
-   * @default { toggleWeekendVisibility: true, toggleWeekNumberVisibility: true, toggleAmpm: true, toggleEmptyDaysInAgenda: true }
+   * @default { toggleWeekendVisibility: true, toggleWeekNumberVisibility: true, toggleAmpm: true, toggleEmptyDaysInAgenda: true, toggleWeekStartsOn: false }
    */
   preferencesMenuConfig: PropTypes.oneOfType([
     PropTypes.oneOf([false]),
@@ -251,6 +299,16 @@ StandaloneDayViewPremium.propTypes = {
    */
   showCurrentTimeIndicator: PropTypes.bool,
   /**
+   * The props used for each component slot.
+   * @default {}
+   */
+  slotProps: PropTypes.object,
+  /**
+   * Overridable component slots.
+   * @default {}
+   */
+  slots: PropTypes.object,
+  /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */
   sx: PropTypes.oneOfType([
@@ -262,6 +320,22 @@ StandaloneDayViewPremium.propTypes = {
    * The view currently displayed in the calendar.
    */
   view: PropTypes.oneOf(['agenda', 'day', 'month', 'week']),
+  /**
+   * Configuration applied to the view, keyed by the view name.
+   * For the `day` view, `startTime` and `endTime` (whole hours between 0 and 24)
+   * limit the hours displayed in the time grid, `initialScrollTime` is the hour the grid
+   * scrolls to on mount, and `timeGridEvents` sets which timed events are rendered in the
+   * time grid.
+   * @example { day: { startTime: 8, endTime: 20, initialScrollTime: 9 } }
+   */
+  viewConfig: PropTypes.shape({
+    day: PropTypes.shape({
+      endTime: PropTypes.number,
+      initialScrollTime: PropTypes.number,
+      startTime: PropTypes.number,
+      timeGridEvents: PropTypes.oneOf(['same-day-only', 'shorter-than-one-day']),
+    }),
+  }),
   /**
    * The views available in the calendar.
    * @default ["day", "week", "month", "agenda"]

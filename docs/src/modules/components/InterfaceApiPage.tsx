@@ -6,7 +6,8 @@ import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
 import VerifiedRoundedIcon from '@mui/icons-material/VerifiedRounded';
 import { alpha } from '@mui/material/styles';
-import { Translate, useTranslate, useUserLanguage } from '@mui/internal-core-docs/i18n';
+import type { Translate } from '@mui/internal-core-docs/i18n';
+import { useTranslate } from '@mui/internal-core-docs/i18n';
 import { HighlightedCode } from '@mui/internal-core-docs/HighlightedCode';
 import { MarkdownElement } from '@mui/internal-core-docs/MarkdownDocs';
 import {
@@ -19,12 +20,13 @@ import type {
   LayoutStorageKeys,
 } from '@mui/internal-core-docs/ApiPage';
 import { AppLayoutDocs } from '@mui/internal-core-docs/AppLayout';
-import { SectionTitle, SectionTitleProps } from '@mui/internal-core-docs/SectionTitle';
-import {
+import type { SectionTitleProps } from '@mui/internal-core-docs/SectionTitle';
+import { SectionTitle } from '@mui/internal-core-docs/SectionTitle';
+import type {
   InterfaceApiTranslation,
   InterfaceApiContent,
 } from 'docs/scripts/api/buildInterfacesDocumentation';
-import { TableOfContentsEntry } from '@mui/internal-markdown';
+import type { TableOfContentsEntry } from '@mui/internal-markdown';
 import { kebabCase } from 'es-toolkit/string';
 
 type HeaderHash = 'demos' | 'import';
@@ -51,11 +53,9 @@ Heading.propTypes = {
 };
 
 interface ApiPageProps {
-  descriptions: {
-    [lang: string]: InterfaceApiTranslation & {
-      // Table of Content added by the mapApiPageTranslations function
-      componentDescriptionToc: TableOfContentsEntry[];
-    };
+  descriptions: InterfaceApiTranslation & {
+    // Table of Content added by the mapApiPageTranslation function
+    componentDescriptionToc: TableOfContentsEntry[];
   };
   pageContent: InterfaceApiContent;
   defaultLayout?: ApiDisplayLayout;
@@ -113,11 +113,10 @@ export default function ApiPage(props: ApiPageProps) {
     layoutStorageKey = DEFAULT_API_LAYOUT_STORAGE_KEYS,
   } = props;
   const t = useTranslate();
-  const userLanguage = useUserLanguage();
 
   const { demos, properties } = pageContent;
 
-  const { propertiesDescriptions, interfaceDescription } = descriptions[userLanguage];
+  const { propertiesDescriptions, interfaceDescription } = descriptions;
   const description = t('api-docs.interfacePageDescription').replace(/{{name}}/, pageContent.name);
 
   return (

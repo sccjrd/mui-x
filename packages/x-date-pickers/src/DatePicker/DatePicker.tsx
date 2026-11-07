@@ -6,7 +6,7 @@ import { useThemeProps } from '@mui/material/styles';
 import refType from '@mui/utils/refType';
 import { DesktopDatePicker } from '../DesktopDatePicker';
 import { MobileDatePicker } from '../MobileDatePicker';
-import { DatePickerProps } from './DatePicker.types';
+import type { DatePickerProps } from './DatePicker.types';
 import { DEFAULT_DESKTOP_MODE_MEDIA_QUERY } from '../internals/utils/utils';
 
 type DatePickerComponent = ((
@@ -41,7 +41,7 @@ const DatePicker = React.forwardRef(function DatePicker(
   return <MobileDatePicker ref={ref} {...other} />;
 }) as DatePickerComponent;
 
-DatePicker.propTypes = {
+DatePicker.propTypes /* remove-proptypes */ = {
   // ----------------------------- Warning --------------------------------
   // | These PropTypes are generated from the TypeScript type definitions |
   // | To update them edit the TypeScript types and run "pnpm proptypes"  |
@@ -53,6 +53,9 @@ DatePicker.propTypes = {
    * - the `input` element if there is a field rendered.
    */
   autoFocus: PropTypes.bool,
+  /**
+   * A CSS class name applied to the root element.
+   */
   className: PropTypes.string,
   /**
    * If `true`, the Picker will close after submitting the full date.
@@ -180,6 +183,10 @@ DatePicker.propTypes = {
    * - `shortcut` (optional): the shortcut metadata if the value was accepted via a shortcut selection
    */
   onAccept: PropTypes.func,
+  /**
+   * Callback fired when the Cancel action is triggered.
+   */
+  onCancel: PropTypes.func,
   /**
    * Callback fired when the value changes.
    * @template TValue The value type. It will be the same type as `value` or `null`. It can be in `[start, end]` format in case of range value.

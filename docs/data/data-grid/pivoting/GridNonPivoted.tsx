@@ -1,4 +1,5 @@
-import { DataGridPremium, GridColDef, GridRowModel } from '@mui/x-data-grid-premium';
+import type { GridColDef, GridRowModel } from '@mui/x-data-grid-premium';
+import { DataGridPremium } from '@mui/x-data-grid-premium';
 
 const rows: GridRowModel[] = [
   {
@@ -76,7 +77,7 @@ const rows: GridRowModel[] = [
 ];
 
 const columns: GridColDef[] = [
-  { field: 'product', headerName: 'Product' },
+  { field: 'product', headerName: 'Product', rowHeader: true },
   { field: 'size', headerName: 'Size' },
   { field: 'region', headerName: 'Region' },
   { field: 'quarter', headerName: 'Quarter' },
