@@ -281,7 +281,7 @@ StandaloneResourceDayView.propTypes /* remove-proptypes */ = {
    */
   pinnedColumnsSectionSeparator: PropTypes.oneOf(['border-and-shadow', 'border', 'shadow']),
   /**
-   * The resource IDs of the columns that are pinned to the left (controlled).
+   * The resource IDs of the columns that are pinned to the inline start (controlled).
    * Pinned columns always appear immediately after the time axis and stay fixed
    * while the remaining columns scroll horizontally.
    */
@@ -340,7 +340,7 @@ StandaloneResourceDayView.propTypes /* remove-proptypes */ = {
   showCurrentTimeIndicator: PropTypes.bool,
   /**
    * The duration of each time slot in minutes.
-   * Must be a divisor of 60 (e.g. 60, 30, 15).
+   * Must be a whole number that divides 60 (e.g. 60, 30, 15). Other values fall back to 60.
    * Controls both the time-axis label density and the grid-line frequency.
    * @default 60
    */

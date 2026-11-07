@@ -111,7 +111,7 @@ export function getPinnedColumnProps(column: PinnedColumnState, separator: Pinne
     style: {
       position: 'sticky',
       // Pinned columns have the minimum width, since the grid only scrolls when every column does.
-      left: `calc(var(--fixed-cell-width) + ${column.pinnedIndex} * var(--min-column-width))`,
+      insetInlineStart: `calc(var(--fixed-cell-width) + ${column.pinnedIndex} * var(--min-column-width))`,
     } as React.CSSProperties,
   };
 }
@@ -133,7 +133,8 @@ export function usePinnedColumnsScrollShadow(
     }
 
     const updateShadows = () => {
-      const isScrolled = element.scrollLeft > 0;
+      // `scrollLeft` is negative when scrolled in right-to-left.
+      const isScrolled = Math.abs(element.scrollLeft) > 0;
       element.style.setProperty('--shadow-opacity', isScrolled && hasPinnedColumns ? '1' : '0');
       element.style.setProperty(
         '--axis-shadow-opacity',

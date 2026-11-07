@@ -29,10 +29,10 @@
       "description": "Controls how the pinned columns section is visually separated from the scrollable columns. - <code>&#39;border&#39;</code> – always shows a thicker divider border. - <code>&#39;shadow&#39;</code> – shows a drop-shadow that appears only when content is scrolled. - <code>&#39;border-and-shadow&#39;</code> – shows both (default, matches DataGrid behaviour)."
     },
     "pinnedResourceIds": {
-      "description": "The resource IDs of the columns that are pinned to the left (controlled). Pinned columns always appear immediately after the time axis and stay fixed while the remaining columns scroll horizontally."
+      "description": "The resource IDs of the columns that are pinned to the inline start (controlled). Pinned columns always appear immediately after the time axis and stay fixed while the remaining columns scroll horizontally."
     },
     "slotDuration": {
-      "description": "The duration of each time slot in minutes. Must be a divisor of 60 (e.g. 60, 30, 15). Controls both the time-axis label density and the grid-line frequency."
+      "description": "The duration of each time slot in minutes. Must be a whole number that divides 60 (e.g. 60, 30, 15). Other values fall back to 60. Controls both the time-axis label density and the grid-line frequency."
     },
     "startTime": {
       "description": "Inclusive start of the hour range displayed in the time grid (whole hour between 0 and 24)."

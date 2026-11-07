@@ -1,5 +1,11 @@
-import { act, screen } from '@mui/internal-test-utils';
-import { createSchedulerRenderer } from 'test/utils/scheduler';
+import { act, fireEvent, screen } from '@mui/internal-test-utils';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import {
+  clientYForTime,
+  createSchedulerRenderer,
+  mockElementBounds,
+  simulateDragAndDrop,
+} from 'test/utils/scheduler';
 import { isJSDOM } from 'test/utils/skipIf';
 import { StandaloneResourceDayView } from '@mui/x-scheduler/resource-day-view';
 import { eventCalendarClasses } from '@mui/x-scheduler/event-calendar';
@@ -343,6 +349,111 @@ describe('<StandaloneResourceDayView />', () => {
         'type',
         'button',
       );
+    });
+  });
+
+  it('should warn and fall back to one slot per hour when slotDuration does not divide 60', () => {
+    expect(() =>
+      render(
+        <StandaloneResourceDayView
+          events={events}
+          resources={resources}
+          defaultVisibleDate={visibleDate}
+          slotDuration={7}
+        />,
+      ),
+    ).toWarnDev('MUI X Scheduler: `ResourceDayView` received an invalid `slotDuration` (7).');
+
+    expect(
+      document.querySelectorAll(`.${eventCalendarClasses.resourceDayTimeGridTimeAxisCell}`),
+    ).to.have.length(24);
+  });
+
+  describe('drag and drop', () => {
+    function setUpDraggableView() {
+      const onEventsChange = vi.fn();
+      render(
+        <StandaloneResourceDayView
+          events={events}
+          resources={resources}
+          defaultVisibleDate={visibleDate}
+          onEventsChange={onEventsChange}
+        />,
+      );
+      // 1px per minute of the day, so a time maps to a `clientY`.
+      getColumns().forEach((column) => {
+        mockElementBounds(column, { top: 0, height: 1440, width: 200 });
+      });
+      return onEventsChange;
+    }
+
+    function getUpdatedEvent(onEventsChange: ReturnType<typeof vi.fn>, id: string) {
+      expect(onEventsChange.mock.calls.length).to.equal(1);
+      return onEventsChange.mock.calls[0][0].find((event: { id: string }) => event.id === id);
+    }
+
+    it('should move an event to the resource of the column it is dropped in', async () => {
+      const onEventsChange = setUpDraggableView();
+      const [, roomB] = getColumns();
+
+      await act(async () => {
+        simulateDragAndDrop({
+          source: screen.getByRole('button', { name: /Sprint Planning/ }),
+          target: roomB,
+          targetClientY: clientYForTime(0, 24, 14),
+        });
+      });
+
+      const updatedEvent = getUpdatedEvent(onEventsChange, 'a1');
+      expect(updatedEvent.resource).to.equal('room-b');
+      expect(new Date(updatedEvent.start).getUTCHours()).not.to.equal(9);
+    });
+
+    it('should keep the resource when an event is moved within its column', async () => {
+      const onEventsChange = setUpDraggableView();
+      const [roomA] = getColumns();
+
+      await act(async () => {
+        simulateDragAndDrop({
+          source: screen.getByRole('button', { name: /Sprint Planning/ }),
+          target: roomA,
+          targetClientY: clientYForTime(0, 24, 14),
+        });
+      });
+
+      const updatedEvent = getUpdatedEvent(onEventsChange, 'a1');
+      expect(updatedEvent.resource).to.equal('room-a');
+      expect(new Date(updatedEvent.start).getUTCHours()).not.to.equal(9);
+    });
+  });
+
+  describe('right-to-left', () => {
+    it('should show the pinned columns shadow when scrolled in right-to-left', async () => {
+      const { user } = render(
+        <ThemeProvider theme={createTheme({ direction: 'rtl' })}>
+          <div dir="rtl">
+            <StandaloneResourceDayView
+              events={events}
+              resources={resources}
+              defaultVisibleDate={visibleDate}
+            />
+          </div>
+        </ThemeProvider>,
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Pin Room C' }));
+
+      const scroller = document.querySelector<HTMLElement>(
+        `.${eventCalendarClasses.resourceDayTimeGridBody}`,
+      )!;
+      expect(scroller.style.getPropertyValue('--shadow-opacity')).to.equal('0');
+
+      // Browsers report a negative `scrollLeft` once a right-to-left element is scrolled.
+      Object.defineProperty(scroller, 'scrollLeft', { configurable: true, value: -120 });
+      fireEvent.scroll(scroller);
+
+      expect(scroller.style.getPropertyValue('--shadow-opacity')).to.equal('1');
+      expect(scroller.style.getPropertyValue('--axis-shadow-opacity')).to.equal('0');
     });
   });
 });

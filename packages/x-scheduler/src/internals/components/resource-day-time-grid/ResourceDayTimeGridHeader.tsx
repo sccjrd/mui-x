@@ -38,7 +38,7 @@ const ResourceDayTimeGridHeaderAxisCell = styled('div', {
   width: 'var(--fixed-cell-width)',
   flexShrink: 0,
   position: 'sticky',
-  left: 0,
+  insetInlineStart: 0,
   // Above the pinned header cells, so its shadow isn't hidden by the first one.
   zIndex: 3,
   backgroundColor: 'inherit',
@@ -97,7 +97,7 @@ const ResourceDayTimeGridPinButton = styled('button', {
 })(({ theme }) => ({
   position: 'absolute',
   top: 4,
-  right: 4,
+  insetInlineEnd: 4,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',

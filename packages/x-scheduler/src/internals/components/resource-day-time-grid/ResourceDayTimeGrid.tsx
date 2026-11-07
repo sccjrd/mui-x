@@ -19,6 +19,7 @@ import {
 } from '@mui/x-scheduler-internals/internals';
 import clsx from 'clsx';
 import type { ResourceDayTimeGridProps } from './ResourceDayTimeGrid.types';
+import { getSlotDuration } from './getSlotDuration';
 import { ResourceDayTimeGridHeader } from './ResourceDayTimeGridHeader';
 import { ResourceDayTimeGridTimeAxis } from './ResourceDayTimeGridTimeAxis';
 import { ResourceTimeGridColumn } from './ResourceTimeGridColumn';
@@ -30,8 +31,8 @@ import { eventCalendarClasses } from '../../../event-calendar/eventCalendarClass
 
 const DEFAULT_HOUR_HEIGHT = 80;
 const DEFAULT_MIN_COLUMN_WIDTH = 200;
-// Names the component in the warnings about an invalid hour range.
-const HOUR_RANGE_SOURCE = 'ResourceDayView';
+// Names the component in the warnings about invalid props.
+const WARNING_SOURCE = 'ResourceDayView';
 // This grid has no focusable header or all-day row, so arrow keys stay in the resource columns.
 const ROW_TYPES: CalendarGrid.Root.Props['rowTypes'] = ['time-grid'];
 
@@ -115,7 +116,7 @@ export const ResourceDayTimeGrid = React.forwardRef(function ResourceDayTimeGrid
     className,
     style,
     hourHeight = DEFAULT_HOUR_HEIGHT,
-    slotDuration = 60,
+    slotDuration: slotDurationProp,
     columnWidth,
     minColumnWidth = DEFAULT_MIN_COLUMN_WIDTH,
     startTime: startTimeProp,
@@ -129,13 +130,10 @@ export const ResourceDayTimeGrid = React.forwardRef(function ResourceDayTimeGrid
     ...other
   } = props;
 
-  const hourRange = getDisplayedHourRange(startTimeProp, endTimeProp, HOUR_RANGE_SOURCE);
+  const hourRange = getDisplayedHourRange(startTimeProp, endTimeProp, WARNING_SOURCE);
   const { startTime, endTime } = hourRange;
-  const initialScrollTime = getInitialScrollTime(
-    initialScrollTimeProp,
-    hourRange,
-    HOUR_RANGE_SOURCE,
-  );
+  const initialScrollTime = getInitialScrollTime(initialScrollTimeProp, hourRange, WARNING_SOURCE);
+  const slotDuration = getSlotDuration(slotDurationProp, WARNING_SOURCE);
 
   // Context hooks
   const { classes } = useEventCalendarStyledContext();

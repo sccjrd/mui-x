@@ -23,7 +23,7 @@ const ResourceDayTimeGridTimeAxisRoot = styled('div', {
   flexShrink: 0,
   width: 'var(--fixed-cell-width)',
   position: 'sticky',
-  left: 0,
+  insetInlineStart: 0,
   // Above the columns, so its background and its shadow cover them.
   zIndex: 2,
   backgroundColor: (theme.vars || theme).palette.background.paper,
