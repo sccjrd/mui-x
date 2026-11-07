@@ -213,6 +213,9 @@ export const ResourceDayTimeGrid = React.forwardRef(function ResourceDayTimeGrid
       style={containerStyle}
       className={clsx(className, classes.resourceDayTimeGridContainer)}
       rowTypes={ROW_TYPES}
+      // The header row and the row of resource columns.
+      aria-rowcount={2}
+      aria-colcount={columns.length}
     >
       <ResourceDayTimeGridRoot ref={scrollRef} className={classes.resourceDayTimeGridBody}>
         <ResourceDayTimeGridInner
@@ -239,7 +242,11 @@ export const ResourceDayTimeGrid = React.forwardRef(function ResourceDayTimeGrid
             />
 
             {hasColumns && (
-              <ResourceDayTimeGridGrid className={classes.resourceDayTimeGridGrid}>
+              <ResourceDayTimeGridGrid
+                className={classes.resourceDayTimeGridGrid}
+                role="row"
+                aria-rowindex={2}
+              >
                 {columns.map((column, index) => (
                   <ResourceTimeGridColumn
                     key={column.resource.id}

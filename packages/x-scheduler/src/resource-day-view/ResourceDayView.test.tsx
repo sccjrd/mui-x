@@ -286,4 +286,63 @@ describe('<StandaloneResourceDayView />', () => {
       expect(scroller.scrollTop).to.equal(240);
     });
   });
+
+  describe('accessibility', () => {
+    it('should expose a grid with a header row and a row of resource columns', () => {
+      render(
+        <StandaloneResourceDayView
+          events={events}
+          resources={resources}
+          defaultVisibleDate={visibleDate}
+        />,
+      );
+
+      const grid = screen.getByRole('grid');
+      expect(grid).to.have.attribute('aria-rowcount', '2');
+      expect(grid).to.have.attribute('aria-colcount', '3');
+
+      const [headerRow, columnsRow] = screen.getAllByRole('row');
+      expect(headerRow).to.have.attribute('aria-rowindex', '1');
+      expect(columnsRow).to.have.attribute('aria-rowindex', '2');
+
+      const headers = screen.getAllByRole('columnheader');
+      expect(headers.map((header) => header.getAttribute('aria-colindex'))).to.deep.equal([
+        '1',
+        '2',
+        '3',
+      ]);
+      expect(headers[0].textContent).to.include('Room A');
+
+      const cells = screen.getAllByRole('gridcell');
+      expect(cells.map((cell) => cell.getAttribute('aria-colindex'))).to.deep.equal([
+        '1',
+        '2',
+        '3',
+      ]);
+    });
+
+    it('should use the localeText for the pin buttons, which do not submit forms', () => {
+      render(
+        <StandaloneResourceDayView
+          events={events}
+          resources={resources}
+          defaultVisibleDate={visibleDate}
+          defaultPinnedResourceIds={['room-b']}
+          localeText={{
+            pinResourceColumn: (resourceTitle) => `Épingler ${resourceTitle}`,
+            unpinResourceColumn: (resourceTitle) => `Désépingler ${resourceTitle}`,
+          }}
+        />,
+      );
+
+      expect(screen.getByRole('button', { name: 'Épingler Room A' })).to.have.attribute(
+        'type',
+        'button',
+      );
+      expect(screen.getByRole('button', { name: 'Désépingler Room B' })).to.have.attribute(
+        'type',
+        'button',
+      );
+    });
+  });
 });

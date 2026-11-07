@@ -3,6 +3,7 @@ import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import type { SchedulerResource } from '@mui/x-scheduler-internals/models';
+import { CalendarGrid } from '@mui/x-scheduler-internals/calendar-grid';
 import { getPinnedColumnProps } from './usePinnedResources';
 import type { PinnedColumnState } from './usePinnedResources';
 import { getStickyEdgeShadowStyles } from './resourceDayTimeGridStyles';
@@ -11,9 +12,10 @@ import { useEventCalendarStyledContext } from '../../../event-calendar/EventCale
 import { eventCalendarClasses } from '../../../event-calendar/eventCalendarClasses';
 
 /**
- * Stays at the top while scrolling vertically, and scrolls horizontally with the columns.
+ * The first row of the grid. Stays at the top while scrolling vertically,
+ * and scrolls horizontally with the columns.
  */
-const ResourceDayTimeGridHeaderRoot = styled('div', {
+const ResourceDayTimeGridHeaderRoot = styled(CalendarGrid.HeaderRow, {
   name: 'MuiEventCalendar',
   slot: 'ResourceDayTimeGridHeader',
 })(({ theme }) => ({
@@ -136,13 +138,13 @@ export function ResourceDayTimeGridHeader(props: ResourceDayTimeGridHeaderProps)
   const { columns, separator, onTogglePinned } = props;
 
   // Context hooks
-  const { classes } = useEventCalendarStyledContext();
+  const { classes, localeText } = useEventCalendarStyledContext();
 
   return (
     <ResourceDayTimeGridHeaderRoot className={classes.resourceDayTimeGridHeader}>
-      <ResourceDayTimeGridHeaderAxisCell />
+      <ResourceDayTimeGridHeaderAxisCell aria-hidden="true" />
       <ResourceDayTimeGridHeaderCells className={classes.resourceDayTimeGridHeaderCells}>
-        {columns.map((column) => {
+        {columns.map((column, index) => {
           const { resource } = column;
           const isPinned = column.pinnedIndex !== undefined;
 
@@ -150,15 +152,22 @@ export function ResourceDayTimeGridHeader(props: ResourceDayTimeGridHeaderProps)
             <ResourceDayTimeGridHeaderCell
               key={resource.id}
               className={classes.resourceDayTimeGridHeaderCell}
+              role="columnheader"
+              aria-colindex={index + 1}
               {...getPinnedColumnProps(column, separator)}
             >
               <ResourceDayTimeGridResourceName className={classes.resourceDayTimeGridResourceName}>
                 {resource.title}
               </ResourceDayTimeGridResourceName>
               <ResourceDayTimeGridPinButton
+                type="button"
                 className={classes.resourceDayTimeGridPinButton}
                 data-pinned={isPinned || undefined}
-                aria-label={isPinned ? `Unpin ${resource.title}` : `Pin ${resource.title}`}
+                aria-label={
+                  isPinned
+                    ? localeText.unpinResourceColumn(resource.title)
+                    : localeText.pinResourceColumn(resource.title)
+                }
                 aria-pressed={isPinned}
                 onClick={() => onTogglePinned(resource.id)}
               >

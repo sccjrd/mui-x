@@ -246,6 +246,10 @@ const heILCalendar: SchedulerCalendarTranslations = {
   // Main calendar region
   calendarContentAriaLabel: 'תוכן לוח השנה',
 
+  // ResourceDayView
+  // pinResourceColumn: resourceTitle => `Pin ${resourceTitle}`,
+  // unpinResourceColumn: resourceTitle => `Unpin ${resourceTitle}`,
+
   // Timeline title sub grid
   timelineResourceTitleHeader: 'שם המשאב',
 };

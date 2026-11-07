@@ -115,6 +115,7 @@ export function ResourceTimeGridColumn(props: ResourceTimeGridColumnProps) {
       dayEndMinute={dayEndMinute}
       resourceId={resource.id}
       addPropertiesToDroppedEvent={addPropertiesToDroppedEvent}
+      aria-colindex={index + 1}
       {...pinnedAttributes}
       style={{ '--columns-count': maxIndex, ...pinnedStyle } as React.CSSProperties}
     >

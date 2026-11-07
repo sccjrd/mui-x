@@ -231,6 +231,10 @@ const ruRUCalendar: SchedulerCalendarTranslations = {
   // Main calendar region
   calendarContentAriaLabel: 'Содержимое календаря',
 
+  // ResourceDayView
+  // pinResourceColumn: resourceTitle => `Pin ${resourceTitle}`,
+  // unpinResourceColumn: resourceTitle => `Unpin ${resourceTitle}`,
+
   // Timeline title sub grid
   timelineResourceTitleHeader: 'Название ресурса',
 };

@@ -178,6 +178,10 @@ const deDECalendar: SchedulerCalendarTranslations = {
   // Main calendar region
   // calendarContentAriaLabel: 'Calendar content',
 
+  // ResourceDayView
+  // pinResourceColumn: resourceTitle => `Pin ${resourceTitle}`,
+  // unpinResourceColumn: resourceTitle => `Unpin ${resourceTitle}`,
+
   // Timeline title sub grid
   timelineResourceTitleHeader: 'Ressourcentitel',
 };

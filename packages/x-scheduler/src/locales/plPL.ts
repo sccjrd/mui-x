@@ -189,6 +189,10 @@ const plPLCalendar: SchedulerCalendarTranslations = {
   // Main calendar region
   calendarContentAriaLabel: 'Zawartość kalendarza',
 
+  // ResourceDayView
+  // pinResourceColumn: resourceTitle => `Pin ${resourceTitle}`,
+  // unpinResourceColumn: resourceTitle => `Unpin ${resourceTitle}`,
+
   // Timeline title sub grid
   timelineResourceTitleHeader: 'Tytuł zasobu',
 };

@@ -286,6 +286,10 @@ export interface EventCalendarLocaleText extends EventEditingLocaleText, Schedul
   // Main calendar region
   calendarContentAriaLabel: string;
 
+  // ResourceDayView
+  pinResourceColumn: (resourceTitle: string) => string;
+  unpinResourceColumn: (resourceTitle: string) => string;
+
   // Timeline title sub grid
   timelineResourceTitleHeader: string;
 }
