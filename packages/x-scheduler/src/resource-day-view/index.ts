@@ -1,2 +1,3 @@
-export { ResourceDayView, StandaloneResourceDayView } from './ResourceDayView';
-export type { ResourceDayViewProps, StandaloneResourceDayViewProps } from './ResourceDayView.types';
+export * from './ResourceDayView';
+export * from './ResourceDayView.types';
+export * from './StandaloneResourceDayView';

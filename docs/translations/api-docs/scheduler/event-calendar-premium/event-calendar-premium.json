@@ -820,6 +820,74 @@
       "description": "Styles applied to {{nodeName}}.",
       "nodeName": "the preferences menu list subheader elements"
     },
+    "resourceDayTimeGridBody": {
+      "description": "Styles applied to {{nodeName}}.",
+      "nodeName": "the resource day time grid body element"
+    },
+    "resourceDayTimeGridColumn": {
+      "description": "Styles applied to {{nodeName}}.",
+      "nodeName": "resource day time grid column elements"
+    },
+    "resourceDayTimeGridColumnInteractiveLayer": {
+      "description": "Styles applied to {{nodeName}}.",
+      "nodeName": "resource day time grid column interactive layer elements"
+    },
+    "resourceDayTimeGridContainer": {
+      "description": "Styles applied to {{nodeName}}.",
+      "nodeName": "the resource day time grid container element"
+    },
+    "resourceDayTimeGridCurrentTimeIndicator": {
+      "description": "Styles applied to {{nodeName}}.",
+      "nodeName": "the resource day time grid current time indicator element"
+    },
+    "resourceDayTimeGridCurrentTimeIndicatorCircle": {
+      "description": "Styles applied to {{nodeName}}.",
+      "nodeName": "the resource day time grid current time indicator circle element"
+    },
+    "resourceDayTimeGridGrid": {
+      "description": "Styles applied to {{nodeName}}.",
+      "nodeName": "the resource day time grid grid element"
+    },
+    "resourceDayTimeGridHeader": {
+      "description": "Styles applied to {{nodeName}}.",
+      "nodeName": "the resource day time grid header element"
+    },
+    "resourceDayTimeGridHeaderCell": {
+      "description": "Styles applied to {{nodeName}}.",
+      "nodeName": "resource day time grid header cell elements"
+    },
+    "resourceDayTimeGridHeaderCells": {
+      "description": "Styles applied to {{nodeName}}.",
+      "nodeName": "the resource day time grid header cells wrapper element"
+    },
+    "resourceDayTimeGridInner": {
+      "description": "Styles applied to {{nodeName}}.",
+      "nodeName": "the resource day time grid inner wrapper element"
+    },
+    "resourceDayTimeGridPinButton": {
+      "description": "Styles applied to {{nodeName}}.",
+      "nodeName": "the pin toggle button inside each resource header cell"
+    },
+    "resourceDayTimeGridResourceName": {
+      "description": "Styles applied to {{nodeName}}.",
+      "nodeName": "the resource name inside the header cell"
+    },
+    "resourceDayTimeGridScrollableContent": {
+      "description": "Styles applied to {{nodeName}}.",
+      "nodeName": "the resource day time grid scrollable content element"
+    },
+    "resourceDayTimeGridTimeAxis": {
+      "description": "Styles applied to {{nodeName}}.",
+      "nodeName": "the resource day time grid time axis element"
+    },
+    "resourceDayTimeGridTimeAxisCell": {
+      "description": "Styles applied to {{nodeName}}.",
+      "nodeName": "resource day time grid time axis cell elements"
+    },
+    "resourceDayTimeGridTimeAxisText": {
+      "description": "Styles applied to {{nodeName}}.",
+      "nodeName": "resource day time grid time axis text elements"
+    },
     "resourceLegendColor": {
       "description": "Styles applied to {{nodeName}}.",
       "nodeName": "event item resource legend color elements"

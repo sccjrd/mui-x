@@ -1,0 +1,39 @@
+{
+  "componentDescription": "A Resource Day View that shows one column per resource for a single day.\nUse inside the Event Calendar.",
+  "propDescriptions": {
+    "columnWidth": {
+      "description": "Fixed width in pixels for each resource column. When set, columns will not grow or shrink beyond this value and horizontal scrolling is enabled. Takes precedence over <code>minColumnWidth</code>."
+    },
+    "defaultPinnedResourceIds": {
+      "description": "The resource IDs to pin by default when the component first mounts (uncontrolled)."
+    },
+    "defaultScrollToHour": {
+      "description": "The hour (0–23) to scroll to when the component first mounts. Useful for starting the view at business hours instead of midnight."
+    },
+    "hourHeight": {
+      "description": "The height in pixels of each hour slot in the time grid. Increasing this value zooms in on the time axis."
+    },
+    "loadingResourceIds": {
+      "description": "IDs of resource columns that are currently loading their data. Only those columns show a skeleton; already-loaded columns are unaffected. This is independent of the global <code>isLoading</code> state; both can be true simultaneously."
+    },
+    "minColumnWidth": {
+      "description": "Minimum width in pixels for each resource column. When the total column width exceeds the available space, horizontal scrolling is enabled."
+    },
+    "onPinnedResourceIdsChange": {
+      "description": "Callback fired when the set of pinned columns changes."
+    },
+    "pinnedColumnsSectionSeparator": {
+      "description": "Controls how the pinned columns section is visually separated from the scrollable columns. - <code>&#39;border&#39;</code> – always shows a thicker divider border. - <code>&#39;shadow&#39;</code> – shows a drop-shadow that appears only when content is scrolled. - <code>&#39;border-and-shadow&#39;</code> – shows both (default, matches DataGrid behaviour)."
+    },
+    "pinnedResourceIds": {
+      "description": "The resource IDs of the columns that are pinned to the left (controlled). Pinned columns always appear immediately after the time axis and stay fixed while the remaining columns scroll horizontally."
+    },
+    "slotDuration": {
+      "description": "The duration of each time slot in minutes. Must be a divisor of 60 (e.g. 60, 30, 15). Controls both the time-axis label density and the grid-line frequency."
+    }
+  },
+  "classDescriptions": {},
+  "slotDescriptions": {
+    "eventDialogGeneralTab": "The content of the &quot;General&quot; tab of the event editing surface: the dialog on regular views, the compact editing drawer on compact views. It is rendered inside the tab panel, so it must not render a tab panel of its own. Return a fragment rather than a wrapper element to keep the spacing between the sections."
+  }
+}

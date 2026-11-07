@@ -14,5 +14,6 @@ export * from './day-view';
 export * from './event-calendar';
 export * from './event-dialog';
 export * from './month-view';
+export * from './resource-day-view';
 export * from './standalone-event';
 export * from './week-view';

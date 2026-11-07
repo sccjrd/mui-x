@@ -1,0 +1,46 @@
+{
+  "props": {
+    "columnWidth": { "type": { "name": "number" } },
+    "defaultPinnedResourceIds": {
+      "type": { "name": "arrayOf", "description": "Array&lt;string&gt;" },
+      "default": "[]"
+    },
+    "defaultScrollToHour": { "type": { "name": "number" }, "default": "0" },
+    "hourHeight": { "type": { "name": "number" }, "default": "80" },
+    "loadingResourceIds": {
+      "type": { "name": "arrayOf", "description": "Array&lt;string&gt;" },
+      "default": "[]"
+    },
+    "minColumnWidth": { "type": { "name": "number" }, "default": "200" },
+    "onPinnedResourceIdsChange": { "type": { "name": "func" } },
+    "pinnedColumnsSectionSeparator": {
+      "type": {
+        "name": "enum",
+        "description": "'border-and-shadow'<br>&#124;&nbsp;'border'<br>&#124;&nbsp;'shadow'"
+      },
+      "default": "'border-and-shadow'"
+    },
+    "pinnedResourceIds": { "type": { "name": "arrayOf", "description": "Array&lt;string&gt;" } },
+    "slotDuration": { "type": { "name": "number" }, "default": "60" }
+  },
+  "name": "ResourceDayView",
+  "imports": [
+    "import { ResourceDayView } from '@mui/x-scheduler/resource-day-view';",
+    "import { ResourceDayView } from '@mui/x-scheduler';"
+  ],
+  "slots": [
+    {
+      "name": "eventDialogGeneralTab",
+      "description": "The content of the \"General\" tab of the event editing surface:\nthe dialog on regular views, the compact editing drawer on compact views.\nIt is rendered inside the tab panel, so it must not render a tab panel of its own.\nReturn a fragment rather than a wrapper element to keep the spacing between the sections.",
+      "default": "EventDialogGeneralTabContent",
+      "class": null
+    }
+  ],
+  "classes": [],
+  "spread": true,
+  "themeDefaultProps": null,
+  "muiName": "MuiResourceDayView",
+  "filename": "/packages/x-scheduler/src/resource-day-view/ResourceDayView.tsx",
+  "inheritance": null,
+  "demos": "<ul><li><a href=\"/x/react-scheduler/event-calendar/resources/\">Event Calendar - Resources</a></li></ul>"
+}

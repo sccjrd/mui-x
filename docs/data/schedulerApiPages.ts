@@ -16,6 +16,10 @@ const schedulerApiPages: MuiPage[] = [
     plan: 'premium',
   },
   {
+    pathname: '/x/api/scheduler/resource-day-view',
+    title: 'ResourceDayView',
+  },
+  {
     pathname: '/x/api/scheduler/standalone-agenda-view',
     title: 'StandaloneAgendaView',
   },
@@ -45,6 +49,10 @@ const schedulerApiPages: MuiPage[] = [
     pathname: '/x/api/scheduler/standalone-month-view-premium',
     title: 'StandaloneMonthViewPremium',
     plan: 'premium',
+  },
+  {
+    pathname: '/x/api/scheduler/standalone-resource-day-view',
+    title: 'StandaloneResourceDayView',
   },
   {
     pathname: '/x/api/scheduler/standalone-week-view',

@@ -23,7 +23,7 @@ export interface ExportedResourceDayTimeGridProps extends React.HTMLAttributes<H
   /**
    * Minimum width in pixels for each resource column.
    * When the total column width exceeds the available space, horizontal scrolling is enabled.
-   * @default 150
+   * @default 200
    */
   minColumnWidth?: number;
   /**
