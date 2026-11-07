@@ -1,28 +1,16 @@
 'use client';
 import * as React from 'react';
-import { createSelectorMemoized } from '@base-ui/utils/store';
-import { EventCalendarViewConfig } from '@mui/x-scheduler-internals/models';
-import {
-  useExtractEventCalendarParameters,
-  EventCalendarState as State,
-} from '@mui/x-scheduler-internals/use-event-calendar';
+import { useThemeProps } from '@mui/material/styles';
+import { useExtractEventCalendarParameters } from '@mui/x-scheduler-internals/use-event-calendar';
 import { useEventCalendarView } from '@mui/x-scheduler-internals/use-event-calendar-view';
-import { processDate } from '@mui/x-scheduler-internals/process-date';
-import { schedulerOtherSelectors } from '@mui/x-scheduler-internals/scheduler-selectors';
-import { ResourceDayViewProps, StandaloneResourceDayViewProps } from './ResourceDayView.types';
+import type { ResourceDayViewProps, StandaloneResourceDayViewProps } from './ResourceDayView.types';
 import { EventCalendarProvider } from '../internals/components/EventCalendarProvider';
 import { ResourceDayTimeGrid } from '../internals/components/resource-day-time-grid/ResourceDayTimeGrid';
 import { EventDialogProvider } from '../internals/components/event-dialog';
+import { ResponsiveTypographyContainer } from '../internals/components/ResponsiveTypographyContainer';
+import { createDayTimeGridViewDefinition } from '../internals/utils/day-time-grid-view-definition';
 
-const RESOURCE_DAY_VIEW_CONFIG: EventCalendarViewConfig = {
-  siblingVisibleDateGetter: ({ state, delta }) =>
-    state.adapter.addDays(schedulerOtherSelectors.visibleDate(state), delta),
-  visibleDaysSelector: createSelectorMemoized(
-    schedulerOtherSelectors.visibleDate,
-    (state: State) => state.adapter,
-    (visibleDate, adapter) => [processDate(visibleDate, adapter)],
-  ),
-};
+const RESOURCE_DAY_VIEW_DEFINITION = createDayTimeGridViewDefinition(1);
 
 /**
  * A Resource Day View that shows one column per resource for a single day.
@@ -33,7 +21,7 @@ export const ResourceDayView = React.memo(
     props: ResourceDayViewProps,
     forwardedRef: React.ForwardedRef<HTMLDivElement>,
   ) {
-    const { days } = useEventCalendarView(RESOURCE_DAY_VIEW_CONFIG);
+    const { days } = useEventCalendarView(RESOURCE_DAY_VIEW_DEFINITION);
 
     return <ResourceDayTimeGrid ref={forwardedRef} day={days[0]} {...props} />;
   }),
@@ -47,21 +35,33 @@ export const StandaloneResourceDayView = React.forwardRef(function StandaloneRes
   TEvent extends object,
   TResource extends object,
 >(
-  props: StandaloneResourceDayViewProps<TEvent, TResource>,
+  inProps: StandaloneResourceDayViewProps<TEvent, TResource>,
   forwardedRef: React.ForwardedRef<HTMLDivElement>,
 ) {
+  // eslint-disable-next-line mui/material-ui-name-matches-component-name
+  const props = useThemeProps({ props: inProps, name: 'MuiEventCalendar' });
+
   const { parameters, forwardedProps } = useExtractEventCalendarParameters<
     TEvent,
     TResource,
     typeof props
   >(props);
 
+  const { localeText, slots, slotProps, ...other } = forwardedProps;
+
   return (
-    <EventCalendarProvider {...parameters}>
-      <EventDialogProvider>
-        <ResourceDayView ref={forwardedRef} {...forwardedProps} />
-      </EventDialogProvider>
-    </EventCalendarProvider>
+    <ResponsiveTypographyContainer>
+      <EventCalendarProvider
+        {...parameters}
+        localeText={localeText}
+        slots={slots}
+        slotProps={slotProps}
+      >
+        <EventDialogProvider>
+          <ResourceDayView ref={forwardedRef} {...other} />
+        </EventDialogProvider>
+      </EventCalendarProvider>
+    </ResponsiveTypographyContainer>
   );
 }) as StandaloneResourceDayViewComponent;
 

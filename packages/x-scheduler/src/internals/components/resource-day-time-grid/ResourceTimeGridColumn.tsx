@@ -2,22 +2,23 @@
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import { useStore } from '@base-ui/utils/store';
-import {
+import type {
   SchedulerEventOccurrence,
-  SchedulerProcessedDate,
+  SchedulerProcessedDay,
   SchedulerResource,
-  TemporalSupportedObject,
 } from '@mui/x-scheduler-internals/models';
+import { useCalendarGridTimeColumnContext } from '@mui/x-scheduler-internals/internals';
 import { CalendarGrid } from '@mui/x-scheduler-internals/calendar-grid';
 import { useEventCalendarStoreContext } from '@mui/x-scheduler-internals/use-event-calendar-store-context';
-import { useAdapterContext } from '@mui/x-scheduler-internals/use-adapter-context';
 import { useEventOccurrencesWithTimelinePosition } from '@mui/x-scheduler-internals/use-event-occurrences-with-timeline-position';
 import { eventCalendarOccurrencePlaceholderSelectors } from '@mui/x-scheduler-internals/event-calendar-selectors';
 import { schedulerOtherSelectors } from '@mui/x-scheduler-internals/scheduler-selectors';
 import { TimeGridEvent } from '../event/time-grid-event/TimeGridEvent';
 import { EventSkeleton } from '../event-skeleton';
-import { EventDialogTrigger, useEventDialogContext } from '../event-dialog/EventDialog';
+import { useEventEditingContext } from '../event-editing';
+import { EventContextMenuTrigger } from '../event-context-menu';
 import { useEventCalendarStyledContext } from '../../../event-calendar/EventCalendarStyledContext';
+import { getCellFocusBackground } from '../../utils/tokens';
 import { isOccurrenceAllDayOrMultipleDay } from '../../utils/event-utils';
 
 const ResourceDayTimeGridColumn = styled(CalendarGrid.TimeColumn, {
@@ -30,6 +31,10 @@ const ResourceDayTimeGridColumn = styled(CalendarGrid.TimeColumn, {
   flexBasis: 0,
   minWidth: 0,
   position: 'relative',
+  '&:focus-visible': {
+    outline: 'none',
+    backgroundColor: getCellFocusBackground(theme),
+  },
   ':last-of-type': {
     borderInlineEnd: `1px solid ${(theme.vars || theme).palette.divider}`,
   },
@@ -135,16 +140,12 @@ export function ResourceTimeGridColumn(props: ResourceTimeGridColumnProps) {
     isLoadingColumn = false,
   } = props;
 
-  const adapter = useAdapterContext();
   const { classes } = useEventCalendarStyledContext();
-
-  const start = React.useMemo(() => adapter.startOfDay(day.value), [adapter, day]);
-  const end = React.useMemo(() => adapter.endOfDay(day.value), [adapter, day]);
 
   // Filter to only time-based (non-all-day) occurrences for this resource
   const timedOccurrences = React.useMemo(
-    () => allOccurrences.filter((occ) => !isOccurrenceAllDayOrMultipleDay(occ, adapter)),
-    [allOccurrences, adapter],
+    () => allOccurrences.filter((occ) => !isOccurrenceAllDayOrMultipleDay(occ)),
+    [allOccurrences],
   );
 
   const { occurrences, maxIndex } = useEventOccurrencesWithTimelinePosition({
@@ -161,8 +162,7 @@ export function ResourceTimeGridColumn(props: ResourceTimeGridColumnProps) {
   return (
     <ResourceDayTimeGridColumn
       className={classes.resourceDayTimeGridColumn}
-      start={start}
-      end={end}
+      value={day.plainDate}
       addPropertiesToDroppedEvent={addPropertiesToDroppedEvent}
       resourceId={resource.id}
       data-pinned={isPinned || undefined}
@@ -181,8 +181,6 @@ export function ResourceTimeGridColumn(props: ResourceTimeGridColumnProps) {
       }
     >
       <ResourceColumnInteractiveLayer
-        start={start}
-        end={end}
         showCurrentTimeIndicator={showCurrentTimeIndicator}
         index={index}
         occurrences={occurrences}
@@ -195,8 +193,6 @@ export function ResourceTimeGridColumn(props: ResourceTimeGridColumnProps) {
 }
 
 function ResourceColumnInteractiveLayer({
-  start,
-  end,
   showCurrentTimeIndicator,
   index,
   occurrences,
@@ -204,8 +200,6 @@ function ResourceColumnInteractiveLayer({
   resourceId,
   isLoadingColumn = false,
 }: {
-  start: TemporalSupportedObject;
-  end: TemporalSupportedObject;
   showCurrentTimeIndicator: boolean;
   index: number;
   occurrences: useEventOccurrencesWithTimelinePosition.EventOccurrenceWithPosition[];
@@ -214,7 +208,8 @@ function ResourceColumnInteractiveLayer({
   isLoadingColumn?: boolean;
 }) {
   const store = useEventCalendarStoreContext();
-  const { onOpen: startEditing } = useEventDialogContext();
+  const { start, end } = useCalendarGridTimeColumnContext().axis;
+  const { startEditing } = useEventEditingContext();
   const { classes } = useEventCalendarStyledContext();
 
   const columnRef = React.useRef<HTMLDivElement | null>(null);
@@ -251,9 +246,9 @@ function ResourceColumnInteractiveLayer({
       {isLoading && <EventSkeleton data-variant="time-column" />}
       {!isLoading &&
         occurrences.map((occurrence) => (
-          <EventDialogTrigger key={occurrence.key} occurrence={occurrence}>
+          <EventContextMenuTrigger key={occurrence.key} occurrence={occurrence}>
             <TimeGridEvent occurrence={occurrence} variant="regular" />
-          </EventDialogTrigger>
+          </EventContextMenuTrigger>
         ))}
       {placeholder != null && <TimeGridEvent occurrence={placeholder} variant="placeholder" />}
       {showCurrentTimeIndicator ? (
@@ -275,7 +270,7 @@ function ResourceColumnInteractiveLayer({
 interface ResourceTimeGridColumnProps {
   resource: SchedulerResource;
   occurrences: SchedulerEventOccurrence[];
-  day: SchedulerProcessedDate;
+  day: SchedulerProcessedDay;
   index: number;
   showCurrentTimeIndicator: boolean;
   isPinned?: boolean;

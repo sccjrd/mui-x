@@ -6,22 +6,28 @@ import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
 import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
 import { useStore } from '@base-ui/utils/store';
 import { CalendarGrid } from '@mui/x-scheduler-internals/calendar-grid';
-import { useAdapterContext } from '@mui/x-scheduler-internals/use-adapter-context';
 import { useEventCalendarStoreContext } from '@mui/x-scheduler-internals/use-event-calendar-store-context';
 import {
   schedulerNowSelectors,
   schedulerOccurrenceSelectors,
+  schedulerOtherSelectors,
+  schedulerPreferenceSelectors,
 } from '@mui/x-scheduler-internals/scheduler-selectors';
+import { formatTime, getDayNumber, getEndOfDayMs } from '@mui/x-scheduler-internals/internals';
 import clsx from 'clsx';
-import { ResourceDayTimeGridProps } from './ResourceDayTimeGrid.types';
+import type { ResourceDayTimeGridProps } from './ResourceDayTimeGrid.types';
 import { ResourceTimeGridColumn } from './ResourceTimeGridColumn';
-import { useFormatTime } from '../../hooks/useFormatTime';
+import { useEventEditingContext } from '../event-editing';
+import { useDisarmOnOutsidePointer } from '../armed-occurrence';
 import { useEventCalendarStyledContext } from '../../../event-calendar/EventCalendarStyledContext';
+import { eventCalendarClasses } from '../../../event-calendar/eventCalendarClasses';
 
 const FIXED_CELL_WIDTH = 68;
 const DEFAULT_HOUR_HEIGHT = 80;
 const DEFAULT_MIN_COLUMN_WIDTH = 200;
 const HOURS_IN_DAY = 24;
+// This grid has no focusable header or all-day row, so arrow keys stay in the resource columns.
+const ROW_TYPES: CalendarGrid.Root.Props['rowTypes'] = ['time-grid'];
 
 const ResourceDayTimeGridContainer = styled(CalendarGrid.Root, {
   name: 'MuiEventCalendar',
@@ -367,12 +373,21 @@ export const ResourceDayTimeGrid = React.forwardRef(function ResourceDayTimeGrid
     ...other
   } = props;
 
-  const adapter = useAdapterContext();
   const { classes } = useEventCalendarStyledContext();
   const store = useEventCalendarStoreContext();
+  const { stopEditing } = useEventEditingContext();
+  const isArmed = useStore(store, schedulerOtherSelectors.editingMode) === 'armed';
 
   const containerRef = React.useRef<HTMLElement | null>(null);
   const handleRef = useMergedRefs(forwardedRef, containerRef);
+
+  // The resize handle is skipped so finishing a resize doesn't disarm.
+  useDisarmOnOutsidePointer({
+    ref: containerRef,
+    active: isArmed,
+    onDisarm: stopEditing,
+    ignoreSelector: `.${eventCalendarClasses.timeGridEventResizeHandler}`,
+  });
 
   // Ref for the scroll container (handles initial scroll + shadow tracking).
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
@@ -443,11 +458,18 @@ export const ResourceDayTimeGrid = React.forwardRef(function ResourceDayTimeGrid
     return () => el.removeEventListener('scroll', onScroll);
   }, [showSeparatorShadow, pinnedCount]);
 
-  const now = useStore(store, schedulerNowSelectors.nowUpdatedEveryMinute);
+  const nowDayNumber = useStore(store, schedulerNowSelectors.nowDayNumber);
   const showCurrentTimeIndicator = useStore(store, schedulerNowSelectors.showCurrentTimeIndicator);
+  const displayTimezone = useStore(store, schedulerOtherSelectors.displayTimezone);
+  const locale = useStore(store, schedulerOtherSelectors.dateLocale);
+  const ampm = useStore(store, schedulerPreferenceSelectors.ampm);
 
-  const start = React.useMemo(() => adapter.startOfDay(day.value), [adapter, day]);
-  const end = React.useMemo(() => adapter.endOfDay(day.value), [adapter, day]);
+  // `day.timestamp` is the first instant of the day.
+  const start = day.timestamp;
+  const end = React.useMemo(
+    () => getEndOfDayMs(day.timestamp, displayTimezone),
+    [day.timestamp, displayTimezone],
+  );
 
   const resourceGroups = useStore(
     store,
@@ -456,13 +478,7 @@ export const ResourceDayTimeGrid = React.forwardRef(function ResourceDayTimeGrid
     end,
   );
 
-  const isTodayInView = React.useMemo(
-    () => adapter.isWithinRange(now, [start, end]),
-    [adapter, now, start, end],
-  );
-
-  const formatTime = useFormatTime();
-  const template = adapter.date('2020-01-01T00:00:00', 'default');
+  const isTodayInView = nowDayNumber === getDayNumber(day.plainDate);
 
   // ── Slot sizing ────────────────────────────────────────────────────────────
   // slotsPerHour: e.g. 2 for 30-min slots, 4 for 15-min slots.
@@ -514,9 +530,7 @@ export const ResourceDayTimeGrid = React.forwardRef(function ResourceDayTimeGrid
               className={classes.resourceDayTimeGridTimeAxisText}
               as="time"
             >
-              {slot === 0
-                ? null
-                : formatTime(adapter.setMinutes(adapter.setHours(template, hour), minute))}
+              {slot === 0 ? null : formatTime(locale, hour * 60 + minute, ampm)}
             </ResourceDayTimeGridTimeAxisText>
           </ResourceDayTimeGridTimeAxisCell>
         );
@@ -556,6 +570,7 @@ export const ResourceDayTimeGrid = React.forwardRef(function ResourceDayTimeGrid
       {...other}
       style={inlineStyle}
       className={clsx(className, classes.resourceDayTimeGridContainer)}
+      rowTypes={ROW_TYPES}
     >
       <ResourceDayTimeGridRoot ref={scrollRef} className={classes.resourceDayTimeGridBody}>
         <ResourceDayTimeGridInner

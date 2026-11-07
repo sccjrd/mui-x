@@ -1,10 +1,10 @@
-import { SchedulerProcessedDate } from '@mui/x-scheduler-internals/models';
+import type { SchedulerProcessedDay } from '@mui/x-scheduler-internals/models';
 
 export interface ResourceDayTimeGridProps extends ExportedResourceDayTimeGridProps {
   /**
    * The day to render resource columns for.
    */
-  day: SchedulerProcessedDate;
+  day: SchedulerProcessedDay;
 }
 
 export interface ExportedResourceDayTimeGridProps extends React.HTMLAttributes<HTMLDivElement> {
