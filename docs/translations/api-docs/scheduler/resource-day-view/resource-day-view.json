@@ -1,5 +1,5 @@
 {
-  "componentDescription": "A Resource Day View that shows one column per resource for a single day.\nUse inside the Event Calendar.",
+  "componentDescription": "A Resource Day View that shows one column per resource for a single day.\nIt isn't one of the Event Calendar views: use `StandaloneResourceDayView`, which provides\nthe calendar context this component reads.",
   "propDescriptions": {
     "columnWidth": {
       "description": "Fixed width in pixels for each resource column. When set, columns will not grow or shrink beyond this value and horizontal scrolling is enabled. Takes precedence over <code>minColumnWidth</code>."

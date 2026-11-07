@@ -10,7 +10,8 @@ const RESOURCE_DAY_VIEW_DEFINITION = createDayTimeGridViewDefinition(1);
 
 /**
  * A Resource Day View that shows one column per resource for a single day.
- * Use inside the Event Calendar.
+ * It isn't one of the Event Calendar views: use `StandaloneResourceDayView`, which provides
+ * the calendar context this component reads.
  */
 const ResourceDayView = React.memo(
   React.forwardRef(function ResourceDayView(

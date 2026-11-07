@@ -19,6 +19,11 @@ This is ideal for room or asset booking scenarios where you need to see all reso
 
 {{"demo": "RoomBookings.js", "bg": "inline", "defaultCodeOpen": false}}
 
+:::info
+The Resource Day View only shows timed events.
+It has no all-day row, so all-day and multi-day events aren't displayed.
+:::
+
 ## Define resources
 
 Use the `resources` prop to define available resources, and the `resource` property on the event model to link an event to its resource:

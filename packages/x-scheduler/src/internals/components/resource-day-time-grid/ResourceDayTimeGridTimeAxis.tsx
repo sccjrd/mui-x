@@ -50,7 +50,8 @@ const ResourceDayTimeGridTimeAxisText = styled('time', {
   slot: 'ResourceDayTimeGridTimeAxisText',
 })(({ theme }) => ({
   display: 'block',
-  fontSize: theme.typography.caption.fontSize,
+  // Shrinks with the time axis on narrow screens, like the labels of the day view.
+  fontSize: 'var(--EventCalendar-fontSize-timeText, 0.75rem)',
   lineHeight: theme.typography.caption.lineHeight,
   color: (theme.vars || theme).palette.text.secondary,
   whiteSpace: 'nowrap',
