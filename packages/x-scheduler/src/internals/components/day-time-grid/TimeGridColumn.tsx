@@ -140,6 +140,7 @@ function ColumnInteractiveLayer({
     eventCalendarOccurrencePlaceholderSelectors.isCreatingInTimeRange,
     start,
     end,
+    undefined,
   );
   const placeholder = CalendarGrid.usePlaceholderInRange({ start, end, occurrences, maxIndex });
   const isLoading = useStore(store, schedulerOtherSelectors.isLoading);

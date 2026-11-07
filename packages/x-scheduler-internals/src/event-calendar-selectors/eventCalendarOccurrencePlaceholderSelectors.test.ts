@@ -98,7 +98,12 @@ describe('eventCalendarOccurrencePlaceholderSelectors', () => {
     it('should return false when there is no placeholder', () => {
       const state = DEFAULT_EVENT_CALENDAR_STATE;
       expect(
-        eventCalendarOccurrencePlaceholderSelectors.isCreatingInTimeRange(state, dayStart, dayEnd),
+        eventCalendarOccurrencePlaceholderSelectors.isCreatingInTimeRange(
+          state,
+          dayStart,
+          dayEnd,
+          undefined,
+        ),
       ).to.equal(false);
     });
 
@@ -114,7 +119,12 @@ describe('eventCalendarOccurrencePlaceholderSelectors', () => {
         },
       };
       expect(
-        eventCalendarOccurrencePlaceholderSelectors.isCreatingInTimeRange(state, dayStart, dayEnd),
+        eventCalendarOccurrencePlaceholderSelectors.isCreatingInTimeRange(
+          state,
+          dayStart,
+          dayEnd,
+          undefined,
+        ),
       ).to.equal(false);
     });
 
@@ -133,7 +143,12 @@ describe('eventCalendarOccurrencePlaceholderSelectors', () => {
         },
       };
       expect(
-        eventCalendarOccurrencePlaceholderSelectors.isCreatingInTimeRange(state, dayStart, dayEnd),
+        eventCalendarOccurrencePlaceholderSelectors.isCreatingInTimeRange(
+          state,
+          dayStart,
+          dayEnd,
+          undefined,
+        ),
       ).to.equal(false);
     });
 
@@ -150,7 +165,12 @@ describe('eventCalendarOccurrencePlaceholderSelectors', () => {
         },
       };
       expect(
-        eventCalendarOccurrencePlaceholderSelectors.isCreatingInTimeRange(state, dayStart, dayEnd),
+        eventCalendarOccurrencePlaceholderSelectors.isCreatingInTimeRange(
+          state,
+          dayStart,
+          dayEnd,
+          undefined,
+        ),
       ).to.equal(false);
     });
 
@@ -166,7 +186,12 @@ describe('eventCalendarOccurrencePlaceholderSelectors', () => {
         },
       };
       expect(
-        eventCalendarOccurrencePlaceholderSelectors.isCreatingInTimeRange(state, dayStart, dayEnd),
+        eventCalendarOccurrencePlaceholderSelectors.isCreatingInTimeRange(
+          state,
+          dayStart,
+          dayEnd,
+          undefined,
+        ),
       ).to.equal(true);
     });
 
@@ -182,7 +207,12 @@ describe('eventCalendarOccurrencePlaceholderSelectors', () => {
         },
       };
       expect(
-        eventCalendarOccurrencePlaceholderSelectors.isCreatingInTimeRange(state, dayStart, dayEnd),
+        eventCalendarOccurrencePlaceholderSelectors.isCreatingInTimeRange(
+          state,
+          dayStart,
+          dayEnd,
+          undefined,
+        ),
       ).to.equal(false);
     });
 
@@ -198,7 +228,12 @@ describe('eventCalendarOccurrencePlaceholderSelectors', () => {
         },
       };
       expect(
-        eventCalendarOccurrencePlaceholderSelectors.isCreatingInTimeRange(state, dayStart, dayEnd),
+        eventCalendarOccurrencePlaceholderSelectors.isCreatingInTimeRange(
+          state,
+          dayStart,
+          dayEnd,
+          undefined,
+        ),
       ).to.equal(false);
     });
   });

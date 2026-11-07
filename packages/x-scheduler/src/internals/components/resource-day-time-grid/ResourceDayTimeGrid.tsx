@@ -5,13 +5,13 @@ import PushPinIcon from '@mui/icons-material/PushPin';
 import { useMergedRefs } from '@base-ui/utils/useMergedRefs';
 import { useIsoLayoutEffect } from '@base-ui/utils/useIsoLayoutEffect';
 import { useStore } from '@base-ui/utils/store';
-import { CalendarGrid } from '@mui/x-scheduler-headless/calendar-grid';
-import { useAdapterContext } from '@mui/x-scheduler-headless/use-adapter-context';
-import { useEventCalendarStoreContext } from '@mui/x-scheduler-headless/use-event-calendar-store-context';
+import { CalendarGrid } from '@mui/x-scheduler-internals/calendar-grid';
+import { useAdapterContext } from '@mui/x-scheduler-internals/use-adapter-context';
+import { useEventCalendarStoreContext } from '@mui/x-scheduler-internals/use-event-calendar-store-context';
 import {
   schedulerNowSelectors,
   schedulerOccurrenceSelectors,
-} from '@mui/x-scheduler-headless/scheduler-selectors';
+} from '@mui/x-scheduler-internals/scheduler-selectors';
 import clsx from 'clsx';
 import { ResourceDayTimeGridProps } from './ResourceDayTimeGrid.types';
 import { ResourceTimeGridColumn } from './ResourceTimeGridColumn';

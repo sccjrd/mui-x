@@ -7,13 +7,13 @@ import {
   SchedulerProcessedDate,
   SchedulerResource,
   TemporalSupportedObject,
-} from '@mui/x-scheduler-headless/models';
-import { CalendarGrid } from '@mui/x-scheduler-headless/calendar-grid';
-import { useEventCalendarStoreContext } from '@mui/x-scheduler-headless/use-event-calendar-store-context';
-import { useAdapterContext } from '@mui/x-scheduler-headless/use-adapter-context';
-import { useEventOccurrencesWithTimelinePosition } from '@mui/x-scheduler-headless/use-event-occurrences-with-timeline-position';
-import { eventCalendarOccurrencePlaceholderSelectors } from '@mui/x-scheduler-headless/event-calendar-selectors';
-import { schedulerOtherSelectors } from '@mui/x-scheduler-headless/scheduler-selectors';
+} from '@mui/x-scheduler-internals/models';
+import { CalendarGrid } from '@mui/x-scheduler-internals/calendar-grid';
+import { useEventCalendarStoreContext } from '@mui/x-scheduler-internals/use-event-calendar-store-context';
+import { useAdapterContext } from '@mui/x-scheduler-internals/use-adapter-context';
+import { useEventOccurrencesWithTimelinePosition } from '@mui/x-scheduler-internals/use-event-occurrences-with-timeline-position';
+import { eventCalendarOccurrencePlaceholderSelectors } from '@mui/x-scheduler-internals/event-calendar-selectors';
+import { schedulerOtherSelectors } from '@mui/x-scheduler-internals/scheduler-selectors';
 import { TimeGridEvent } from '../event/time-grid-event/TimeGridEvent';
 import { EventSkeleton } from '../event-skeleton';
 import { EventDialogTrigger, useEventDialogContext } from '../event-dialog/EventDialog';

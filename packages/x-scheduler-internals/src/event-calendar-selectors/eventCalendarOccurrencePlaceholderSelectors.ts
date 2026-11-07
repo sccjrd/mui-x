@@ -35,7 +35,7 @@ export const eventCalendarOccurrencePlaceholderSelectors = {
       state: State,
       start: TemporalSupportedObject,
       end: TemporalSupportedObject,
-      resourceId?: SchedulerResourceId | null,
+      resourceId: SchedulerResourceId | null | undefined,
     ) => {
       if (
         state.occurrencePlaceholder === null ||
@@ -45,10 +45,7 @@ export const eventCalendarOccurrencePlaceholderSelectors = {
         return null;
       }
 
-      if (
-        resourceId !== undefined &&
-        state.occurrencePlaceholder.resourceId !== resourceId
-      ) {
+      if (resourceId !== undefined && state.occurrencePlaceholder.resourceId !== resourceId) {
         return null;
       }
 
@@ -74,7 +71,7 @@ export const eventCalendarOccurrencePlaceholderSelectors = {
       state: State,
       dayStart: TemporalSupportedObject,
       dayEnd: TemporalSupportedObject,
-      resourceId?: SchedulerResourceId | null,
+      resourceId: SchedulerResourceId | null | undefined,
     ) => {
       const placeholder = state.occurrencePlaceholder;
       if (placeholder?.surfaceType !== 'time-grid' || placeholder.type !== 'creation') {
