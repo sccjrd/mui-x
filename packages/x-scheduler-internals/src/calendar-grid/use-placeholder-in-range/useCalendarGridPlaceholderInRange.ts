@@ -40,6 +40,9 @@ export function useCalendarGridPlaceholderInRange(
       key: 'occurrence-placeholder',
       id: originalEventId ?? 'occurrence-placeholder',
       title: originalEvent ? originalEvent.title : '',
+      // Set when the column belongs to a resource, so the placeholder (and the event created
+      // from it) carries that resource. `null` columns keep the previous behavior.
+      ...(rawPlaceholder.resourceId != null && { resource: rawPlaceholder.resourceId }),
       displayTimezone: {
         start: createProcessedDate(adapter, rawPlaceholder.start, displayTimezone),
         end: createProcessedDate(adapter, rawPlaceholder.end, displayTimezone),
