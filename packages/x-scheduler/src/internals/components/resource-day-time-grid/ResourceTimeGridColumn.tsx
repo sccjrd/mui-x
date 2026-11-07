@@ -13,6 +13,10 @@ import { useEventCalendarStoreContext } from '@mui/x-scheduler-internals/use-eve
 import { useEventOccurrencesWithTimelinePosition } from '@mui/x-scheduler-internals/use-event-occurrences-with-timeline-position';
 import { eventCalendarOccurrencePlaceholderSelectors } from '@mui/x-scheduler-internals/event-calendar-selectors';
 import { schedulerOtherSelectors } from '@mui/x-scheduler-internals/scheduler-selectors';
+import { getPinnedColumnProps } from './usePinnedResources';
+import type { PinnedColumnState } from './usePinnedResources';
+import { getStickyEdgeShadowStyles } from './resourceDayTimeGridStyles';
+import type { ExportedResourceDayTimeGridProps } from './ResourceDayTimeGrid.types';
 import { TimeGridEvent } from '../event/time-grid-event/TimeGridEvent';
 import { EventSkeleton } from '../event-skeleton';
 import { useEventEditingContext } from '../event-editing';
@@ -25,25 +29,13 @@ const ResourceDayTimeGridColumn = styled(CalendarGrid.TimeColumn, {
   name: 'MuiEventCalendar',
   slot: 'ResourceDayTimeGridColumn',
 })(({ theme }) => ({
-  borderInlineEnd: `1px solid ${(theme.vars || theme).palette.divider}`,
+  position: 'relative',
   flexGrow: 1,
   flexShrink: 0,
   flexBasis: 0,
   minWidth: 0,
-  position: 'relative',
-  '&:focus-visible': {
-    outline: 'none',
-    backgroundColor: getCellFocusBackground(theme),
-  },
-  ':last-of-type': {
-    borderInlineEnd: `1px solid ${(theme.vars || theme).palette.divider}`,
-  },
-  // Each column draws its own horizontal hour dividers.
-  // Keeping the gradient here (rather than on the grid container) means pinned
-  // columns with an opaque background-color still show the lines — background-image
-  // paints above background-color in CSS.
-  // Grid lines drawn per slot. --slot-height equals --hour-height when
-  // slotDuration is 60, and shrinks proportionally for shorter slots.
+  borderInlineEnd: `1px solid ${(theme.vars || theme).palette.divider}`,
+  // One line per slot, drawn by each column so the opaque pinned columns still show them.
   backgroundImage: `repeating-linear-gradient(
     to bottom,
     transparent,
@@ -51,38 +43,24 @@ const ResourceDayTimeGridColumn = styled(CalendarGrid.TimeColumn, {
     ${(theme.vars || theme).palette.divider} calc(var(--slot-height) - 1px),
     ${(theme.vars || theme).palette.divider} var(--slot-height)
   )`,
-  // Each column is its own stacking context so event z-indexes (2 / 3) stay
-  // local and never bleed above adjacent pinned columns.
+  // Its own stacking context, so its events never go above a pinned column.
   isolation: 'isolate',
-  // Pinned column: sticky within the scroll container, above non-pinned columns.
-  // position: sticky overrides the position: relative above via the inline style
-  // passed from ResourceTimeGridColumn (inline styles take precedence over class styles).
+  '&:focus-visible': {
+    outline: 'none',
+    backgroundColor: getCellFocusBackground(theme),
+  },
   '&[data-pinned]': {
-    zIndex: 1, // within the grid's isolated stacking context
+    zIndex: 1,
     backgroundColor: (theme.vars || theme).palette.background.paper,
   },
-  // The last pinned column carries the visual separator.
   '&[data-last-pinned]': {
-    zIndex: 2, // above other pinned columns so its ::after shadow renders on top
+    zIndex: 2,
   },
-  // Border separator — always visible when enabled.
   '&[data-last-pinned][data-separator-border]': {
     borderInlineEnd: `1px solid ${(theme.vars || theme).palette.divider}`,
   },
-  // Shadow separator — uses a CSS variable --shadow-opacity set by the parent on scroll.
   '&[data-last-pinned][data-separator-shadow]::after': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    right: -8,
-    bottom: 0,
-    width: 8,
-    background: `linear-gradient(to right, ${
-      theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.15)'
-    }, transparent)`,
-    pointerEvents: 'none',
-    opacity: 'var(--shadow-opacity, 0)',
-    transition: 'opacity 0.2s',
+    ...getStickyEdgeShadowStyles(theme, '--shadow-opacity'),
     zIndex: 1,
   },
 }));
@@ -126,94 +104,65 @@ const ResourceDayTimeGridCurrentTimeIndicatorCircle = styled('span', {
 }));
 
 export function ResourceTimeGridColumn(props: ResourceTimeGridColumnProps) {
-  const {
-    resource,
-    occurrences: allOccurrences,
-    day,
-    showCurrentTimeIndicator,
-    index,
-    isPinned = false,
-    isLastPinned = false,
-    pinnedLeft,
-    showSeparatorBorder = false,
-    showSeparatorShadow = false,
-    isLoadingColumn = false,
-  } = props;
+  const { column, day, index, separator, showCurrentTimeIndicator, isLoading } = props;
+  const { resource } = column;
 
+  // Context hooks
   const { classes } = useEventCalendarStyledContext();
 
-  // Filter to only time-based (non-all-day) occurrences for this resource
+  // Only the timed events, since this grid has no all-day row.
   const timedOccurrences = React.useMemo(
-    () => allOccurrences.filter((occ) => !isOccurrenceAllDayOrMultipleDay(occ)),
-    [allOccurrences],
+    () => column.occurrences.filter((occurrence) => !isOccurrenceAllDayOrMultipleDay(occurrence)),
+    [column.occurrences],
   );
 
+  // Feature hooks
   const { occurrences, maxIndex } = useEventOccurrencesWithTimelinePosition({
     occurrences: timedOccurrences,
     maxSpan: Infinity,
   });
 
-  const resourceId = resource.id;
-  const addPropertiesToDroppedEvent = React.useMemo(
-    () => () => ({ allDay: false as const, resource: resourceId }),
-    [resourceId],
+  const addPropertiesToDroppedEvent = React.useCallback(
+    () => ({ allDay: false as const, resource: resource.id }),
+    [resource.id],
   );
+
+  const { style: pinnedStyle, ...pinnedAttributes } = getPinnedColumnProps(column, separator);
 
   return (
     <ResourceDayTimeGridColumn
       className={classes.resourceDayTimeGridColumn}
       value={day.plainDate}
-      addPropertiesToDroppedEvent={addPropertiesToDroppedEvent}
       resourceId={resource.id}
-      data-pinned={isPinned || undefined}
-      data-last-pinned={isLastPinned || undefined}
-      data-separator-border={(isLastPinned && showSeparatorBorder) || undefined}
-      data-separator-shadow={(isLastPinned && showSeparatorShadow) || undefined}
-      style={
-        {
-          '--columns-count': maxIndex,
-          // Sticky positioning for pinned columns — overrides position: relative from CSS.
-          ...(isPinned && {
-            position: 'sticky',
-            left: pinnedLeft,
-          }),
-        } as React.CSSProperties
-      }
+      addPropertiesToDroppedEvent={addPropertiesToDroppedEvent}
+      {...pinnedAttributes}
+      style={{ '--columns-count': maxIndex, ...pinnedStyle } as React.CSSProperties}
     >
       <ResourceColumnInteractiveLayer
-        showCurrentTimeIndicator={showCurrentTimeIndicator}
-        index={index}
+        resourceId={resource.id}
         occurrences={occurrences}
         maxIndex={maxIndex}
-        resourceId={resource.id}
-        isLoadingColumn={isLoadingColumn}
+        index={index}
+        showCurrentTimeIndicator={showCurrentTimeIndicator}
+        isLoading={isLoading}
       />
     </ResourceDayTimeGridColumn>
   );
 }
 
-function ResourceColumnInteractiveLayer({
-  showCurrentTimeIndicator,
-  index,
-  occurrences,
-  maxIndex,
-  resourceId,
-  isLoadingColumn = false,
-}: {
-  showCurrentTimeIndicator: boolean;
-  index: number;
-  occurrences: useEventOccurrencesWithTimelinePosition.EventOccurrenceWithPosition[];
-  maxIndex: number;
-  resourceId: string;
-  isLoadingColumn?: boolean;
-}) {
+function ResourceColumnInteractiveLayer(props: ResourceColumnInteractiveLayerProps) {
+  const { resourceId, occurrences, maxIndex, index, showCurrentTimeIndicator, isLoading } = props;
+
+  // Context hooks
   const store = useEventCalendarStoreContext();
   const { start, end } = useCalendarGridTimeColumnContext().axis;
   const { startEditing } = useEventEditingContext();
   const { classes } = useEventCalendarStyledContext();
 
+  // Ref hooks
   const columnRef = React.useRef<HTMLDivElement | null>(null);
 
+  // Selector hooks
   const isCreatingAnEvent = useStore(
     store,
     eventCalendarOccurrencePlaceholderSelectors.isCreatingInTimeRange,
@@ -221,6 +170,9 @@ function ResourceColumnInteractiveLayer({
     end,
     resourceId,
   );
+  const isStoreLoading = useStore(store, schedulerOtherSelectors.isLoading);
+
+  // Feature hooks
   const placeholder = CalendarGrid.usePlaceholderInRange({
     start,
     end,
@@ -228,8 +180,6 @@ function ResourceColumnInteractiveLayer({
     maxIndex,
     resourceId,
   });
-  const isGlobalLoading = useStore(store, schedulerOtherSelectors.isLoading);
-  const isLoading = isGlobalLoading || isLoadingColumn;
 
   React.useEffect(() => {
     if (!isCreatingAnEvent || !placeholder || !columnRef.current) {
@@ -238,20 +188,22 @@ function ResourceColumnInteractiveLayer({
     startEditing(columnRef, placeholder);
   }, [isCreatingAnEvent, placeholder, startEditing]);
 
+  const showSkeleton = isStoreLoading || isLoading;
+
   return (
     <ResourceDayTimeGridColumnInteractiveLayer
       className={classes.resourceDayTimeGridColumnInteractiveLayer}
       ref={columnRef}
     >
-      {isLoading && <EventSkeleton data-variant="time-column" />}
-      {!isLoading &&
+      {showSkeleton && <EventSkeleton data-variant="time-column" />}
+      {!showSkeleton &&
         occurrences.map((occurrence) => (
           <EventContextMenuTrigger key={occurrence.key} occurrence={occurrence}>
             <TimeGridEvent occurrence={occurrence} variant="regular" />
           </EventContextMenuTrigger>
         ))}
       {placeholder != null && <TimeGridEvent occurrence={placeholder} variant="placeholder" />}
-      {showCurrentTimeIndicator ? (
+      {showCurrentTimeIndicator && (
         <ResourceDayTimeGridCurrentTimeIndicator
           className={classes.resourceDayTimeGridCurrentTimeIndicator}
           aria-hidden
@@ -262,23 +214,34 @@ function ResourceColumnInteractiveLayer({
             />
           )}
         </ResourceDayTimeGridCurrentTimeIndicator>
-      ) : null}
+      )}
     </ResourceDayTimeGridColumnInteractiveLayer>
   );
 }
 
 interface ResourceTimeGridColumnProps {
-  resource: SchedulerResource;
-  occurrences: SchedulerEventOccurrence[];
+  column: {
+    resource: SchedulerResource;
+    occurrences: SchedulerEventOccurrence[];
+  } & PinnedColumnState;
   day: SchedulerProcessedDay;
+  /**
+   * The position of the column in the grid. The first column draws the dot of the current time.
+   */
+  index: number;
+  separator: NonNullable<ExportedResourceDayTimeGridProps['pinnedColumnsSectionSeparator']>;
+  showCurrentTimeIndicator: boolean;
+  /**
+   * Whether this column is loading, in addition to the loading state of the whole calendar.
+   */
+  isLoading: boolean;
+}
+
+interface ResourceColumnInteractiveLayerProps {
+  resourceId: string;
+  occurrences: useEventOccurrencesWithTimelinePosition.EventOccurrenceWithPosition[];
+  maxIndex: number;
   index: number;
   showCurrentTimeIndicator: boolean;
-  isPinned?: boolean;
-  isLastPinned?: boolean;
-  /** Pre-computed `left` value in px for sticky positioning. */
-  pinnedLeft?: number;
-  showSeparatorBorder?: boolean;
-  showSeparatorShadow?: boolean;
-  /** Whether this specific column is loading. Combined with the global isLoading. */
-  isLoadingColumn?: boolean;
+  isLoading: boolean;
 }
