@@ -111,12 +111,6 @@ StandaloneResourceDayView.propTypes /* remove-proptypes */ = {
     weekStartsOn: PropTypes.oneOf([1, 2, 3, 4, 5, 6, 7]),
   }),
   /**
-   * The hour (0–23) to scroll to when the component first mounts.
-   * Useful for starting the view at business hours instead of midnight.
-   * @default 0
-   */
-  defaultScrollToHour: PropTypes.number,
-  /**
    * The view initially displayed in the calendar.
    * To render a controlled calendar, use the `view` prop.
    * @default "week"
@@ -149,6 +143,11 @@ StandaloneResourceDayView.propTypes /* remove-proptypes */ = {
    * @default "default"
    */
   displayTimezone: PropTypes.string,
+  /**
+   * Exclusive end of the hour range displayed in the time grid (whole hour between 0 and 24).
+   * @default 24
+   */
+  endTime: PropTypes.number,
   /**
    * The color palette used for all events.
    * Can be overridden per resource using the `eventColor` property on the resource model.
@@ -215,6 +214,11 @@ StandaloneResourceDayView.propTypes /* remove-proptypes */ = {
    * @default 80
    */
   hourHeight: PropTypes.number,
+  /**
+   * The hour the grid scrolls to when it first renders. Must be a displayed hour.
+   * @default 7 when it is a displayed hour, otherwise `startTime`
+   */
+  initialScrollTime: PropTypes.number,
   /**
    * IDs of resource columns that are currently loading their data.
    * Only those columns show a skeleton; already-loaded columns are unaffected.
@@ -351,6 +355,11 @@ StandaloneResourceDayView.propTypes /* remove-proptypes */ = {
    * @default {}
    */
   slots: PropTypes.object,
+  /**
+   * Inclusive start of the hour range displayed in the time grid (whole hour between 0 and 24).
+   * @default 0
+   */
+  startTime: PropTypes.number,
   /**
    * The system prop that allows defining system overrides as well as additional CSS styles.
    */

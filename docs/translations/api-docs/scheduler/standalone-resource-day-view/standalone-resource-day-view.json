@@ -25,9 +25,6 @@
     "defaultPreferences": {
       "description": "The default preferences for the calendar. To use controlled preferences, use the <code>preferences</code> prop."
     },
-    "defaultScrollToHour": {
-      "description": "The hour (0–23) to scroll to when the component first mounts. Useful for starting the view at business hours instead of midnight."
-    },
     "defaultView": {
       "description": "The view initially displayed in the calendar. To render a controlled calendar, use the <code>view</code> prop."
     },
@@ -39,6 +36,9 @@
     },
     "displayTimezone": {
       "description": "The timezone used to display events in the scheduler.<br>Accepts any valid IANA timezone name (for example &quot;America/New_York&quot;, &quot;Europe/Paris&quot;, &quot;Asia/Tokyo&quot;), or keywords understood by the adapter, such as &quot;default&quot; (use the adapter&#39;s default timezone), &quot;locale&quot; (use the user&#39;s current locale timezone), or &quot;UTC&quot;.<br>Events keep their original data timezone. The visible range starts on the day of the visible date in this timezone, and the next and previous navigation return dates in this timezone."
+    },
+    "endTime": {
+      "description": "Exclusive end of the hour range displayed in the time grid (whole hour between 0 and 24)."
     },
     "eventColor": {
       "description": "The color palette used for all events. Can be overridden per resource using the <code>eventColor</code> property on the resource model. Can be overridden per event using the <code>color</code> property on the event model."
@@ -57,6 +57,9 @@
     },
     "hourHeight": {
       "description": "The height in pixels of each hour slot in the time grid. Increasing this value zooms in on the time axis."
+    },
+    "initialScrollTime": {
+      "description": "The hour the grid scrolls to when it first renders. Must be a displayed hour."
     },
     "loadingResourceIds": {
       "description": "IDs of resource columns that are currently loading their data. Only those columns show a skeleton; already-loaded columns are unaffected. This is independent of the global <code>isLoading</code> state; both can be true simultaneously."
@@ -106,6 +109,9 @@
     },
     "slotProps": { "description": "The props used for each component slot." },
     "slots": { "description": "Overridable component slots." },
+    "startTime": {
+      "description": "Inclusive start of the hour range displayed in the time grid (whole hour between 0 and 24)."
+    },
     "sx": {
       "description": "The system prop that allows defining system overrides as well as additional CSS styles."
     },

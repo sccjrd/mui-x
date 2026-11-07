@@ -825,21 +825,9 @@
       "description": "Styles applied to {{nodeName}}.",
       "nodeName": "resource day time grid column elements"
     },
-    "resourceDayTimeGridColumnInteractiveLayer": {
-      "description": "Styles applied to {{nodeName}}.",
-      "nodeName": "resource day time grid column interactive layer elements"
-    },
     "resourceDayTimeGridContainer": {
       "description": "Styles applied to {{nodeName}}.",
       "nodeName": "the resource day time grid container element"
-    },
-    "resourceDayTimeGridCurrentTimeIndicator": {
-      "description": "Styles applied to {{nodeName}}.",
-      "nodeName": "the resource day time grid current time indicator element"
-    },
-    "resourceDayTimeGridCurrentTimeIndicatorCircle": {
-      "description": "Styles applied to {{nodeName}}.",
-      "nodeName": "the resource day time grid current time indicator circle element"
     },
     "resourceDayTimeGridGrid": {
       "description": "Styles applied to {{nodeName}}.",

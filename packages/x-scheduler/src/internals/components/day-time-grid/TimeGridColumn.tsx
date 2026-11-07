@@ -8,6 +8,7 @@ import {
   useCalendarGridTimeColumnContext,
 } from '@mui/x-scheduler-internals/internals';
 import { CalendarGrid } from '@mui/x-scheduler-internals/calendar-grid';
+import type { SchedulerResourceId } from '@mui/x-scheduler-internals/models';
 import { useEventCalendarStoreContext } from '@mui/x-scheduler-internals/use-event-calendar-store-context';
 import type { useEventOccurrencesWithDayGridPosition } from '@mui/x-scheduler-internals/use-event-occurrences-with-day-grid-position';
 import { useEventOccurrencesWithTimelinePosition } from '@mui/x-scheduler-internals/use-event-occurrences-with-timeline-position';
@@ -130,16 +131,31 @@ export function TimeGridColumn(props: TimeGridColumnProps) {
   );
 }
 
-function ColumnInteractiveLayer({
+/**
+ * The events, the placeholder and the current time indicator of a time grid column.
+ * Shared with the resource day view.
+ */
+export function ColumnInteractiveLayer({
   showCurrentTimeIndicator,
   index,
   occurrences,
   maxIndex,
+  resourceId,
+  isLoading: isColumnLoading = false,
 }: {
   showCurrentTimeIndicator: boolean;
   index: number;
   occurrences: useEventOccurrencesWithTimelinePosition.EventOccurrenceWithPosition[];
   maxIndex: number;
+  /**
+   * The resource of the column. When set, only the placeholders of this resource are rendered.
+   */
+  resourceId?: SchedulerResourceId;
+  /**
+   * Whether this column is loading, in addition to the loading state of the whole calendar.
+   * @default false
+   */
+  isLoading?: boolean;
 }) {
   // Context hooks
   const store = useEventCalendarStoreContext();
@@ -156,9 +172,16 @@ function ColumnInteractiveLayer({
     eventCalendarOccurrencePlaceholderSelectors.isCreatingInTimeRange,
     start,
     end,
+    resourceId,
   );
-  const placeholder = CalendarGrid.usePlaceholderInRange({ start, end, occurrences, maxIndex });
-  const isLoading = useStore(store, schedulerOtherSelectors.isLoading);
+  const placeholder = CalendarGrid.usePlaceholderInRange({
+    start,
+    end,
+    occurrences,
+    maxIndex,
+    resourceId,
+  });
+  const isLoading = useStore(store, schedulerOtherSelectors.isLoading) || isColumnLoading;
 
   React.useEffect(() => {
     // `startEditing` is a no-op once the surface is open, so placeholder churn doesn't re-fire it.

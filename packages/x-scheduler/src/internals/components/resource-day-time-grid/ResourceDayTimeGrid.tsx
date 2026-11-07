@@ -11,7 +11,12 @@ import {
   schedulerOccurrenceSelectors,
   schedulerOtherSelectors,
 } from '@mui/x-scheduler-internals/scheduler-selectors';
-import { getDayNumber, getEndOfDayMs } from '@mui/x-scheduler-internals/internals';
+import {
+  getDayNumber,
+  getDisplayedHourRange,
+  getEndOfDayMs,
+  getInitialScrollTime,
+} from '@mui/x-scheduler-internals/internals';
 import clsx from 'clsx';
 import type { ResourceDayTimeGridProps } from './ResourceDayTimeGrid.types';
 import { ResourceDayTimeGridHeader } from './ResourceDayTimeGridHeader';
@@ -25,7 +30,8 @@ import { eventCalendarClasses } from '../../../event-calendar/eventCalendarClass
 
 const DEFAULT_HOUR_HEIGHT = 80;
 const DEFAULT_MIN_COLUMN_WIDTH = 200;
-const HOURS_IN_DAY = 24;
+// Names the component in the warnings about an invalid hour range.
+const HOUR_RANGE_SOURCE = 'ResourceDayView';
 // This grid has no focusable header or all-day row, so arrow keys stay in the resource columns.
 const ROW_TYPES: CalendarGrid.Root.Props['rowTypes'] = ['time-grid'];
 
@@ -78,7 +84,7 @@ const ResourceDayTimeGridScrollableContent = styled(CalendarGrid.TimeScrollableC
   slot: 'ResourceDayTimeGridScrollableContent',
 })({
   display: 'flex',
-  height: `calc(var(--hour-height) * ${HOURS_IN_DAY})`,
+  height: 'calc(var(--hour-height) * var(--hours-count))',
   position: 'relative',
   // `ResourceDayTimeGridRoot` scrolls.
   overflow: 'visible',
@@ -112,7 +118,9 @@ export const ResourceDayTimeGrid = React.forwardRef(function ResourceDayTimeGrid
     slotDuration = 60,
     columnWidth,
     minColumnWidth = DEFAULT_MIN_COLUMN_WIDTH,
-    defaultScrollToHour = 0,
+    startTime: startTimeProp,
+    endTime: endTimeProp,
+    initialScrollTime: initialScrollTimeProp,
     pinnedResourceIds,
     defaultPinnedResourceIds,
     onPinnedResourceIdsChange,
@@ -120,6 +128,14 @@ export const ResourceDayTimeGrid = React.forwardRef(function ResourceDayTimeGrid
     loadingResourceIds = [],
     ...other
   } = props;
+
+  const hourRange = getDisplayedHourRange(startTimeProp, endTimeProp, HOUR_RANGE_SOURCE);
+  const { startTime, endTime } = hourRange;
+  const initialScrollTime = getInitialScrollTime(
+    initialScrollTimeProp,
+    hourRange,
+    HOUR_RANGE_SOURCE,
+  );
 
   // Context hooks
   const { classes } = useEventCalendarStyledContext();
@@ -131,7 +147,7 @@ export const ResourceDayTimeGrid = React.forwardRef(function ResourceDayTimeGrid
   const handleRef = useMergedRefs(forwardedRef, containerRef);
   const scrollRef = React.useRef<HTMLDivElement | null>(null);
   // Only the values of the first render are used, like `defaultValue` on an input.
-  const initialScrollTopRef = React.useRef(defaultScrollToHour * hourHeight);
+  const initialScrollTopRef = React.useRef((initialScrollTime - startTime) * hourHeight);
 
   // Selector hooks
   const isArmed = useStore(store, schedulerOtherSelectors.editingMode) === 'armed';
@@ -184,6 +200,7 @@ export const ResourceDayTimeGrid = React.forwardRef(function ResourceDayTimeGrid
   const containerStyle = {
     ...style,
     '--hour-height': `${hourHeight}px`,
+    '--hours-count': endTime - startTime,
     '--slot-height': `${(hourHeight * slotDuration) / 60}px`,
     '--min-column-width': `${columnWidth ?? minColumnWidth}px`,
     ...(columnWidth != null && { '--column-template': `${columnWidth}px` }),
@@ -215,7 +232,11 @@ export const ResourceDayTimeGrid = React.forwardRef(function ResourceDayTimeGrid
           <ResourceDayTimeGridScrollableContent
             className={classes.resourceDayTimeGridScrollableContent}
           >
-            <ResourceDayTimeGridTimeAxis slotDuration={slotDuration} />
+            <ResourceDayTimeGridTimeAxis
+              startTime={startTime}
+              endTime={endTime}
+              slotDuration={slotDuration}
+            />
 
             {hasColumns && (
               <ResourceDayTimeGridGrid className={classes.resourceDayTimeGridGrid}>
@@ -225,6 +246,8 @@ export const ResourceDayTimeGrid = React.forwardRef(function ResourceDayTimeGrid
                     column={column}
                     day={day}
                     index={index}
+                    startTime={startTime}
+                    endTime={endTime}
                     separator={pinnedColumnsSectionSeparator}
                     showCurrentTimeIndicator={showCurrentTimeIndicator && isTodayInView}
                     isLoading={loadingResourceIds.includes(column.resource.id)}

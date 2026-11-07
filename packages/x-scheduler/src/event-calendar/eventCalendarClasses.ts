@@ -268,12 +268,6 @@ export interface EventCalendarClasses
   resourceDayTimeGridGrid: string;
   /** Styles applied to resource day time grid column elements. */
   resourceDayTimeGridColumn: string;
-  /** Styles applied to resource day time grid column interactive layer elements. */
-  resourceDayTimeGridColumnInteractiveLayer: string;
-  /** Styles applied to the resource day time grid current time indicator element. */
-  resourceDayTimeGridCurrentTimeIndicator: string;
-  /** Styles applied to the resource day time grid current time indicator circle element. */
-  resourceDayTimeGridCurrentTimeIndicatorCircle: string;
   /** Styles applied to the agenda view event list item elements. */
   agendaViewEventListItem: string;
   /** Styles applied to the side panel collapse element. */
@@ -473,9 +467,6 @@ export const eventCalendarClasses: EventCalendarClasses = generateUtilityClasses
     'resourceDayTimeGridTimeAxisText',
     'resourceDayTimeGridGrid',
     'resourceDayTimeGridColumn',
-    'resourceDayTimeGridColumnInteractiveLayer',
-    'resourceDayTimeGridCurrentTimeIndicator',
-    'resourceDayTimeGridCurrentTimeIndicatorCircle',
     'agendaViewEventListItem',
     'sidePanelCollapse',
     'sidePanelDivider',
@@ -639,9 +630,6 @@ const slots = {
   resourceDayTimeGridTimeAxisText: ['resourceDayTimeGridTimeAxisText'],
   resourceDayTimeGridGrid: ['resourceDayTimeGridGrid'],
   resourceDayTimeGridColumn: ['resourceDayTimeGridColumn'],
-  resourceDayTimeGridColumnInteractiveLayer: ['resourceDayTimeGridColumnInteractiveLayer'],
-  resourceDayTimeGridCurrentTimeIndicator: ['resourceDayTimeGridCurrentTimeIndicator'],
-  resourceDayTimeGridCurrentTimeIndicatorCircle: ['resourceDayTimeGridCurrentTimeIndicatorCircle'],
   agendaViewEventListItem: ['agendaViewEventListItem'],
   sidePanelCollapse: ['sidePanelCollapse'],
   sidePanelDivider: ['sidePanelDivider'],

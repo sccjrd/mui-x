@@ -7,11 +7,14 @@
     "defaultPinnedResourceIds": {
       "description": "The resource IDs to pin by default when the component first mounts (uncontrolled)."
     },
-    "defaultScrollToHour": {
-      "description": "The hour (0–23) to scroll to when the component first mounts. Useful for starting the view at business hours instead of midnight."
+    "endTime": {
+      "description": "Exclusive end of the hour range displayed in the time grid (whole hour between 0 and 24)."
     },
     "hourHeight": {
       "description": "The height in pixels of each hour slot in the time grid. Increasing this value zooms in on the time axis."
+    },
+    "initialScrollTime": {
+      "description": "The hour the grid scrolls to when it first renders. Must be a displayed hour."
     },
     "loadingResourceIds": {
       "description": "IDs of resource columns that are currently loading their data. Only those columns show a skeleton; already-loaded columns are unaffected. This is independent of the global <code>isLoading</code> state; both can be true simultaneously."
@@ -30,6 +33,9 @@
     },
     "slotDuration": {
       "description": "The duration of each time slot in minutes. Must be a divisor of 60 (e.g. 60, 30, 15). Controls both the time-axis label density and the grid-line frequency."
+    },
+    "startTime": {
+      "description": "Inclusive start of the hour range displayed in the time grid (whole hour between 0 and 24)."
     }
   },
   "classDescriptions": {},

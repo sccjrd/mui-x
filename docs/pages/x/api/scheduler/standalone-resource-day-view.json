@@ -23,7 +23,6 @@
       },
       "default": "{ showWeekends: true, showWeekNumber: false, isSidePanelOpen: true, showEmptyDaysInAgenda: true }"
     },
-    "defaultScrollToHour": { "type": { "name": "number" }, "default": "0" },
     "defaultView": {
       "type": {
         "name": "enum",
@@ -40,6 +39,7 @@
       "default": "{} - all resources are visible"
     },
     "displayTimezone": { "type": { "name": "string" }, "default": "\"default\"" },
+    "endTime": { "type": { "name": "number" }, "default": "24" },
     "eventColor": {
       "type": {
         "name": "enum",
@@ -63,6 +63,10 @@
       "default": "[]"
     },
     "hourHeight": { "type": { "name": "number" }, "default": "80" },
+    "initialScrollTime": {
+      "type": { "name": "number" },
+      "default": "7 when it is a displayed hour, otherwise `startTime`"
+    },
     "loadingResourceIds": {
       "type": { "name": "arrayOf", "description": "Array&lt;string&gt;" },
       "default": "[]"
@@ -109,6 +113,7 @@
       "default": "{}",
       "additionalInfo": { "slotsApi": true }
     },
+    "startTime": { "type": { "name": "number" }, "default": "0" },
     "sx": {
       "type": {
         "name": "union",

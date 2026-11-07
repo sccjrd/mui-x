@@ -5,8 +5,12 @@
       "type": { "name": "arrayOf", "description": "Array&lt;string&gt;" },
       "default": "[]"
     },
-    "defaultScrollToHour": { "type": { "name": "number" }, "default": "0" },
+    "endTime": { "type": { "name": "number" }, "default": "24" },
     "hourHeight": { "type": { "name": "number" }, "default": "80" },
+    "initialScrollTime": {
+      "type": { "name": "number" },
+      "default": "7 when it is a displayed hour, otherwise `startTime`"
+    },
     "loadingResourceIds": {
       "type": { "name": "arrayOf", "description": "Array&lt;string&gt;" },
       "default": "[]"
@@ -21,7 +25,8 @@
       "default": "'border-and-shadow'"
     },
     "pinnedResourceIds": { "type": { "name": "arrayOf", "description": "Array&lt;string&gt;" } },
-    "slotDuration": { "type": { "name": "number" }, "default": "60" }
+    "slotDuration": { "type": { "name": "number" }, "default": "60" },
+    "startTime": { "type": { "name": "number" }, "default": "0" }
   },
   "name": "ResourceDayView",
   "imports": [

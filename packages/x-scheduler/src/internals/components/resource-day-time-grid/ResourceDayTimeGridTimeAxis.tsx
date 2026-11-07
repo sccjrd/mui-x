@@ -11,8 +11,6 @@ import { formatTime } from '@mui/x-scheduler-internals/internals';
 import { getStickyEdgeShadowStyles } from './resourceDayTimeGridStyles';
 import { useEventCalendarStyledContext } from '../../../event-calendar/EventCalendarStyledContext';
 
-const MINUTES_IN_DAY = 24 * 60;
-
 /**
  * Stays at the inline start while scrolling horizontally, and hides the start of the grid lines.
  */
@@ -64,7 +62,7 @@ const ResourceDayTimeGridTimeAxisText = styled('time', {
  * One label per slot. The labels of the slots that don't start an hour are minor.
  */
 export function ResourceDayTimeGridTimeAxis(props: ResourceDayTimeGridTimeAxisProps) {
-  const { slotDuration } = props;
+  const { startTime, endTime, slotDuration } = props;
 
   // Context hooks
   const store = useEventCalendarStoreContext();
@@ -74,7 +72,7 @@ export function ResourceDayTimeGridTimeAxis(props: ResourceDayTimeGridTimeAxisPr
   const locale = useStore(store, schedulerOtherSelectors.dateLocale);
   const ampm = useStore(store, schedulerPreferenceSelectors.ampm);
 
-  const slotCount = MINUTES_IN_DAY / slotDuration;
+  const slotCount = ((endTime - startTime) * 60) / slotDuration;
 
   return (
     <ResourceDayTimeGridTimeAxisRoot
@@ -82,7 +80,7 @@ export function ResourceDayTimeGridTimeAxis(props: ResourceDayTimeGridTimeAxisPr
       aria-hidden="true"
     >
       {Array.from({ length: slotCount }, (_, slot) => {
-        const minutesInDay = slot * slotDuration;
+        const minutesInDay = startTime * 60 + slot * slotDuration;
         return (
           <ResourceDayTimeGridTimeAxisCell
             key={slot}
@@ -100,6 +98,14 @@ export function ResourceDayTimeGridTimeAxis(props: ResourceDayTimeGridTimeAxisPr
 }
 
 interface ResourceDayTimeGridTimeAxisProps {
+  /**
+   * Inclusive start of the displayed hours.
+   */
+  startTime: number;
+  /**
+   * Exclusive end of the displayed hours.
+   */
+  endTime: number;
   /**
    * The duration of each slot, in minutes.
    */

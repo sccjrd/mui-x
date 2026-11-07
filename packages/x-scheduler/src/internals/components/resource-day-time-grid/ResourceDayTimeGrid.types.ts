@@ -34,11 +34,20 @@ export interface ExportedResourceDayTimeGridProps extends React.HTMLAttributes<H
    */
   slotDuration?: number;
   /**
-   * The hour (0–23) to scroll to when the component first mounts.
-   * Useful for starting the view at business hours instead of midnight.
+   * Inclusive start of the hour range displayed in the time grid (whole hour between 0 and 24).
    * @default 0
    */
-  defaultScrollToHour?: number;
+  startTime?: number;
+  /**
+   * Exclusive end of the hour range displayed in the time grid (whole hour between 0 and 24).
+   * @default 24
+   */
+  endTime?: number;
+  /**
+   * The hour the grid scrolls to when it first renders. Must be a displayed hour.
+   * @default 7 when it is a displayed hour, otherwise `startTime`
+   */
+  initialScrollTime?: number;
   /**
    * The resource IDs of the columns that are pinned to the left (controlled).
    * Pinned columns always appear immediately after the time axis and stay fixed

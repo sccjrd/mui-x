@@ -42,17 +42,21 @@ ResourceDayView.propTypes /* remove-proptypes */ = {
    */
   defaultPinnedResourceIds: PropTypes.arrayOf(PropTypes.string),
   /**
-   * The hour (0–23) to scroll to when the component first mounts.
-   * Useful for starting the view at business hours instead of midnight.
-   * @default 0
+   * Exclusive end of the hour range displayed in the time grid (whole hour between 0 and 24).
+   * @default 24
    */
-  defaultScrollToHour: PropTypes.number,
+  endTime: PropTypes.number,
   /**
    * The height in pixels of each hour slot in the time grid.
    * Increasing this value zooms in on the time axis.
    * @default 80
    */
   hourHeight: PropTypes.number,
+  /**
+   * The hour the grid scrolls to when it first renders. Must be a displayed hour.
+   * @default 7 when it is a displayed hour, otherwise `startTime`
+   */
+  initialScrollTime: PropTypes.number,
   /**
    * IDs of resource columns that are currently loading their data.
    * Only those columns show a skeleton; already-loaded columns are unaffected.
@@ -92,6 +96,11 @@ ResourceDayView.propTypes /* remove-proptypes */ = {
    * @default 60
    */
   slotDuration: PropTypes.number,
+  /**
+   * Inclusive start of the hour range displayed in the time grid (whole hour between 0 and 24).
+   * @default 0
+   */
+  startTime: PropTypes.number,
 } as any;
 
 export { ResourceDayView };

@@ -1221,27 +1221,9 @@
       "isGlobal": false
     },
     {
-      "key": "resourceDayTimeGridColumnInteractiveLayer",
-      "className": "MuiEventCalendar-resourceDayTimeGridColumnInteractiveLayer",
-      "description": "Styles applied to resource day time grid column interactive layer elements.",
-      "isGlobal": false
-    },
-    {
       "key": "resourceDayTimeGridContainer",
       "className": "MuiEventCalendar-resourceDayTimeGridContainer",
       "description": "Styles applied to the resource day time grid container element.",
-      "isGlobal": false
-    },
-    {
-      "key": "resourceDayTimeGridCurrentTimeIndicator",
-      "className": "MuiEventCalendar-resourceDayTimeGridCurrentTimeIndicator",
-      "description": "Styles applied to the resource day time grid current time indicator element.",
-      "isGlobal": false
-    },
-    {
-      "key": "resourceDayTimeGridCurrentTimeIndicatorCircle",
-      "className": "MuiEventCalendar-resourceDayTimeGridCurrentTimeIndicatorCircle",
-      "description": "Styles applied to the resource day time grid current time indicator circle element.",
       "isGlobal": false
     },
     {

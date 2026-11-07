@@ -1,5 +1,6 @@
 import { act, screen } from '@mui/internal-test-utils';
 import { createSchedulerRenderer } from 'test/utils/scheduler';
+import { isJSDOM } from 'test/utils/skipIf';
 import { StandaloneResourceDayView } from '@mui/x-scheduler/resource-day-view';
 import { eventCalendarClasses } from '@mui/x-scheduler/event-calendar';
 import { describe, it, expect, vi } from 'vitest';
@@ -228,5 +229,61 @@ describe('<StandaloneResourceDayView />', () => {
     expect(cells[1]).to.have.attribute('data-minor');
     expect(cells[2].textContent).to.include('1:00');
     expect(cells[2]).not.to.have.attribute('data-minor');
+  });
+
+  describe('hour range', () => {
+    const eventsWithEarlyMeeting = [
+      ...events,
+      {
+        id: 'a0',
+        title: 'Early Standup',
+        start: '2025-07-01T06:00:00',
+        end: '2025-07-01T06:30:00',
+        resource: 'room-a',
+      },
+    ];
+
+    it('should only render the hours between startTime and endTime', () => {
+      render(
+        <StandaloneResourceDayView
+          events={eventsWithEarlyMeeting}
+          resources={resources}
+          defaultVisibleDate={visibleDate}
+          startTime={8}
+          endTime={18}
+        />,
+      );
+
+      const cells = Array.from(
+        document.querySelectorAll(`.${eventCalendarClasses.resourceDayTimeGridTimeAxisCell}`),
+      );
+      expect(cells).to.have.length(10);
+      expect(cells[0].textContent).to.equal('');
+      expect(cells[1].textContent).to.include('9:00');
+
+      const [roomA] = getColumns();
+      expect(roomA.textContent).to.include('Sprint Planning');
+      expect(roomA.textContent).not.to.include('Early Standup');
+    });
+
+    it.skipIf(isJSDOM)('should scroll to initialScrollTime', () => {
+      render(
+        <div style={{ height: 400 }}>
+          <StandaloneResourceDayView
+            events={events}
+            resources={resources}
+            defaultVisibleDate={visibleDate}
+            startTime={6}
+            initialScrollTime={9}
+          />
+        </div>,
+      );
+
+      const scroller = document.querySelector<HTMLElement>(
+        `.${eventCalendarClasses.resourceDayTimeGridBody}`,
+      )!;
+      // 3 hours after `startTime`, at the default hour height of 80px.
+      expect(scroller.scrollTop).to.equal(240);
+    });
   });
 });
